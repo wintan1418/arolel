@@ -37,6 +37,11 @@ class PagesController < ApplicationController
     t, d = titles[@op]
     page_title "#{t} — runs in your browser · Toolbench"
     meta_description d
+
+    # Enable SharedArrayBuffer so ffmpeg.wasm can run multi-threaded (3–5× faster).
+    # `credentialless` keeps Google Fonts working without needing CORP on them.
+    response.set_header("Cross-Origin-Opener-Policy",   "same-origin")
+    response.set_header("Cross-Origin-Embedder-Policy", "credentialless")
   end
 
   def image

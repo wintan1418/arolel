@@ -4,7 +4,8 @@ import { Controller } from "@hotwired/stimulus"
 // site snappy. It's lazy-loaded when the user drops their first file.
 
 const FFMPEG_CORE_VERSION = "0.12.6"
-const FFMPEG_CORE_BASE = `https://unpkg.com/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/umd`
+const FFMPEG_MT_BASE = `https://unpkg.com/@ffmpeg/core-mt@${FFMPEG_CORE_VERSION}/dist/umd`
+const FFMPEG_ST_BASE = `https://unpkg.com/@ffmpeg/core@${FFMPEG_CORE_VERSION}/dist/umd`
 
 export default class extends Controller {
   static targets = [
@@ -65,7 +66,14 @@ export default class extends Controller {
   async ensureFFmpeg () {
     if (this.ffmpeg) return this.ffmpeg
     this.ffmpegStatusTarget.style.display = "block"
-    this.statusText("fetching FFmpeg runtime (one-time, ~25MB)…")
+
+    // Multi-threaded ffmpeg needs SharedArrayBuffer, which needs COOP/COEP
+    // headers (the controller sets them on /media/*). If either is missing
+    // we fall back to the single-threaded core.
+    const mtAvailable = typeof SharedArrayBuffer !== "undefined" && self.crossOriginIsolated
+    const base  = mtAvailable ? FFMPEG_MT_BASE : FFMPEG_ST_BASE
+    const label = mtAvailable ? "multi-threaded" : "single-threaded (older browser)"
+    this.statusText(`fetching FFmpeg runtime (${label}, one-time ~25MB)…`)
 
     const [{ FFmpeg }, util] = await Promise.all([
       import("@ffmpeg/ffmpeg"),
@@ -76,7 +84,7 @@ export default class extends Controller {
 
     const ff = new FFmpeg()
     ff.on("log", ({ message }) => {
-      // Tight progress-ish updates by scraping ffmpeg's stderr log for time=
+      // Progress from ffmpeg's stderr `time=HH:MM:SS.xxx` output.
       const m = /time=(\d+):(\d+):([\d.]+)/.exec(message)
       if (m && this.currentFile) {
         const seconds = (+m[1]) * 3600 + (+m[2]) * 60 + parseFloat(m[3])
@@ -85,13 +93,18 @@ export default class extends Controller {
       }
     })
 
-    await ff.load({
-      coreURL: await this.toBlobURL(`${FFMPEG_CORE_BASE}/ffmpeg-core.js`, "text/javascript"),
-      wasmURL: await this.toBlobURL(`${FFMPEG_CORE_BASE}/ffmpeg-core.wasm`, "application/wasm")
-    })
+    const loadOpts = {
+      coreURL: await this.toBlobURL(`${base}/ffmpeg-core.js`, "text/javascript"),
+      wasmURL: await this.toBlobURL(`${base}/ffmpeg-core.wasm`, "application/wasm")
+    }
+    if (mtAvailable) {
+      loadOpts.workerURL = await this.toBlobURL(`${base}/ffmpeg-core.worker.js`, "text/javascript")
+    }
+    await ff.load(loadOpts)
 
     this.ffmpeg = ff
-    this.statusText("ready. runtime cached by your browser.")
+    this.mtActive = mtAvailable
+    this.statusText(`ready · ${label}. cached in your browser.`)
     return ff
   }
 
