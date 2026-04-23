@@ -47,3 +47,7 @@
 /TOOLBENCH_BRIEF*.md
 /TOOLBENCH_DESIGN_BRIEF.md
 /pdfpon.png
+
+# Screenshot artifacts
+/FireShot*.png
+/Screenshot*.png
