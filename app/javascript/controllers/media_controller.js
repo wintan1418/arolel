@@ -7,7 +7,9 @@ import { Controller } from "@hotwired/stimulus"
 // See /public/vendor/ffmpeg/{mt,st}/ for the actual binaries.
 const FFMPEG_MT_BASE = "/vendor/ffmpeg/mt"
 const FFMPEG_ST_BASE = "/vendor/ffmpeg/st"
-const FFMPEG_FETCH_TIMEOUT_MS = 90_000
+const FFMPEG_WRAPPER_URL = "/vendor/ffmpeg/pkg/ffmpeg.js"
+const FFMPEG_LOAD_TIMEOUT_MS = 120_000
+const FFMPEG_USE_MULTI_THREAD = false
 
 export default class extends Controller {
   static targets = [
@@ -21,7 +23,7 @@ export default class extends Controller {
     this.files = []
     this.ffmpeg = null
     this.ffmpegLoading = null
-    this.fetchFile = null
+    this.ffmpegWrapperLoading = null
     this.processing = false
 
     // Pre-fetch ffmpeg.wasm so it's usually ready by the time the user drops
@@ -94,25 +96,85 @@ export default class extends Controller {
 
   async _loadFFmpeg () {
     this.ffmpegStatusTarget.style.display = "block"
+    this.debug("connect-load", { op: this.opValue })
 
-    // Multi-threaded ffmpeg needs SharedArrayBuffer, which needs COOP/COEP
-    // headers (the controller sets them on /media/*). If either is missing
-    // we fall back to the single-threaded core.
+    // Multi-threaded ffmpeg needs SharedArrayBuffer and COOP/COEP. Those
+    // headers made Chromium hang during runtime startup here, so keep the
+    // reliable single-threaded path unless FFMPEG_USE_MULTI_THREAD is enabled.
     const hasSAB = typeof SharedArrayBuffer !== "undefined"
     const isolated = self.crossOriginIsolated === true
-    const mtAvailable = hasSAB && isolated
+    const mtAvailable = FFMPEG_USE_MULTI_THREAD && hasSAB && isolated
     console.log("[media] SAB:", hasSAB, "crossOriginIsolated:", isolated, "→ mt:", mtAvailable)
+    this.debug("runtime-capabilities", { hasSAB, isolated, mtAvailable })
 
-    const base  = mtAvailable ? FFMPEG_MT_BASE : FFMPEG_ST_BASE
-    const label = mtAvailable ? "multi-threaded" : "single-threaded"
+    const attempts = mtAvailable
+      ? [
+          { base: FFMPEG_MT_BASE, label: "multi-threaded", worker: true },
+          { base: FFMPEG_ST_BASE, label: "single-threaded fallback", worker: false }
+        ]
+      : [{ base: FFMPEG_ST_BASE, label: "single-threaded", worker: false }]
 
-    const [{ FFmpeg }, util] = await Promise.all([
-      import("@ffmpeg/ffmpeg"),
-      import("@ffmpeg/util")
-    ])
-    this.fetchFile = util.fetchFile
+    let lastError = null
+    for (const attempt of attempts) {
+      try {
+        const ff = await this.loadFFmpegAttempt(attempt)
+        this.ffmpeg = ff
+        this.mtActive = attempt.worker
+        this.statusText(`ready · ${attempt.label}. cached in your browser for next time.`)
+        return ff
+      } catch (err) {
+        lastError = err
+        console.warn(`[media] ${attempt.label} runtime failed:`, err)
+        this.statusText(`${attempt.label} failed: ${err.message}`)
+      }
+    }
 
+    throw lastError || new Error("FFmpeg runtime failed to load")
+  }
+
+  async loadFFmpegAttempt ({ base, label, worker }) {
+    this.statusText(`loading ${label} FFmpeg wrapper…`)
+    this.debug("runtime-attempt", { label, worker })
+    const { FFmpeg } = await this.loadFFmpegWrapper()
     const ff = new FFmpeg()
+    this.attachFFmpegLogHandler(ff)
+
+    const coreURL = new URL(`${base}/ffmpeg-core.js`, location.origin).href
+    const wasmURL = new URL(`${base}/ffmpeg-core.wasm`, location.origin).href
+    const workerURL = worker ? new URL(`${base}/ffmpeg-core.worker.js`, location.origin).href : null
+    this.statusText(`loading ${label} runtime files…`)
+    this.debug("runtime-files", { label, coreURL, wasmURL, workerURL })
+
+    let secs = 0
+    const tickTimer = setInterval(() => {
+      secs += 1
+      const msg = secs < 10
+        ? `compiling ${label} WebAssembly… ${secs}s`
+        : secs < 20
+          ? `compiling (this takes 15–30s first time)… ${secs}s`
+          : secs < 45
+            ? `almost there… ${secs}s`
+            : `still working at ${secs}s — trying a fallback if this times out.`
+      this.statusText(msg)
+    }, 1000)
+
+    const loadOpts = { coreURL, wasmURL }
+    if (workerURL) loadOpts.workerURL = workerURL
+    try {
+      await this.withTimeout(ff.load(loadOpts), FFMPEG_LOAD_TIMEOUT_MS, `${label} FFmpeg runtime initialisation timed out`)
+      this.debug("runtime-ready", { label })
+    } catch (err) {
+      try { ff.terminate() } catch (_) {}
+      this.debug("runtime-error", { label, message: err.message })
+      throw err
+    } finally {
+      clearInterval(tickTimer)
+    }
+
+    return ff
+  }
+
+  attachFFmpegLogHandler (ff) {
     ff.on("log", ({ message }) => {
       const m = /time=(\d+):(\d+):([\d.]+)/.exec(message)
       if (m && this.currentFile) {
@@ -121,53 +183,64 @@ export default class extends Controller {
         this.renderRow(this.currentFile)
       }
     })
-
-    // Fetch each asset with a visible progress bar.
-    const step = async (path, mime) => {
-      return this._fetchToBlobURL(`${base}/${path}`, mime,
-        (got, total) => this.statusProgress(`${label} · downloading ${path}`, got, total))
-    }
-
-    const coreURL = await step("ffmpeg-core.js",  "text/javascript")
-    const wasmURL = await step("ffmpeg-core.wasm", "application/wasm")
-    const workerURL = mtAvailable ? await step("ffmpeg-core.worker.js", "text/javascript") : null
-
-    this.statusText("initialising…")
-    const loadOpts = { coreURL, wasmURL }
-    if (workerURL) loadOpts.workerURL = workerURL
-    await ff.load(loadOpts)
-
-    this.ffmpeg = ff
-    this.mtActive = mtAvailable
-    this.statusText(`ready · ${label}. cached in your browser for next time.`)
-    return ff
   }
 
-  async _fetchToBlobURL (url, mime, onProgress) {
-    const ctrl = new AbortController()
-    const killTimer = setTimeout(() => ctrl.abort(), FFMPEG_FETCH_TIMEOUT_MS)
-    try {
-      const res = await fetch(url, { signal: ctrl.signal })
-      if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`)
-      const total = +res.headers.get("Content-Length") || 0
-      const reader = res.body.getReader()
-      const chunks = []
-      let received = 0
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        chunks.push(value)
-        received += value.length
-        if (onProgress) onProgress(received, total)
+  loadFFmpegWrapper () {
+    if (window.FFmpegWASM) return Promise.resolve(window.FFmpegWASM)
+    if (this.ffmpegWrapperLoading) return this.ffmpegWrapperLoading
+
+    this.ffmpegWrapperLoading = new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${FFMPEG_WRAPPER_URL}"]`)
+      if (existing) {
+        existing.addEventListener("load", () => resolve(window.FFmpegWASM), { once: true })
+        existing.addEventListener("error", () => reject(new Error(`failed to load ${FFMPEG_WRAPPER_URL}`)), { once: true })
+        return
       }
-      const blob = new Blob(chunks, { type: mime })
-      return URL.createObjectURL(blob)
-    } catch (err) {
-      if (err.name === "AbortError") throw new Error(`Download timed out (${FFMPEG_FETCH_TIMEOUT_MS/1000}s) fetching ${url}`)
-      throw err
-    } finally {
-      clearTimeout(killTimer)
-    }
+
+      const script = document.createElement("script")
+      script.src = FFMPEG_WRAPPER_URL
+      script.async = true
+      this.debug("wrapper-load", { url: FFMPEG_WRAPPER_URL })
+      script.onload = () => {
+        if (window.FFmpegWASM) {
+          this.debug("wrapper-ready", { url: FFMPEG_WRAPPER_URL })
+          resolve(window.FFmpegWASM)
+        } else {
+          reject(new Error("FFmpeg wrapper loaded but did not expose window.FFmpegWASM"))
+        }
+      }
+      script.onerror = () => {
+        this.debug("wrapper-error", { url: FFMPEG_WRAPPER_URL })
+        reject(new Error(`failed to load ${FFMPEG_WRAPPER_URL}`))
+      }
+      document.head.appendChild(script)
+    }).finally(() => {
+      this.ffmpegWrapperLoading = null
+    })
+
+    return this.ffmpegWrapperLoading
+  }
+
+  async fetchFile (file) {
+    return new Uint8Array(await file.arrayBuffer())
+  }
+
+  withTimeout (promise, ms, message) {
+    let timer
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`${message} after ${Math.round(ms / 1000)}s`)), ms)
+    })
+    return Promise.race([promise, timeout]).finally(() => clearTimeout(timer))
+  }
+
+  debug (event, data = {}) {
+    if (!["localhost", "127.0.0.1"].includes(location.hostname)) return
+    const payload = new URLSearchParams({
+      event,
+      data: JSON.stringify(data),
+      at: String(Date.now())
+    })
+    fetch(`/media-debug?${payload.toString()}`, { keepalive: true }).catch(() => {})
   }
 
   statusProgress (label, got, total) {
@@ -213,7 +286,8 @@ export default class extends Controller {
       await ff.writeFile(inputName, await this.fetchFile(next.file))
 
       const args = this.ffmpegArgs(inputName, outputName)
-      await ff.exec(args)
+      const exitCode = await ff.exec(args)
+      if (exitCode !== 0) throw new Error(`FFmpeg exited with code ${exitCode}`)
 
       const outData = await ff.readFile(outputName)
       const mime = this.extOutValue === "mp3" ? "audio/mpeg" : "video/mp4"
@@ -253,13 +327,16 @@ export default class extends Controller {
       // Strip video, re-encode audio as 192 kbps MP3.
       return ["-i", input, "-vn", "-acodec", "libmp3lame", "-b:a", "192k", output]
     }
-    // WebM → MP4 : H.264 video + AAC audio. -movflags +faststart for web.
-    // -preset ultrafast trades ~20% file size for a 3–4× faster encode — right
-    // trade in a browser where each extra second hurts.
+    // WebM → MP4: H.264 video + AAC audio. Real browser/screen recordings can
+    // have odd dimensions or alpha-capable pixel formats; normalize them for
+    // reliable H.264/browser playback.
     return [
       "-i", input,
+      "-map", "0:v:0", "-map", "0:a:0?",
+      "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p",
       "-c:v", "libx264", "-preset", "ultrafast", "-crf", "28",
       "-c:a", "aac", "-b:a", "160k",
+      "-sn", "-dn",
       "-movflags", "+faststart",
       output
     ]

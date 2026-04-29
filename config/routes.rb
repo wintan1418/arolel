@@ -1,6 +1,6 @@
 Rails.application.routes.draw do
   resource  :session
-  resource  :registration, only: [:new, :create], as: :registration
+  resource  :registration, only: [ :new, :create ], as: :registration
   resources :passwords, param: :token
 
   get  "signup",  to: "registrations#new"
@@ -10,18 +10,20 @@ Rails.application.routes.draw do
   get "dashboard", to: "dashboards#show", as: :dashboard
 
   # Tool 06 — Invoice maker
-  get  "invoice",             to: "invoices#new",    as: :new_invoice
-  resources :invoices, only: [:create, :update, :destroy], param: :slug
+  get "invoice",             to: "invoices#new",    as: :new_invoice
+  resources :invoices, only: [ :create, :update, :destroy ], param: :slug
   get  "invoices/:slug/edit", to: "invoices#edit",   as: :edit_invoice
 
   # Tool 07 — Sign PDF
   get  "sign",                to: "signatures#new",  as: :sign
+  resources :digital_signatures, only: [ :create, :destroy ]
 
   # Tools 08 / 09 — Media (client-side ffmpeg.wasm)
   get  "media",               to: redirect("/media/mp4-to-mp3"), as: :media_root
   get  "media/:op",           to: "pages#media",
                               as: :media,
                               constraints: { op: /mp4-to-mp3|webm-to-mp4/ }
+  get  "media-debug",         to: "pages#media_debug"
 
   root "pages#home"
 
@@ -48,17 +50,19 @@ Rails.application.routes.draw do
   # Tool 03 — Is It Down? (server-side, boards)
   get  "down",              to: "down#index",   as: :down
   post "down/check",        to: "down#check",   as: :down_check
-  resources :boards, only: [:create, :show], path: "down/b", param: :slug do
+  resources :boards, only: [ :create, :show ], path: "down/b", param: :slug do
     member do
       post :recheck
     end
   end
 
   # Tool 04 — Bulk URL opener (server-side sets)
-  get  "open",              to: "url_sets#new",    as: :open_urls
-  resources :url_sets, only: [:create], path: "o"
-  get  "o/:slug",           to: "url_sets#show",   as: :url_set
+  get "open",              to: "url_sets#new",    as: :open_urls
+  resources :url_sets, only: [ :create ], path: "o"
+  get "o/:slug",           to: "url_sets#show",   as: :url_set
 
   # Health / PWA
+  get "manifest" => "rails/pwa#manifest", as: :pwa_manifest
+  get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
   get "up" => "rails/health#show", as: :rails_health_check
 end

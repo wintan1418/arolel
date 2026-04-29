@@ -34,13 +34,14 @@ Each in-browser tool shows a live "0 bytes sent" receipt that reads the browser'
 # Dependencies
 bundle install
 yarn install
+bin/fetch_ffmpeg
 
 # Database
 bin/rails db:create db:migrate
 
 # Dev server (Puma + asset watchers)
 bin/dev
-# → http://localhost:5000
+# → http://localhost:7000
 ```
 
 ## Production

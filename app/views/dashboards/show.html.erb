@@ -1,115 +1,179 @@
-<section>
-  <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+<% total_saved = @invoices.size + @boards.size + @url_sets.size + @digital_signatures.size %>
+
+<section class="tb-dashboard">
+  <div class="tb-dashboard-head">
     <div>
       <div class="tb-eyebrow">Dashboard</div>
-      <h1 class="tb-h1" style="font-size: 44px; margin-top: 10px;">Your stuff.</h1>
-      <div class="tb-mono tb-muted" style="margin-top: 8px; font-size: 13px;">
-        signed in as <%= current_user.email_address %>
-      </div>
+      <h1 class="tb-h1 tb-dashboard-title">Workspace</h1>
+      <div class="tb-dashboard-user">Signed in as <span><%= current_user.email_address %></span></div>
     </div>
-    <div style="display: flex; gap: 8px;">
-      <%= link_to "New invoice", new_invoice_path, class: "tb-btn tb-btn-ghost" %>
-      <%= link_to "New board",   down_path,        class: "tb-btn tb-btn-ghost" %>
-      <%= button_to "Sign out",  session_path, method: :delete, class: "tb-btn tb-btn-quiet", form: { style: "display:inline;" } %>
+    <div class="tb-dashboard-actions">
+      <%= link_to new_invoice_path, class: "tb-btn tb-btn-primary" do %>
+        <span class="tb-btn-mark">+</span> Invoice
+      <% end %>
+      <%= link_to down_path, class: "tb-btn tb-btn-ghost" do %>
+        <span class="tb-btn-mark">+</span> Board
+      <% end %>
+      <%= link_to sign_path, class: "tb-btn tb-btn-ghost" do %>
+        <span class="tb-btn-mark">+</span> Signature
+      <% end %>
+      <%= button_to "Sign out", session_path, method: :delete, class: "tb-btn tb-btn-quiet", form: { style: "display:inline;" } %>
     </div>
   </div>
 
-  <div class="tb-tool-layout" style="grid-template-columns: 1.3fr 1fr; gap: 28px; margin-top: 28px;">
-    <div class="tb-stack-20">
-      <section>
-        <div class="tb-section-title">
-          <h2 class="tb-h2" style="font-size: 22px;">Invoices</h2>
-          <span class="tb-eyebrow"><%= @invoices.size %> saved</span>
+  <div class="tb-dashboard-stats">
+    <div class="tb-stat">
+      <span class="tb-stat-label">Saved items</span>
+      <strong><%= total_saved %></strong>
+      <span class="tb-stat-note">Across this account</span>
+    </div>
+    <div class="tb-stat">
+      <span class="tb-stat-label">Invoices</span>
+      <strong><%= @invoices.size %></strong>
+      <span class="tb-stat-note">Drafts and saved PDFs</span>
+    </div>
+    <div class="tb-stat">
+      <span class="tb-stat-label">Boards</span>
+      <strong><%= @boards.size %></strong>
+      <span class="tb-stat-note">Uptime watchlists</span>
+    </div>
+    <div class="tb-stat">
+      <span class="tb-stat-label">Signatures</span>
+      <strong><%= @digital_signatures.size %></strong>
+      <span class="tb-stat-note">Reusable PNGs</span>
+    </div>
+  </div>
+
+  <div class="tb-dashboard-grid">
+    <main class="tb-dashboard-main">
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Invoices</h2>
+            <p>Saved billing documents.</p>
+          </div>
+          <%= link_to "New invoice", new_invoice_path, class: "tb-dash-link" %>
         </div>
+
         <% if @invoices.any? %>
-          <div class="tb-card">
+          <div class="tb-dash-list">
             <% @invoices.each do |inv| %>
-              <div class="tb-file-row" style="grid-template-columns: 1fr 90px 110px 90px 60px;">
-                <div>
-                  <div class="tb-file-name"><%= inv.number %><span class="tb-mono tb-muted" style="font-weight:400; margin-left: 10px; font-size: 11px;"><%= inv.to_name.presence || "—" %></span></div>
-                  <div class="tb-file-meta">created <%= time_ago_in_words(inv.created_at) %> ago · template: <%= inv.template %></div>
+              <div class="tb-dash-row tb-dash-row-invoice">
+                <div class="tb-dash-maincell">
+                  <div class="tb-dash-name"><%= inv.number %></div>
+                  <div class="tb-dash-meta"><%= inv.to_name.presence || "No client" %> · <%= time_ago_in_words(inv.created_at) %> ago</div>
                 </div>
                 <span class="tb-pill tb-pill-neu"><%= inv.template %></span>
-                <span class="tb-mono" style="font-size: 13px;"><%= inv.currency %> <%= number_with_delimiter((inv.total_cents || 0).to_f.round(2)) %></span>
-                <%= link_to "Edit", edit_invoice_path(slug: inv.slug), class: "tb-btn tb-btn-ghost", style: "height: 30px; padding: 0 10px; font-size: 12px;" %>
-                <%= button_to "×", invoice_path(slug: inv.slug),
-                      method: :delete,
-                      form: { data: { turbo_confirm: "Delete this invoice?" }, style: "display:inline;" },
-                      class: "tb-btn-icon" %>
+                <span class="tb-dash-money"><%= inv.currency %> <%= number_with_delimiter((inv.total_cents || 0).to_f.round(2)) %></span>
+                <div class="tb-dash-row-actions">
+                  <%= link_to "Edit", edit_invoice_path(slug: inv.slug), class: "tb-btn tb-btn-ghost tb-btn-sm" %>
+                  <%= button_to "Delete", invoice_path(slug: inv.slug),
+                        method: :delete,
+                        form: { data: { turbo_confirm: "Delete this invoice?" }, style: "display:inline;" },
+                        class: "tb-btn tb-btn-quiet tb-btn-sm" %>
+                </div>
               </div>
             <% end %>
           </div>
         <% else %>
-          <%= render "empty", message: "No invoices yet. Create one in the invoice maker." %>
+          <%= render "empty", message: "No invoices yet.", action_label: "Create invoice", action_path: new_invoice_path %>
         <% end %>
       </section>
 
-      <section>
-        <div class="tb-section-title">
-          <h2 class="tb-h2" style="font-size: 22px;">Uptime boards</h2>
-          <span class="tb-eyebrow"><%= @boards.size %> saved</span>
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Uptime Boards</h2>
+            <p>Shareable monitor boards.</p>
+          </div>
+          <%= link_to "New board", down_path, class: "tb-dash-link" %>
         </div>
+
         <% if @boards.any? %>
-          <div class="tb-card">
+          <div class="tb-dash-list">
             <% @boards.each do |b| %>
-              <div class="tb-file-row" style="grid-template-columns: 1fr 140px 80px;">
-                <div>
-                  <div class="tb-file-name"><%= b.name %></div>
-                  <div class="tb-file-meta"><%= b.hosts.size %> hosts · /down/b/<%= b.slug %></div>
+              <div class="tb-dash-row tb-dash-row-board">
+                <div class="tb-dash-maincell">
+                  <div class="tb-dash-name"><%= b.name %></div>
+                  <div class="tb-dash-meta"><%= b.hosts.size %> hosts · /down/b/<%= b.slug %></div>
                 </div>
-                <span class="tb-mono tb-muted" style="font-size: 11px;"><%= time_ago_in_words(b.created_at) %> ago</span>
-                <%= link_to "Open", board_path(slug: b.slug), class: "tb-btn tb-btn-ghost", style: "height: 30px; padding: 0 10px; font-size: 12px;" %>
+                <span class="tb-dash-age"><%= time_ago_in_words(b.created_at) %> ago</span>
+                <%= link_to "Open", board_path(slug: b.slug), class: "tb-btn tb-btn-ghost tb-btn-sm" %>
               </div>
             <% end %>
           </div>
         <% else %>
-          <%= render "empty", message: "No uptime boards yet." %>
+          <%= render "empty", message: "No uptime boards yet.", action_label: "Create board", action_path: down_path %>
         <% end %>
       </section>
 
-      <section>
-        <div class="tb-section-title">
-          <h2 class="tb-h2" style="font-size: 22px;">URL sets</h2>
-          <span class="tb-eyebrow"><%= @url_sets.size %> saved</span>
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>URL Sets</h2>
+            <p>Saved link collections.</p>
+          </div>
+          <%= link_to "New set", open_urls_path, class: "tb-dash-link" %>
         </div>
+
         <% if @url_sets.any? %>
-          <div class="tb-card">
+          <div class="tb-dash-list">
             <% @url_sets.each do |s| %>
-              <div class="tb-file-row" style="grid-template-columns: 1fr 140px 80px;">
-                <div>
-                  <div class="tb-file-name"><%= s.name %></div>
-                  <div class="tb-file-meta"><%= s.urls.size %> URLs · /o/<%= s.slug %></div>
+              <div class="tb-dash-row tb-dash-row-url">
+                <div class="tb-dash-maincell">
+                  <div class="tb-dash-name"><%= s.name %></div>
+                  <div class="tb-dash-meta"><%= s.urls.size %> URLs · /o/<%= s.slug %></div>
                 </div>
-                <span class="tb-mono tb-muted" style="font-size: 11px;"><%= time_ago_in_words(s.created_at) %> ago</span>
-                <%= link_to "Open", url_set_path(slug: s.slug), class: "tb-btn tb-btn-ghost", style: "height: 30px; padding: 0 10px; font-size: 12px;" %>
+                <span class="tb-dash-age"><%= time_ago_in_words(s.created_at) %> ago</span>
+                <%= link_to "Open", url_set_path(slug: s.slug), class: "tb-btn tb-btn-ghost tb-btn-sm" %>
               </div>
             <% end %>
           </div>
         <% else %>
-          <%= render "empty", message: "No saved URL sets yet." %>
+          <%= render "empty", message: "No saved URL sets yet.", action_label: "Create set", action_path: open_urls_path %>
         <% end %>
       </section>
-    </div>
+    </main>
 
-    <aside class="tb-stack-14">
-      <div class="tb-card tb-card-pad">
-        <div class="tb-eyebrow" style="color: var(--tb-green); margin-bottom: 8px;">By design</div>
-        <div class="tb-text-sm">
-          <strong>HEIC, PDF tools, Image compress and Sign PDF don't appear here.</strong>
-          They run entirely in your browser — we never see what you converted, merged, or signed.
-          That negative space is the whole point of this suite.
+    <aside class="tb-dashboard-side">
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Digital Signatures</h2>
+            <p>Reusable signature images.</p>
+          </div>
+          <%= link_to "Create", sign_path, class: "tb-dash-link" %>
         </div>
-      </div>
 
-      <div class="tb-card tb-card-pad">
-        <div class="tb-eyebrow" style="margin-bottom: 8px;">Shortcuts</div>
-        <div class="tb-stack-10">
-          <%= link_to "→ Make an invoice",    new_invoice_path, class: "tb-mono" %>
-          <%= link_to "→ New uptime board",   down_path,        class: "tb-mono" %>
-          <%= link_to "→ New URL set",        open_urls_path,   class: "tb-mono" %>
-          <%= link_to "→ Sign a PDF",         sign_path,        class: "tb-mono" %>
-        </div>
-      </div>
+        <% if @digital_signatures.any? %>
+          <div class="tb-signature-grid">
+            <% @digital_signatures.each do |sig| %>
+              <div class="tb-signature-card">
+                <div class="tb-signature-preview">
+                  <img src="<%= sig.image_data %>" alt="<%= sig.name %>">
+                </div>
+                <div class="tb-signature-card-foot">
+                  <div>
+                    <div class="tb-dash-name"><%= sig.name %></div>
+                    <div class="tb-dash-meta"><%= time_ago_in_words(sig.created_at) %> ago</div>
+                  </div>
+                  <%= button_to "Delete", digital_signature_path(sig),
+                        method: :delete,
+                        form: { data: { turbo_confirm: "Delete this signature?" }, style: "display:inline;" },
+                        class: "tb-btn tb-btn-quiet tb-btn-sm" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <%= render "empty", message: "No saved signatures yet.", action_label: "Create signature", action_path: sign_path %>
+        <% end %>
+      </section>
+
+      <section class="tb-dash-note">
+        <div class="tb-eyebrow" style="color: var(--tb-green);">Privacy</div>
+        <p><strong>Files still stay local.</strong> Browser tools do not upload your PDFs, media, images, or documents. Saved signatures store only the reusable PNG you choose to keep.</p>
+      </section>
     </aside>
   </div>
 </section>

@@ -3,15 +3,24 @@
 # can serve them same-origin. Run once after checkout, and on deploy hosts.
 set -euo pipefail
 
-VERSION="0.12.6"
+CORE_VERSION="0.12.9"
+WRAPPER_VERSION="0.12.15"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MT="$ROOT/public/vendor/ffmpeg/mt"
 ST="$ROOT/public/vendor/ffmpeg/st"
-mkdir -p "$MT" "$ST"
+PKG="$ROOT/public/vendor/ffmpeg/pkg"
+mkdir -p "$MT" "$ST" "$PKG"
+VERSION_MARKER="$ROOT/public/vendor/ffmpeg/.versions"
+EXPECTED_VERSION="wrapper=$WRAPPER_VERSION core=$CORE_VERSION"
+CURRENT_VERSION="$(cat "$VERSION_MARKER" 2>/dev/null || true)"
+REFRESH_ASSETS=0
+if [ "$CURRENT_VERSION" != "$EXPECTED_VERSION" ]; then
+  REFRESH_ASSETS=1
+fi
 
 fetch () {
   local url="$1" dest="$2"
-  if [ -s "$dest" ]; then
+  if [ "$REFRESH_ASSETS" -eq 0 ] && [ -s "$dest" ]; then
     echo "skip $dest (exists)"
   else
     echo "get  $dest"
@@ -19,15 +28,36 @@ fetch () {
   fi
 }
 
-echo "==> multi-threaded core @ffmpeg/core-mt@$VERSION"
-fetch "https://unpkg.com/@ffmpeg/core-mt@$VERSION/dist/umd/ffmpeg-core.js"        "$MT/ffmpeg-core.js"
-fetch "https://unpkg.com/@ffmpeg/core-mt@$VERSION/dist/umd/ffmpeg-core.wasm"      "$MT/ffmpeg-core.wasm"
-fetch "https://unpkg.com/@ffmpeg/core-mt@$VERSION/dist/umd/ffmpeg-core.worker.js" "$MT/ffmpeg-core.worker.js"
+copy_or_fetch () {
+  local package_path="$1" url="$2" dest="$3"
+  if [ "$REFRESH_ASSETS" -eq 0 ] && [ -s "$dest" ]; then
+    echo "skip $dest (exists)"
+  elif [ -s "$ROOT/node_modules/$package_path" ]; then
+    echo "copy $dest"
+    cp "$ROOT/node_modules/$package_path" "$dest"
+  else
+    fetch "$url" "$dest"
+  fi
+}
 
-echo "==> single-threaded fallback @ffmpeg/core@$VERSION"
-fetch "https://unpkg.com/@ffmpeg/core@$VERSION/dist/umd/ffmpeg-core.js"   "$ST/ffmpeg-core.js"
-fetch "https://unpkg.com/@ffmpeg/core@$VERSION/dist/umd/ffmpeg-core.wasm" "$ST/ffmpeg-core.wasm"
+echo "==> ffmpeg package wrapper @ffmpeg/ffmpeg@$WRAPPER_VERSION"
+copy_or_fetch "@ffmpeg/ffmpeg/dist/umd/ffmpeg.js" \
+  "https://unpkg.com/@ffmpeg/ffmpeg@$WRAPPER_VERSION/dist/umd/ffmpeg.js" \
+  "$PKG/ffmpeg.js"
+copy_or_fetch "@ffmpeg/ffmpeg/dist/umd/814.ffmpeg.js" \
+  "https://unpkg.com/@ffmpeg/ffmpeg@$WRAPPER_VERSION/dist/umd/814.ffmpeg.js" \
+  "$PKG/814.ffmpeg.js"
+
+echo "==> multi-threaded core @ffmpeg/core-mt@$CORE_VERSION"
+fetch "https://unpkg.com/@ffmpeg/core-mt@$CORE_VERSION/dist/umd/ffmpeg-core.js"        "$MT/ffmpeg-core.js"
+fetch "https://unpkg.com/@ffmpeg/core-mt@$CORE_VERSION/dist/umd/ffmpeg-core.wasm"      "$MT/ffmpeg-core.wasm"
+fetch "https://unpkg.com/@ffmpeg/core-mt@$CORE_VERSION/dist/umd/ffmpeg-core.worker.js" "$MT/ffmpeg-core.worker.js"
+
+echo "==> single-threaded fallback @ffmpeg/core@$CORE_VERSION"
+fetch "https://unpkg.com/@ffmpeg/core@$CORE_VERSION/dist/umd/ffmpeg-core.js"   "$ST/ffmpeg-core.js"
+fetch "https://unpkg.com/@ffmpeg/core@$CORE_VERSION/dist/umd/ffmpeg-core.wasm" "$ST/ffmpeg-core.wasm"
 
 echo
 echo "done. sizes:"
-du -h "$MT" "$ST" | sed 's/^/  /'
+du -h "$PKG" "$MT" "$ST" | sed 's/^/  /'
+printf '%s\n' "$EXPECTED_VERSION" > "$VERSION_MARKER"

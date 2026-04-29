@@ -11,7 +11,7 @@ class CreateChecks < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :checks, [:board_id, :host, :checked_at]
+    add_index :checks, [ :board_id, :host, :checked_at ]
     add_index :checks, :checked_at
   end
 end

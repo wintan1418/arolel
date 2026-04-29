@@ -22,6 +22,6 @@ class CreateInvoices < ActiveRecord::Migration[8.1]
     end
 
     add_index :invoices, :slug,               unique: true
-    add_index :invoices, [:user_id, :created_at]
+    add_index :invoices, [ :user_id, :created_at ]
   end
 end

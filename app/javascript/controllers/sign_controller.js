@@ -12,19 +12,31 @@ export default class extends Controller {
   static targets = [
     "drop", "pdfInput", "pagesWrap", "pages",
     "modeTabs", "drawPanel", "typePanel", "uploadPanel",
-    "canvas", "inkColor", "typeText", "sigInput",
-    "downloadBtn"
+    "canvas", "inkColor", "typeText", "sigInput", "variants",
+    "signatureActions", "saveSignatureBtn", "signatureStatus",
+    "savedSeed", "savedList", "downloadBtn"
   ]
+  static values = {
+    signedIn: Boolean,
+    loginUrl: String,
+    registerUrl: String
+  }
 
   connect () {
     this.pdfBuffer = null
     this.pdfDoc    = null             // pdf-lib doc
     this.pageInfos = []               // { w, h, canvasEl, placements: [ {x,y,w,h} relative to canvas, el } ]
     this.signature = null             // PNG data-url
-    this.mode      = "draw"
+    this.signatureMeta = null
+    this.typedVariants = []
+    this.savedSignatures = []
+    this.signatureMode = "draw"
     this.drawing   = false
     this.ink       = "#0f172a"
     this.initPad()
+    this.loadSavedSignatures()
+    this.updateDownloadBtn()
+    this.updateSignatureActions()
   }
 
   // ----- signature pad -----
@@ -73,56 +85,129 @@ export default class extends Controller {
     const c = this.canvasTarget
     c.getContext("2d").clearRect(0, 0, c.width, c.height)
     this.signature = null
+    this.signatureMeta = null
     this.updateDownloadBtn()
+    this.updateSignatureActions()
   }
 
   captureSigFromCanvas () {
     // Crop to opaque pixels for a tight signature, then export as PNG.
-    const c = this.canvasTarget
-    const { data, width, height } = c.getContext("2d").getImageData(0, 0, c.width, c.height)
-    let minX = width, minY = height, maxX = 0, maxY = 0, any = false
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const a = data[(y * width + x) * 4 + 3]
-        if (a > 8) { any = true
-          if (x < minX) minX = x; if (y < minY) minY = y
-          if (x > maxX) maxX = x; if (y > maxY) maxY = y
-        }
-      }
+    const signature = this.cropCanvasToPng(this.canvasTarget)
+    if (!signature) {
+      this.signature = null
+      this.signatureMeta = null
+      this.updateSignatureActions()
+      return
     }
-    if (!any) { this.signature = null; return }
-    const pad = 6
-    const cx = Math.max(0, minX - pad), cy = Math.max(0, minY - pad)
-    const cw = Math.min(width,  maxX + pad) - cx
-    const ch = Math.min(height, maxY + pad) - cy
-    const crop = document.createElement("canvas"); crop.width = cw; crop.height = ch
-    crop.getContext("2d").drawImage(c, cx, cy, cw, ch, 0, 0, cw, ch)
-    this.signature = crop.toDataURL("image/png")
+    this.setSignature(signature, { name: "Drawn signature", sourceText: "", styleKey: "draw" })
     this.updateDownloadBtn()
   }
 
   // ----- mode switching -----
 
-  mode (e) {
-    this.mode = e.currentTarget.dataset.mode
+  setMode (e) {
+    this.signatureMode = e.currentTarget.dataset.mode
     this.modeTabsTarget.querySelectorAll(".tb-tab").forEach((b) => b.classList.remove("is-active"))
     e.currentTarget.classList.add("is-active")
-    this.drawPanelTarget.hidden   = this.mode !== "draw"
-    this.typePanelTarget.hidden   = this.mode !== "type"
-    this.uploadPanelTarget.hidden = this.mode !== "upload"
+    this.drawPanelTarget.hidden   = this.signatureMode !== "draw"
+    this.typePanelTarget.hidden   = this.signatureMode !== "type"
+    this.uploadPanelTarget.hidden = this.signatureMode !== "upload"
   }
 
   typedSig () {
     const text = (this.typeTextTarget.value || "").trim()
-    if (!text) { this.signature = null; this.updateDownloadBtn(); return }
-    const c = document.createElement("canvas"); c.width = 520; c.height = 180
+    if (!text) {
+      this.signature = null
+      this.signatureMeta = null
+      this.typedVariants = []
+      this.variantsTarget.innerHTML = ""
+      this.updateDownloadBtn()
+      this.updateSignatureActions()
+      return
+    }
+
+    this.renderTypedVariants(text)
+    this.updateDownloadBtn()
+  }
+
+  renderTypedVariants (text) {
+    this.typedVariants = this.signatureStyles().map((style) => ({
+      style,
+      image: this.renderTypedSignature(text, style)
+    }))
+    this.variantsTarget.innerHTML = this.typedVariants.map((variant, index) => `
+      <button type="button"
+              class="tb-tab ${index === 0 ? "is-active" : ""}"
+              data-action="click->sign#selectTypedVariant"
+              data-sign-index-param="${index}"
+              style="height: 62px; padding: 6px; background: var(--tb-paper);">
+        <img src="${variant.image}" alt="${this.escape(variant.style.name)}" style="max-height: 44px; width: 100%; object-fit: contain;">
+      </button>
+    `).join("")
+    this.applyTypedVariant(0)
+  }
+
+  selectTypedVariant (event) {
+    this.applyTypedVariant(event.params.index || 0)
+  }
+
+  applyTypedVariant (index) {
+    const variant = this.typedVariants[index]
+    if (!variant) return
+
+    this.variantsTarget.querySelectorAll(".tb-tab").forEach((button) => button.classList.remove("is-active"))
+    const button = this.variantsTarget.querySelector(`[data-sign-index-param="${index}"]`)
+    if (button) button.classList.add("is-active")
+
+    this.setSignature(variant.image, {
+      name: this.typeTextTarget.value.trim(),
+      sourceText: this.typeTextTarget.value.trim(),
+      styleKey: variant.style.key
+    })
+    this.updateDownloadBtn()
+  }
+
+  signatureStyles () {
+    return [
+      { key: "serif-flow", name: "Serif flow", font: "italic 600 64px \"Source Serif 4\", Georgia, serif", rotate: -0.02, scaleX: 1, y: 100 },
+      { key: "script-wide", name: "Wide script", font: "italic 500 58px \"Segoe Script\", \"Brush Script MT\", cursive", rotate: -0.04, scaleX: 1.08, y: 104 },
+      { key: "classic-ink", name: "Classic ink", font: "italic 600 54px Georgia, \"Times New Roman\", serif", rotate: 0.01, scaleX: 1.14, y: 104, underline: true },
+      { key: "compact", name: "Compact", font: "italic 600 48px \"Source Serif 4\", Georgia, serif", rotate: -0.01, scaleX: 0.9, y: 102 },
+      { key: "bold-script", name: "Bold script", font: "italic 700 56px \"Segoe Script\", \"Brush Script MT\", cursive", rotate: -0.03, scaleX: 1, y: 104 },
+      { key: "formal", name: "Formal", font: "italic 500 52px \"Source Serif 4\", Georgia, serif", rotate: 0, scaleX: 1.04, y: 102, underline: true }
+    ]
+  }
+
+  renderTypedSignature (text, style) {
+    const c = document.createElement("canvas")
+    c.width = 760
+    c.height = 220
     const ctx = c.getContext("2d")
     ctx.fillStyle = this.ink
-    ctx.font = "italic 500 52px \"Source Serif 4\", \"Segoe Script\", Georgia, serif"
+    ctx.strokeStyle = this.ink
+    ctx.lineCap = "round"
+    ctx.lineWidth = 2
+    ctx.font = style.font
     ctx.textBaseline = "middle"
-    ctx.fillText(text, 10, 100)
-    this.signature = c.toDataURL("image/png")
-    this.updateDownloadBtn()
+
+    const measured = ctx.measureText(text)
+    const maxWidth = 680
+    const scale = Math.min(1, maxWidth / Math.max(measured.width, 1))
+    ctx.save()
+    ctx.translate(36, style.y)
+    ctx.rotate(style.rotate || 0)
+    ctx.scale((style.scaleX || 1) * scale, scale)
+    ctx.fillText(text, 0, 0)
+    if (style.underline) {
+      const w = Math.min(measured.width, maxWidth)
+      ctx.beginPath()
+      ctx.moveTo(8, 36)
+      ctx.quadraticCurveTo(w * 0.45, 48, w + 24, 34)
+      ctx.stroke()
+    }
+    ctx.restore()
+
+    return this.cropCanvasToPng(c) || c.toDataURL("image/png")
   }
 
   async uploadedSig () {
@@ -135,8 +220,23 @@ export default class extends Controller {
     const maxW = 520, scale = Math.min(1, maxW / img.width)
     c.width = img.width * scale; c.height = img.height * scale
     c.getContext("2d").drawImage(img, 0, 0, c.width, c.height)
-    this.signature = c.toDataURL("image/png")
+    this.setSignature(c.toDataURL("image/png"), {
+      name: file.name.replace(/\.[^.]+$/, ""),
+      sourceText: "",
+      styleKey: "upload"
+    })
     this.updateDownloadBtn()
+  }
+
+  setSignature (imageData, meta = {}) {
+    this.signature = imageData
+    this.signatureMeta = {
+      name: meta.name || meta.sourceText || "Signature",
+      sourceText: meta.sourceText || "",
+      styleKey: meta.styleKey || this.signatureMode
+    }
+    this.signatureStatusTarget.textContent = ""
+    this.updateSignatureActions()
   }
 
   // ----- PDF handling -----
@@ -240,7 +340,92 @@ export default class extends Controller {
 
   updateDownloadBtn () {
     const any = this.pageInfos.some((p) => p.placements.some((b) => b.isConnected))
-    this.downloadBtnTarget.disabled = !(this.pdfDoc && this.signature && any)
+    const ready = this.pdfDoc && this.signature && any
+    this.downloadBtnTarget.disabled = !ready
+
+    if (ready) {
+      this.downloadBtnTarget.textContent = "Stamp & download signed PDF"
+    } else if (!this.pdfDoc) {
+      this.downloadBtnTarget.textContent = "Choose a PDF first"
+    } else if (!this.signature) {
+      this.downloadBtnTarget.textContent = "Create a signature first"
+    } else {
+      this.downloadBtnTarget.textContent = "Click a page to place signature"
+    }
+  }
+
+  updateSignatureActions () {
+    this.signatureActionsTarget.style.display = this.signature ? "flex" : "none"
+    if (!this.signature) this.signatureStatusTarget.textContent = ""
+  }
+
+  downloadSignature () {
+    if (!this.signature) return
+
+    const a = document.createElement("a")
+    a.href = this.signature
+    a.download = `${this.slugify(this.signatureMeta?.name || "signature")}.png`
+    document.body.appendChild(a)
+    a.click()
+    a.remove()
+  }
+
+  async saveSignature () {
+    if (!this.signature) {
+      this.toast("Create a signature first.")
+      return
+    }
+
+    if (!this.signedInValue) {
+      this.signatureStatusTarget.innerHTML = `
+        <a href="${this.escape(this.loginUrlValue)}" style="color: var(--tb-red); text-decoration: underline;">Log in</a>
+        or
+        <a href="${this.escape(this.registerUrlValue)}" style="color: var(--tb-red); text-decoration: underline;">register</a>
+        to save.
+      `
+      return
+    }
+
+    this.saveSignatureBtnTarget.disabled = true
+    this.signatureStatusTarget.textContent = "saving..."
+    try {
+      const res = await fetch("/digital_signatures", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": this.csrf(),
+          Accept: "application/json"
+        },
+        body: JSON.stringify({
+          digital_signature: {
+            name: this.signatureMeta?.name || "Signature",
+            source_text: this.signatureMeta?.sourceText || "",
+            style_key: this.signatureMeta?.styleKey || "",
+            image_data: this.signature
+          }
+        })
+      })
+
+      if (res.status === 401) {
+        this.signatureStatusTarget.innerHTML = `
+          <a href="${this.escape(this.loginUrlValue)}" style="color: var(--tb-red); text-decoration: underline;">Log in</a>
+          or
+          <a href="${this.escape(this.registerUrlValue)}" style="color: var(--tb-red); text-decoration: underline;">register</a>
+          to save.
+        `
+        return
+      }
+      const data = await res.json()
+      if (!res.ok) throw new Error((data.errors || ["Could not save signature."]).join(", "))
+
+      this.savedSignatures.unshift(data)
+      this.renderSavedSignatures()
+      this.signatureStatusTarget.textContent = "saved"
+    } catch (err) {
+      this.signatureStatusTarget.textContent = err.message || "save failed"
+    } finally {
+      this.saveSignatureBtnTarget.disabled = false
+    }
   }
 
   async download () {
@@ -279,8 +464,79 @@ export default class extends Controller {
 
   // ----- util -----
 
+  loadSavedSignatures () {
+    if (!this.hasSavedSeedTarget || !this.hasSavedListTarget) return
+
+    try {
+      this.savedSignatures = JSON.parse(this.savedSeedTarget.textContent || "[]")
+    } catch (_) {
+      this.savedSignatures = []
+    }
+    this.renderSavedSignatures()
+  }
+
+  renderSavedSignatures () {
+    if (!this.hasSavedListTarget) return
+
+    if (this.savedSignatures.length === 0) {
+      this.savedListTarget.innerHTML = '<div class="tb-text-sm">No saved signatures yet.</div>'
+      return
+    }
+
+    this.savedListTarget.innerHTML = this.savedSignatures.map((sig, index) => `
+      <button type="button"
+              class="tb-tab"
+              data-action="click->sign#useSavedSignature"
+              data-sign-index-param="${index}"
+              style="height: 64px; padding: 6px; background: var(--tb-paper);">
+        <img src="${sig.image_data}" alt="${this.escape(sig.name)}" style="max-height: 42px; width: 100%; object-fit: contain;">
+      </button>
+    `).join("")
+  }
+
+  useSavedSignature (event) {
+    const sig = this.savedSignatures[event.params.index || 0]
+    if (!sig) return
+
+    this.setSignature(sig.image_data, {
+      name: sig.name,
+      sourceText: sig.source_text || "",
+      styleKey: sig.style_key || "saved"
+    })
+    this.updateDownloadBtn()
+  }
+
   loadImage (src) {
     return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = src })
+  }
+
+  cropCanvasToPng (canvas) {
+    const { data, width, height } = canvas.getContext("2d").getImageData(0, 0, canvas.width, canvas.height)
+    let minX = width, minY = height, maxX = 0, maxY = 0, any = false
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const a = data[(y * width + x) * 4 + 3]
+        if (a > 8) {
+          any = true
+          if (x < minX) minX = x
+          if (y < minY) minY = y
+          if (x > maxX) maxX = x
+          if (y > maxY) maxY = y
+        }
+      }
+    }
+    if (!any) return null
+
+    const pad = 8
+    const cx = Math.max(0, minX - pad)
+    const cy = Math.max(0, minY - pad)
+    const cw = Math.min(width, maxX + pad) - cx
+    const ch = Math.min(height, maxY + pad) - cy
+    const crop = document.createElement("canvas")
+    crop.width = cw
+    crop.height = ch
+    crop.getContext("2d").drawImage(canvas, cx, cy, cw, ch, 0, 0, cw, ch)
+    return crop.toDataURL("image/png")
   }
 
   async pngDataUrlToBytes (url) {
@@ -291,5 +547,18 @@ export default class extends Controller {
   toast (msg) {
     const t = document.createElement("div"); t.className = "tb-toast"; t.textContent = msg
     document.body.appendChild(t); setTimeout(() => t.remove(), 2200)
+  }
+
+  csrf () {
+    const el = document.querySelector('meta[name="csrf-token"]')
+    return el ? el.content : ""
+  }
+
+  slugify (value) {
+    return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "signature"
+  }
+
+  escape (value) {
+    return String(value).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]))
   }
 }

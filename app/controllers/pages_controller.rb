@@ -17,10 +17,10 @@ class PagesController < ApplicationController
     @op = params[:op]
     set_nav :pdf
     titles = {
-      "merge"    => ["Merge PDF", "Combine multiple PDFs into one, in your browser. No upload."],
-      "split"    => ["Split PDF", "Split a PDF into separate pages. Runs on your device only."],
-      "rotate"   => ["Rotate PDF", "Rotate PDF pages without uploading the file."],
-      "compress" => ["Compress PDF", "Shrink a PDF in your browser. No upload, no account."]
+      "merge"    => [ "Merge PDF", "Combine multiple PDFs into one, in your browser. No upload." ],
+      "split"    => [ "Split PDF", "Split a PDF into separate pages. Runs on your device only." ],
+      "rotate"   => [ "Rotate PDF", "Rotate PDF pages without uploading the file." ],
+      "compress" => [ "Compress PDF", "Shrink a PDF in your browser. No upload, no account." ]
     }
     t, d = titles[@op]
     page_title "#{t} — runs in your browser · Toolbench"
@@ -31,24 +31,30 @@ class PagesController < ApplicationController
     @op = params[:op]
     set_nav :media
     titles = {
-      "mp4-to-mp3"  => ["MP4 to MP3",  "Extract audio from MP4 video as MP3, in your browser. No upload."],
-      "webm-to-mp4" => ["WebM to MP4", "Convert WebM video to MP4, in your browser. No upload."]
+      "mp4-to-mp3"  => [ "MP4 to MP3",  "Extract audio from MP4 video as MP3, in your browser. No upload." ],
+      "webm-to-mp4" => [ "WebM to MP4", "Convert WebM video to MP4, in your browser. No upload." ]
     }
     t, d = titles[@op]
     page_title "#{t} — runs in your browser · Toolbench"
     meta_description d
 
-    # Enable SharedArrayBuffer so ffmpeg.wasm can run multi-threaded (3–5× faster).
-    # `credentialless` keeps Google Fonts working without needing CORP on them.
-    response.set_header("Cross-Origin-Opener-Policy",   "same-origin")
-    response.set_header("Cross-Origin-Embedder-Policy", "credentialless")
+    # The media tools use the single-threaded FFmpeg core for reliability.
+    # Multi-threaded FFmpeg needs COOP/COEP, but those headers make browser
+    # worker/WASM loading stricter and can leave the runtime stuck compiling.
+  end
+
+  def media_debug
+    return head :not_found unless Rails.env.development?
+
+    Rails.logger.info("[media-debug] #{params[:event]} #{params[:data]}")
+    head :no_content
   end
 
   def image
     @op = params[:op]
     set_nav :images
     titles = {
-      "compress" => ["Compress images", "Shrink JPG, PNG and WebP images in your browser. No upload, no account."]
+      "compress" => [ "Compress images", "Shrink JPG, PNG and WebP images in your browser. No upload, no account." ]
     }
     t, d = titles[@op]
     page_title "#{t} — runs in your browser · Toolbench"

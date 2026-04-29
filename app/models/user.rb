@@ -5,6 +5,7 @@ class User < ApplicationRecord
   has_many :boards,     dependent: :nullify
   has_many :url_sets,   dependent: :nullify
   has_many :invoices,   dependent: :destroy
+  has_many :digital_signatures, dependent: :destroy
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 

@@ -1,7 +1,7 @@
 class BoardsController < ApplicationController
   allow_unauthenticated_access
   before_action { set_nav :down }
-  before_action :find_board, only: [:show, :recheck]
+  before_action :find_board, only: [ :show, :recheck ]
 
   # POST /down/b — create a board (from the Down landing page form).
   def create
@@ -30,10 +30,10 @@ class BoardsController < ApplicationController
       format.html
       format.json do
         render json: {
-          tableHtml: render_to_string(partial: "boards/table", formats: [:html],
+          tableHtml: render_to_string(partial: "boards/table", formats: [ :html ],
                                        locals: { board: @board, checks: @checks, sparklines: @sparklines }),
           counts: @board.counts,
-          lastCheckedRel: (@board.last_checked_at ? "#{time_ago_in_words(@board.last_checked_at)} ago" : "pending")
+          lastCheckedRel: (@board.last_checked_at ? "#{helpers.time_ago_in_words(@board.last_checked_at)} ago" : "pending")
         }
       end
     end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_23_190001) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_29_231000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_190001) do
     t.index ["board_id", "host", "checked_at"], name: "index_checks_on_board_id_and_host_and_checked_at"
     t.index ["board_id"], name: "index_checks_on_board_id"
     t.index ["checked_at"], name: "index_checks_on_checked_at"
+  end
+
+  create_table "digital_signatures", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "image_data", null: false
+    t.string "name", null: false
+    t.string "source_text"
+    t.string "style_key"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "created_at"], name: "index_digital_signatures_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_digital_signatures_on_user_id"
   end
 
   create_table "invoices", force: :cascade do |t|
@@ -99,6 +111,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_190001) do
 
   add_foreign_key "boards", "users"
   add_foreign_key "checks", "boards"
+  add_foreign_key "digital_signatures", "users"
   add_foreign_key "invoices", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "url_sets", "users"

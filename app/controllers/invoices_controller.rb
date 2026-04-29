@@ -1,6 +1,6 @@
 class InvoicesController < ApplicationController
-  allow_unauthenticated_access only: [:new]
-  before_action :require_auth_for_save, only: [:create, :update, :destroy, :edit]
+  allow_unauthenticated_access only: [ :new ]
+  before_action :require_auth_for_save, only: [ :create, :update, :destroy, :edit ]
   before_action { set_nav :invoice }
 
   # GET /invoice — the builder (works signed out; "Save" is gated).
@@ -64,7 +64,7 @@ class InvoicesController < ApplicationController
       :from_name, :from_address, :from_email,
       :to_name, :to_address, :to_email,
       :notes, :tax_rate, :total_cents,
-      line_items: [:description, :quantity, :unit_price]
+      line_items: [ :description, :quantity, :unit_price ]
     )
   end
 

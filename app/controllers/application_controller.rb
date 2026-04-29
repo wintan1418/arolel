@@ -26,10 +26,11 @@ class ApplicationController < ActionController::Base
   end
 
   def current_user
+    authenticated?
     Current.user
   end
 
   def signed_in?
-    Current.user.present?
+    authenticated?
   end
 end
