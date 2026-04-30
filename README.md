@@ -59,6 +59,7 @@ Deployed via Hatchbox. App reads:
 | `SMTP_DOMAIN` | SMTP HELO/domain value (defaults to `PUBLIC_HOST`) |
 | `SMTP_USERNAME` | Brevo SMTP login (default: `a9d4bc001@smtp-brevo.com`) |
 | `SMTP_PASSWORD` | Brevo SMTP key/password. Required to enable SMTP delivery |
+| `SUPER_ADMIN_EMAILS` | Comma-separated emails that can access `/admin` without flipping the DB flag |
 | `COFFEE_URL` | Optional Buy Me A Coffee link — if unset, the button is hidden |
 | `SOURCE_URL` | Optional public source-code link — if unset, hidden from the footer |
 | `SECRET_KEY_BASE` | Standard Rails secret |

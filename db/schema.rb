@@ -10,9 +10,29 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_29_231000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_30_203100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "activity_events", force: :cascade do |t|
+    t.string "controller_action"
+    t.datetime "created_at", null: false
+    t.string "event_name", null: false
+    t.string "ip_hash"
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "occurred_at", null: false
+    t.string "path", null: false
+    t.string "referrer"
+    t.string "request_method", null: false
+    t.integer "status"
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.bigint "user_id"
+    t.index ["event_name"], name: "index_activity_events_on_event_name"
+    t.index ["occurred_at"], name: "index_activity_events_on_occurred_at"
+    t.index ["path"], name: "index_activity_events_on_path"
+    t.index ["user_id"], name: "index_activity_events_on_user_id"
+  end
 
   create_table "boards", force: :cascade do |t|
     t.datetime "created_at", null: false
@@ -105,10 +125,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_29_231000) do
     t.datetime "created_at", null: false
     t.string "email_address", null: false
     t.string "password_digest", null: false
+    t.boolean "super_admin", default: false, null: false
     t.datetime "updated_at", null: false
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
+    t.index ["super_admin"], name: "index_users_on_super_admin"
   end
 
+  add_foreign_key "activity_events", "users"
   add_foreign_key "boards", "users"
   add_foreign_key "checks", "boards"
   add_foreign_key "digital_signatures", "users"

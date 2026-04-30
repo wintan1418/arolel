@@ -1083,6 +1083,14 @@ a {
   grid-template-columns: minmax(0, 1fr) 130px 76px;
 }
 
+.tb-admin-path-row {
+  grid-template-columns: minmax(0, 1fr) 140px;
+}
+
+.tb-admin-user-row {
+  grid-template-columns: minmax(0, 1fr) 72px;
+}
+
 .tb-dash-maincell {
   min-width: 0;
 }
@@ -1210,7 +1218,9 @@ a {
   .tb-dash-row,
   .tb-dash-row-invoice,
   .tb-dash-row-board,
-  .tb-dash-row-url {
+  .tb-dash-row-url,
+  .tb-admin-path-row,
+  .tb-admin-user-row {
     grid-template-columns: 1fr;
     gap: 8px;
   }

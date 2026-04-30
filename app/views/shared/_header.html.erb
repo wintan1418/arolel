@@ -28,6 +28,9 @@
       <% end %>
 
       <% if signed_in? %>
+        <% if current_user.super_admin? %>
+          <%= link_to "Admin", admin_root_path, class: ["tb-nav-link", ("is-active" if current_nav == :admin)], style: "font-weight: 600;" %>
+        <% end %>
         <%= link_to "Dashboard", dashboard_path, class: ["tb-nav-link", ("is-active" if current_nav == :dashboard)], style: "font-weight: 600;" %>
       <% else %>
         <%= link_to "Sign in", new_session_path, class: "tb-nav-link" %>

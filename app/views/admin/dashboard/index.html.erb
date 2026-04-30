@@ -1,0 +1,140 @@
+<section class="tb-dashboard">
+  <div class="tb-dashboard-head">
+    <div>
+      <div class="tb-eyebrow">Super admin</div>
+      <h1 class="tb-h1 tb-dashboard-title">Arolel overview</h1>
+      <div class="tb-dashboard-user">Signed in as <span><%= current_user.email_address %></span></div>
+    </div>
+    <div class="tb-dashboard-actions">
+      <%= link_to "User dashboard", dashboard_path, class: "tb-btn tb-btn-ghost" %>
+    </div>
+  </div>
+
+  <div class="tb-dashboard-stats tb-admin-stats">
+    <div class="tb-stat">
+      <span class="tb-stat-label">Visits today</span>
+      <strong><%= number_with_delimiter(@totals[:visits_today]) %></strong>
+      <span class="tb-stat-note">First-party server events</span>
+    </div>
+    <div class="tb-stat">
+      <span class="tb-stat-label">Visits 7d</span>
+      <strong><%= number_with_delimiter(@totals[:visits_7d]) %></strong>
+      <span class="tb-stat-note">All app pages</span>
+    </div>
+    <div class="tb-stat">
+      <span class="tb-stat-label">Users</span>
+      <strong><%= number_with_delimiter(@totals[:users]) %></strong>
+      <span class="tb-stat-note">Registered accounts</span>
+    </div>
+    <div class="tb-stat">
+      <span class="tb-stat-label">Saved items</span>
+      <strong><%= number_with_delimiter(@totals.values_at(:invoices, :boards, :url_sets, :signatures).sum) %></strong>
+      <span class="tb-stat-note">Invoices, boards, sets, signatures</span>
+    </div>
+  </div>
+
+  <div class="tb-dashboard-grid">
+    <main class="tb-dashboard-main">
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Recent activity</h2>
+            <p>Server-side requests, excluding admin and assets.</p>
+          </div>
+        </div>
+        <div class="tb-card">
+          <table class="tb-table">
+            <thead>
+              <tr>
+                <th>When</th>
+                <th>Event</th>
+                <th>Path</th>
+                <th>User</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @recent_events.each do |event| %>
+                <tr>
+                  <td class="tb-mono"><%= time_ago_in_words(event.occurred_at) %> ago</td>
+                  <td><%= event.event_name.humanize %></td>
+                  <td class="tb-mono"><%= event.path %></td>
+                  <td><%= event.user&.email_address || "guest" %></td>
+                  <td class="tb-mono"><%= event.status %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Top paths</h2>
+            <p>Most visited paths over the last 30 days.</p>
+          </div>
+        </div>
+        <div class="tb-dash-list">
+          <% @top_paths.each do |path, count| %>
+            <div class="tb-dash-row tb-admin-path-row">
+              <div class="tb-dash-maincell">
+                <div class="tb-dash-name tb-mono"><%= path %></div>
+              </div>
+              <span class="tb-dash-money"><%= number_with_delimiter(count) %> visits</span>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    </main>
+
+    <aside class="tb-dashboard-side">
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Email test</h2>
+            <p>Send one SMTP test email through Brevo.</p>
+          </div>
+        </div>
+
+        <%= form_with url: admin_email_tests_path, method: :post, class: "tb-card tb-card-pad tb-stack-14", local: true do |f| %>
+          <div>
+            <label class="tb-eyebrow" style="display: block; margin-bottom: 6px;">To</label>
+            <%= f.email_field :to, value: current_user.email_address, class: "tb-input", required: true %>
+          </div>
+          <div>
+            <label class="tb-eyebrow" style="display: block; margin-bottom: 6px;">Subject</label>
+            <%= f.text_field :subject, value: "Arolel email test", class: "tb-input", required: true %>
+          </div>
+          <div>
+            <label class="tb-eyebrow" style="display: block; margin-bottom: 6px;">Message</label>
+            <%= f.text_area :body, value: "This confirms Arolel can send email through Brevo SMTP.", class: "tb-textarea", rows: 5, required: true %>
+          </div>
+          <%= f.submit "Send test email", class: "tb-btn tb-btn-primary tb-btn-lg" %>
+        <% end %>
+      </section>
+
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Recent users</h2>
+            <p>Newest registered accounts.</p>
+          </div>
+        </div>
+        <div class="tb-dash-list">
+          <% @recent_users.each do |user| %>
+            <div class="tb-dash-row tb-admin-user-row">
+              <div class="tb-dash-maincell">
+                <div class="tb-dash-name"><%= user.email_address %></div>
+                <div class="tb-dash-meta"><%= time_ago_in_words(user.created_at) %> ago</div>
+              </div>
+              <% if user.super_admin? %>
+                <span class="tb-pill tb-pill-ok">admin</span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    </aside>
+  </div>
+</section>
