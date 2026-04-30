@@ -54,6 +54,11 @@ Deployed via Hatchbox. App reads:
 | `PUBLIC_HOST` | Canonical public host used in share previews and generated links (default: `arolel.com`) |
 | `PUBLIC_URL` | Canonical public URL including protocol (default: `https://arolel.com`) |
 | `MAIL_DOMAIN` | Domain used for the default `no-reply` sender (defaults to `PUBLIC_HOST` / first `APP_HOST`) |
+| `SMTP_ADDRESS` | SMTP host for account emails (default: `smtp-relay.brevo.com`) |
+| `SMTP_PORT` | SMTP port (default: `587`) |
+| `SMTP_DOMAIN` | SMTP HELO/domain value (defaults to `PUBLIC_HOST`) |
+| `SMTP_USERNAME` | Brevo SMTP login (default: `a9d4bc001@smtp-brevo.com`) |
+| `SMTP_PASSWORD` | Brevo SMTP key/password. Required to enable SMTP delivery |
 | `COFFEE_URL` | Optional Buy Me A Coffee link — if unset, the button is hidden |
 | `SOURCE_URL` | Optional public source-code link — if unset, hidden from the footer |
 | `SECRET_KEY_BASE` | Standard Rails secret |
