@@ -24,6 +24,7 @@ export default class extends Controller {
     this.ffmpeg = null
     this.ffmpegLoading = null
     this.ffmpegWrapperLoading = null
+    this.ffmpegLogs = []
     this.processing = false
 
     // Pre-fetch ffmpeg.wasm so it's usually ready by the time the user drops
@@ -176,6 +177,9 @@ export default class extends Controller {
 
   attachFFmpegLogHandler (ff) {
     ff.on("log", ({ message }) => {
+      this.ffmpegLogs.push(message)
+      if (this.ffmpegLogs.length > 80) this.ffmpegLogs.shift()
+
       const m = /time=(\d+):(\d+):([\d.]+)/.exec(message)
       if (m && this.currentFile) {
         const seconds = (+m[1]) * 3600 + (+m[2]) * 60 + parseFloat(m[3])
@@ -280,23 +284,26 @@ export default class extends Controller {
       // Best-effort duration guess from the file — used for % progress only.
       next.durationHint = await this.guessDuration(next.file).catch(() => null)
 
-      const inputName  = `in.${this.extInValue}`
-      const outputName = `out.${this.extOutValue}`
+      const runId = next.id.replace(/[^a-z0-9]/gi, "")
+      const inputName  = `in-${runId}.${this.extInValue}`
+      const outputName = `out-${runId}.${this.extOutValue}`
 
       await ff.writeFile(inputName, await this.fetchFile(next.file))
 
+      this.ffmpegLogs = []
       const args = this.ffmpegArgs(inputName, outputName)
       const exitCode = await ff.exec(args)
-      if (exitCode !== 0) throw new Error(`FFmpeg exited with code ${exitCode}`)
+      if (exitCode !== 0) throw new Error(this.ffmpegFailureMessage(exitCode))
 
       const outData = await ff.readFile(outputName)
       const mime = this.extOutValue === "mp3" ? "audio/mpeg" : "video/mp4"
-      const blob = new Blob([outData.buffer], { type: mime })
+      const blob = new Blob([outData.slice().buffer], { type: mime })
 
       next.outBlob = blob
       next.outSize = blob.size
       next.progress = 100
       next.status = "done"
+      this.statusText("done · local download ready")
 
       // Free ffmpeg's virtual filesystem so long sessions don't balloon.
       try { await ff.deleteFile(inputName) } catch (_) {}
@@ -316,6 +323,25 @@ export default class extends Controller {
     this.processNext()
   }
 
+  ffmpegFailureMessage (exitCode) {
+    const logs = this.ffmpegLogs.join("\n")
+    if (/Stream map '0:a:0' matches no streams|Output file #0 does not contain any stream|does not contain any stream/i.test(logs)) {
+      return "No audio track found in this file."
+    }
+    if (/Invalid data found when processing input|moov atom not found|Invalid argument/i.test(logs)) {
+      return "This file is not a readable MP4/MOV audio-video file."
+    }
+    if (/File .* already exists|Not overwriting/i.test(logs)) {
+      return "Temporary output already existed. Try again."
+    }
+
+    const lastUsefulLine = this.ffmpegLogs
+      .slice()
+      .reverse()
+      .find((line) => !/^size=|^video:|^audio:|^frame=/.test(line))
+    return lastUsefulLine || `FFmpeg exited with code ${exitCode}`
+  }
+
   toast (msg) {
     const t = document.createElement("div")
     t.className = "tb-toast"; t.textContent = msg
@@ -324,13 +350,21 @@ export default class extends Controller {
 
   ffmpegArgs (input, output) {
     if (this.opValue === "mp4-to-mp3") {
-      // Strip video, re-encode audio as 192 kbps MP3.
-      return ["-i", input, "-vn", "-acodec", "libmp3lame", "-b:a", "192k", output]
+      // Extract the first audio stream and re-encode it as MP3.
+      return [
+        "-y",
+        "-i", input,
+        "-map", "0:a:0",
+        "-vn", "-sn", "-dn",
+        "-c:a", "libmp3lame", "-b:a", "192k",
+        output
+      ]
     }
     // WebM → MP4: H.264 video + AAC audio. Real browser/screen recordings can
     // have odd dimensions or alpha-capable pixel formats; normalize them for
     // reliable H.264/browser playback.
     return [
+      "-y",
       "-i", input,
       "-map", "0:v:0", "-map", "0:a:0?",
       "-vf", "scale=trunc(iw/2)*2:trunc(ih/2)*2,format=yuv420p",
