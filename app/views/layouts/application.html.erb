@@ -7,15 +7,17 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="<%= app_name %>">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#f7f6f3">
+    <meta name="theme-color" content="#f6f5f1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
     <%= yield :head %>
 
-    <link rel="icon" href="/icon.png" type="image/png">
-    <link rel="icon" href="/icon.svg" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="/icon.png">
+    <%= favicon_link_tag "logo/favicon-32.png", type: "image/png" %>
+    <link rel="icon" type="image/png" sizes="16x16" href="<%= asset_path("logo/favicon-16.png") %>">
+    <link rel="icon" type="image/png" sizes="48x48" href="<%= asset_path("logo/favicon-48.png") %>">
+    <link rel="icon" type="image/svg+xml" href="<%= asset_path("logo/arolel-bundle.svg") %>">
+    <link rel="apple-touch-icon" href="<%= asset_path("logo/arolel-app-icon-1024.png") %>">
 
     <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>

@@ -63,7 +63,7 @@ Deployed via Hatchbox. App reads:
 
 ## Design
 
-Warm-neutral palette (`#f7f6f3` page, `#ffffff` paper, `#171717` ink) with Victorinox red (`#dc2626`) as the signal colour. Type pairing: **Source Serif 4** for H1s, **Inter** for UI, **JetBrains Mono** for numbers, URLs, and receipts. Design tokens live in `app/assets/stylesheets/application.tailwind.css`.
+Chalk-neutral palette (`#f6f5f1` page, `#ffffff` paper, `#14161a` ink) with Arolel moss (`#2f6f4e`) as the signal colour. The primary mark is the Bundle logo in `app/assets/images/logo/`. Type pairing: **Instrument Serif** for the wordmark, **Source Serif 4** for H1s, **Inter** for UI, and **JetBrains Mono** for numbers, URLs, and receipts. Design tokens live in `app/assets/stylesheets/application.tailwind.css`.
 
 ## License
 

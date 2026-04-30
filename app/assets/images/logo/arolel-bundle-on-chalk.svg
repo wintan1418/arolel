@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 56 56" role="img" aria-label="Arolel">
+  <defs>
+    <clipPath id="lensA"><circle cx="22" cy="28" r="14"></circle></clipPath>
+  </defs>
+  <rect width="56" height="56" fill="#f6f5f1"></rect>
+  <circle cx="22" cy="28" r="14" fill="none" stroke="#14161a" stroke-width="2.6"></circle>
+  <circle cx="34" cy="28" r="14" fill="none" stroke="#14161a" stroke-width="2.6"></circle>
+  <g clip-path="url(#lensA)">
+    <circle cx="34" cy="28" r="14" fill="#2f6f4e"></circle>
+  </g>
+</svg>
