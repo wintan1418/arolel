@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title><%= content_for?(:title) ? yield(:title) : (page_title || "Toolbench") %></title>
+    <title><%= content_for?(:title) ? yield(:title) : (page_title || app_name) %></title>
     <% if meta_description %><meta name="description" content="<%= meta_description %>"><% end %>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Toolbench">
+    <meta name="application-name" content="<%= app_name %>">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#f7f6f3">
     <%= csrf_meta_tags %>

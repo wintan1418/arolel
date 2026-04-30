@@ -4,7 +4,7 @@ class UrlSetsController < ApplicationController
 
   # GET /open — paste-and-open landing.
   def new
-    page_title "Bulk URL opener — paste a list, open all at once · Toolbench"
+    page_title "Bulk URL opener — paste a list, open all at once · Arolel"
     meta_description "Paste any list of URLs and open them all in new tabs, or save as a shareable set you can reuse."
   end
 
@@ -35,7 +35,7 @@ class UrlSetsController < ApplicationController
   # GET /o/:slug — public set with Open All.
   def show
     @set = UrlSet.find_by!(slug: params[:slug])
-    page_title "#{@set.name} — tab set · Toolbench"
+    page_title "#{@set.name} — tab set · Arolel"
     meta_description "#{@set.urls.size} links, ready to open in new tabs. Shareable."
     @can_manage = cookies[@set.cookie_key] == @set.manage_token
   end

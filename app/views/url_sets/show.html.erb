@@ -5,7 +5,7 @@
       <h1 class="tb-h1" style="font-size: 40px; margin-top: 10px;"><%= @set.name %></h1>
       <div class="tb-mono tb-muted" style="margin-top: 8px; font-size: 13px;">
         <%= @set.urls.size %> URLs · created <%= time_ago_in_words(@set.created_at) %> ago ·
-        <span class="tb-mono">toolbench.app/o/<%= @set.slug %></span>
+        <span class="tb-mono"><%= app_host %>/o/<%= @set.slug %></span>
       </div>
     </div>
     <div style="display: flex; gap: 8px;">

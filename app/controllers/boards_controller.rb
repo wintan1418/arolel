@@ -20,7 +20,7 @@ class BoardsController < ApplicationController
 
   # GET /down/b/:slug
   def show
-    page_title "#{@board.name} — Is It Down? · Toolbench"
+    page_title "#{@board.name} — Is It Down? · Arolel"
     meta_description "Live uptime board for #{@board.hosts.take(3).join(', ')}. Shareable. No account required."
     @checks = @board.latest_checks
     @sparklines = @board.sparklines

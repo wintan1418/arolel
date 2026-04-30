@@ -4,9 +4,9 @@
 
   <div class="tb-text" style="margin-top: 20px;">
     <p>
-      Toolbench is four small web utilities, held together by one promise: we do not want your files,
+      Arolel is a set of small web utilities, held together by one promise: we do not want your files,
       your email, or your money. If a tool saves you a few minutes, you can
-      <a href="https://buymeacoffee.com/toolbench" target="_blank" rel="noopener" style="color: var(--tb-red); text-decoration: underline;">buy us a coffee</a>.
+      <a href="<%= ENV.fetch("COFFEE_URL", "https://buymeacoffee.com/arolel") %>" target="_blank" rel="noopener" style="color: var(--tb-red); text-decoration: underline;">buy us a coffee</a>.
     </p>
     <p style="margin-top: 14px;">
       Two of the four tools (HEIC and PDF) run entirely in your browser — there is no upload step.

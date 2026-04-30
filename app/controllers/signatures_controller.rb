@@ -3,7 +3,7 @@ class SignaturesController < ApplicationController
   before_action { set_nav :sign }
 
   def new
-    page_title "Sign PDF — runs in your browser · Toolbench"
+    page_title "Sign PDF — runs in your browser · Arolel"
     meta_description "Add a signature to a PDF right in your browser. Draw or type your signature, drop it on the page, download the signed PDF. Nothing uploads."
     @digital_signatures = signed_in? ? current_user.digital_signatures.recent.limit(12) : DigitalSignature.none
   end

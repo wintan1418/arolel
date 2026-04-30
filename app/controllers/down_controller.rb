@@ -4,7 +4,7 @@ class DownController < ApplicationController
 
   # GET /down — landing page. Shows a URL input that posts to #check.
   def index
-    page_title "Is It Down? — shareable uptime boards · Toolbench"
+    page_title "Is It Down? — shareable uptime boards · Arolel"
     meta_description "Paste any URL, get an instant status check. Save a list of URLs as a shareable board with a permanent link."
   end
 

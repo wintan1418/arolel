@@ -313,7 +313,7 @@ export default class extends Controller {
     // + drop metadata, which is typically ~5–15%. Label honestly.
     const item = this.items[0]
     const doc = await PDFDocument.load(item.buf, { ignoreEncryption: true })
-    doc.setTitle(""); doc.setAuthor(""); doc.setSubject(""); doc.setKeywords([]); doc.setProducer("toolbench"); doc.setCreator("toolbench")
+    doc.setTitle(""); doc.setAuthor(""); doc.setSubject(""); doc.setKeywords([]); doc.setProducer("Arolel"); doc.setCreator("Arolel")
     const bytes = await doc.save({ useObjectStreams: true })
     this.downloadBlob(new Blob([bytes], { type: "application/pdf" }), this.renameExt(item.name, "-compressed.pdf"))
   }

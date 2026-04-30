@@ -1,4 +1,4 @@
-# Toolbench
+# Arolel
 
 A small suite of everyday web utilities. Nine tools under one roof. Most of them run entirely in your browser — your files never leave your device.
 
@@ -50,7 +50,10 @@ Deployed via Hatchbox. App reads:
 
 | Env var | Purpose |
 |---|---|
-| `APP_HOST` | Comma-separated allowlist for Rails host auth (e.g. `toolbench.app,www.toolbench.app`) |
+| `APP_HOST` | Comma-separated allowlist for Rails host auth (e.g. `arolel.com,www.arolel.com`) |
+| `PUBLIC_HOST` | Canonical public host used in share previews and generated links (default: `arolel.com`) |
+| `PUBLIC_URL` | Canonical public URL including protocol (default: `https://arolel.com`) |
+| `MAIL_DOMAIN` | Domain used for the default `no-reply` sender (defaults to `PUBLIC_HOST` / first `APP_HOST`) |
 | `COFFEE_URL` | Optional Buy Me A Coffee link — if unset, the button is hidden |
 | `SOURCE_URL` | Optional public source-code link — if unset, hidden from the footer |
 | `SECRET_KEY_BASE` | Standard Rails secret |

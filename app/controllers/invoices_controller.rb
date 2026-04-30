@@ -5,7 +5,7 @@ class InvoicesController < ApplicationController
 
   # GET /invoice — the builder (works signed out; "Save" is gated).
   def new
-    page_title "Invoice maker — free, no upload · Toolbench"
+    page_title "Invoice maker — free, no upload · Arolel"
     meta_description "Create invoices in your browser. Pick a template, add line items, download a PDF. Save to your free account if you want a dashboard."
     @invoice = load_invoice
   end
@@ -29,7 +29,7 @@ class InvoicesController < ApplicationController
   # GET /invoices/:slug/edit — open a saved invoice in the builder.
   def edit
     @invoice = current_user.invoices.find_by!(slug: params[:slug])
-    page_title "#{@invoice.number} · Toolbench"
+    page_title "#{@invoice.number} · Arolel"
     render :new
   end
 

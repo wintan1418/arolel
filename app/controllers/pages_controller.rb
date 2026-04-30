@@ -3,13 +3,13 @@ class PagesController < ApplicationController
 
   def home
     set_nav :home
-    page_title "Toolbench — four everyday web utilities, no uploads"
+    page_title "Arolel — everyday web utilities, no uploads"
     meta_description "HEIC to JPG, PDF merge/split, website uptime, and bulk URL opener. HEIC and PDF tools run entirely in your browser. No accounts, no tracking."
   end
 
   def heic
     set_nav :heic
-    page_title "HEIC to JPG converter — runs in your browser · Toolbench"
+    page_title "HEIC to JPG converter — runs in your browser · Arolel"
     meta_description "Convert HEIC photos to JPG, PNG or WebP. Works entirely in your browser — no upload, no account, unlimited files."
   end
 
@@ -23,7 +23,7 @@ class PagesController < ApplicationController
       "compress" => [ "Compress PDF", "Shrink a PDF in your browser. No upload, no account." ]
     }
     t, d = titles[@op]
-    page_title "#{t} — runs in your browser · Toolbench"
+    page_title "#{t} — runs in your browser · Arolel"
     meta_description d
   end
 
@@ -35,7 +35,7 @@ class PagesController < ApplicationController
       "webm-to-mp4" => [ "WebM to MP4", "Convert WebM video to MP4, in your browser. No upload." ]
     }
     t, d = titles[@op]
-    page_title "#{t} — runs in your browser · Toolbench"
+    page_title "#{t} — runs in your browser · Arolel"
     meta_description d
 
     # The media tools use the single-threaded FFmpeg core for reliability.
@@ -57,20 +57,20 @@ class PagesController < ApplicationController
       "compress" => [ "Compress images", "Shrink JPG, PNG and WebP images in your browser. No upload, no account." ]
     }
     t, d = titles[@op]
-    page_title "#{t} — runs in your browser · Toolbench"
+    page_title "#{t} — runs in your browser · Arolel"
     meta_description d
   end
 
   def about
     set_nav :about
-    page_title "About — Toolbench"
+    page_title "About — Arolel"
   end
 
   def privacy
-    page_title "Privacy — Toolbench"
+    page_title "Privacy — Arolel"
   end
 
   def changelog
-    page_title "Changelog — Toolbench"
+    page_title "Changelog — Arolel"
   end
 end
