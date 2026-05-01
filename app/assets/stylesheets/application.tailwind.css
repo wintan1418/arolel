@@ -1559,6 +1559,86 @@ a {
   text-decoration: underline;
 }
 
+.tb-signup-nudge {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: end center;
+  padding: 24px;
+  background: rgba(20, 22, 26, 0);
+  pointer-events: none;
+  transition: background 0.18s ease;
+}
+
+.tb-signup-nudge.is-open {
+  background: rgba(20, 22, 26, 0.22);
+  pointer-events: auto;
+}
+
+.tb-signup-nudge[hidden] {
+  display: none;
+}
+
+.tb-signup-nudge-panel {
+  width: min(100%, 430px);
+  position: relative;
+  padding: 24px;
+  border: 1px solid var(--tb-line);
+  border-radius: var(--tb-r-tile);
+  background: var(--tb-paper);
+  box-shadow: var(--tb-shadow-lg);
+  transform: translateY(18px);
+  opacity: 0;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.tb-signup-nudge.is-open .tb-signup-nudge-panel {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.tb-signup-nudge-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--tb-muted);
+  font-size: 22px;
+  line-height: 1;
+}
+
+.tb-signup-nudge-close:hover {
+  color: var(--tb-ink);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.tb-signup-nudge-panel h2 {
+  margin: 10px 36px 8px 0;
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.tb-signup-nudge-panel p {
+  margin: 0;
+  color: var(--tb-ink-2);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.tb-signup-nudge-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
 .tb-conversion-status {
   margin-top: 14px;
   padding: 12px 14px;

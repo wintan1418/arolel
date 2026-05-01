@@ -1,0 +1,26 @@
+<div class="tb-signup-nudge"
+     data-controller="signup-nudge"
+     data-action="click->signup-nudge#backdrop"
+     hidden>
+  <section class="tb-signup-nudge-panel"
+           data-signup-nudge-target="panel"
+           role="dialog"
+           aria-modal="true"
+           aria-labelledby="signup-nudge-title">
+    <button type="button"
+            class="tb-signup-nudge-close"
+            data-action="click->signup-nudge#close"
+            aria-label="Close sign up prompt">×</button>
+
+    <div class="tb-eyebrow">Personalize Arolel</div>
+    <h2 id="signup-nudge-title">Make Arolel yours</h2>
+    <p>
+      Create a free account to save signatures, invoices, tool history, and get a more personalized workspace as new features ship.
+    </p>
+
+    <div class="tb-signup-nudge-actions">
+      <%= link_to "Create free account", signup_path, class: "tb-btn tb-btn-primary" %>
+      <%= link_to "Sign in", new_session_path, class: "tb-btn tb-btn-ghost" %>
+    </div>
+  </section>
+</div>
