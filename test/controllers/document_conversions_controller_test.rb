@@ -14,6 +14,7 @@ class DocumentConversionsControllerTest < ActionDispatch::IntegrationTest
     post document_conversion_path(op: "docx-to-pdf")
 
     assert_redirected_to pdf_path(op: "docx-to-pdf")
+    assert_equal "failed", ToolRun.last.status
     follow_redirect!
     assert_response :success
     assert_includes response.body, "Choose a file to convert."

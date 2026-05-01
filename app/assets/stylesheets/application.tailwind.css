@@ -836,6 +836,12 @@ a {
   border-color: rgba(217, 119, 6, 0.2);
 }
 
+.tb-pill-warn {
+  background: var(--tb-amber-wash);
+  color: var(--tb-amber);
+  border-color: rgba(217, 119, 6, 0.2);
+}
+
 .tb-pill-neu {
   background: #f3f2ef;
   color: var(--tb-ink-2);
@@ -1522,6 +1528,63 @@ a {
 .tb-toast a {
   color: #fff;
   text-decoration: underline;
+}
+
+.tb-conversion-status {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--tb-line);
+  border-radius: var(--tb-r-input);
+  background: var(--tb-paper-2);
+}
+
+.tb-conversion-status strong,
+.tb-conversion-status span {
+  display: block;
+}
+
+.tb-conversion-status strong {
+  font-size: 13px;
+}
+
+.tb-conversion-status span {
+  margin-top: 4px;
+  color: var(--tb-muted);
+  font-size: 12px;
+}
+
+.tb-mini-chart {
+  display: grid;
+  gap: 10px;
+}
+
+.tb-chart-row {
+  display: grid;
+  grid-template-columns: 38px 1fr 56px;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.tb-chart-row div {
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--tb-r-pill);
+  background: var(--tb-line);
+}
+
+.tb-chart-row i {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: inherit;
+  background: var(--tb-red);
+}
+
+.tb-chart-row strong {
+  text-align: right;
+  font-weight: 600;
 }
 
 /* ----- layout helpers ----- */

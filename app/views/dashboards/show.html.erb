@@ -139,6 +139,34 @@
       <section class="tb-dash-section">
         <div class="tb-dash-section-head">
           <div>
+            <h2>Recent Conversions</h2>
+            <p>Metadata only. No uploaded files are stored.</p>
+          </div>
+          <%= link_to "Convert", pdf_path(op: "docx-to-pdf"), class: "tb-dash-link" %>
+        </div>
+
+        <% if @tool_runs.any? %>
+          <div class="tb-dash-list">
+            <% @tool_runs.each do |run| %>
+              <div class="tb-dash-row tb-dash-row-url">
+                <div class="tb-dash-maincell">
+                  <div class="tb-dash-name"><%= run.operation_label %></div>
+                  <div class="tb-dash-meta">
+                    <%= run.input_filename.presence || "file" %> · <%= time_ago_in_words(run.occurred_at) %> ago
+                  </div>
+                </div>
+                <span class="tb-pill <%= run.status == "succeeded" ? "tb-pill-ok" : "tb-pill-warn" %>"><%= run.status %></span>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <%= render "empty", message: "No conversions yet.", action_label: "Convert a document", action_path: pdf_path(op: "docx-to-pdf") %>
+        <% end %>
+      </section>
+
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
             <h2>Digital Signatures</h2>
             <p>Reusable signature images.</p>
           </div>

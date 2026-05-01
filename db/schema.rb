@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_30_203100) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_01_172000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -108,6 +108,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_30_203100) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "tool_runs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "error_message"
+    t.bigint "input_bytes"
+    t.string "input_filename"
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "occurred_at", null: false
+    t.string "operation", null: false
+    t.bigint "output_bytes"
+    t.string "output_filename"
+    t.string "status", null: false
+    t.string "tool_key", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id"
+    t.index ["occurred_at"], name: "index_tool_runs_on_occurred_at"
+    t.index ["operation"], name: "index_tool_runs_on_operation"
+    t.index ["status"], name: "index_tool_runs_on_status"
+    t.index ["tool_key"], name: "index_tool_runs_on_tool_key"
+    t.index ["user_id"], name: "index_tool_runs_on_user_id"
+  end
+
   create_table "url_sets", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "last_accessed_at"
@@ -137,5 +158,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_30_203100) do
   add_foreign_key "digital_signatures", "users"
   add_foreign_key "invoices", "users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "tool_runs", "users"
   add_foreign_key "url_sets", "users"
 end

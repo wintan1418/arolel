@@ -53,7 +53,16 @@
   <% if server_pdf_op %>
     <div class="tb-tool-layout" style="margin-top: 28px;">
       <div>
-        <%= form_with url: document_conversion_path(op: @op), method: :post, multipart: true, local: true, data: { turbo: false } do |form| %>
+        <%= form_with url: document_conversion_path(op: @op),
+                      method: :post,
+                      multipart: true,
+                      local: true,
+                      data: {
+                        turbo: false,
+                        controller: "document-conversion",
+                        document_conversion_op_value: @op,
+                        action: "submit->document-conversion#submitting"
+                      } do |form| %>
           <label class="tb-drop" for="document-conversion-file" style="margin-top: 0; cursor: pointer;">
             <svg class="tb-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
@@ -70,14 +79,24 @@
                                 accept: labels[:accept],
                                 required: true,
                                 class: "tb-input",
+                                data: {
+                                  document_conversion_target: "file",
+                                  action: "change->document-conversion#picked"
+                                },
                                 style: "padding-top: 8px;" %>
             <div class="tb-text-sm" style="margin-top: 10px;">
               This conversion needs server software, so the selected file is uploaded once, processed in a temporary directory, returned as a download, and deleted.
             </div>
+            <div class="tb-conversion-status" aria-live="polite">
+              <strong data-document-conversion-target="status">Choose a file to convert.</strong>
+              <span data-document-conversion-target="details">We check file size before upload. PDF page counts are estimated locally when possible.</span>
+            </div>
           </div>
 
           <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
-            <%= form.submit labels[:cta], class: "tb-btn tb-btn-primary tb-btn-lg" %>
+            <%= form.submit labels[:cta],
+                            class: "tb-btn tb-btn-primary tb-btn-lg",
+                            data: { document_conversion_target: "submit" } %>
             <%= link_to "Use local PDF tools", pdf_path(op: "merge"), class: "tb-btn tb-btn-ghost tb-btn-lg" %>
           </div>
         <% end %>

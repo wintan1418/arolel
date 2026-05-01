@@ -7,6 +7,7 @@ class User < ApplicationRecord
   has_many :invoices,   dependent: :destroy
   has_many :digital_signatures, dependent: :destroy
   has_many :activity_events, dependent: :nullify
+  has_many :tool_runs, dependent: :nullify
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 

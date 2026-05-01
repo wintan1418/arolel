@@ -31,10 +31,76 @@
       <strong><%= number_with_delimiter(@totals.values_at(:invoices, :boards, :url_sets, :signatures).sum) %></strong>
       <span class="tb-stat-note">Invoices, boards, sets, signatures</span>
     </div>
+    <div class="tb-stat">
+      <span class="tb-stat-label">Conversions 7d</span>
+      <strong><%= number_with_delimiter(@totals[:conversions_7d]) %></strong>
+      <span class="tb-stat-note"><%= number_with_delimiter(@totals[:conversion_failures_7d]) %> failed</span>
+    </div>
   </div>
 
   <div class="tb-dashboard-grid">
     <main class="tb-dashboard-main">
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Visits by day</h2>
+            <p>Last 7 days of first-party page events.</p>
+          </div>
+        </div>
+        <div class="tb-card tb-card-pad tb-mini-chart">
+          <% max_visits = [@visits_by_day.values.max.to_i, 1].max %>
+          <% 6.downto(0).map { |n| n.days.ago.to_date }.each do |day| %>
+            <% count = @visits_by_day[day] || 0 %>
+            <div class="tb-chart-row">
+              <span><%= day.strftime("%a") %></span>
+              <div><i style="width: <%= ((count.to_f / max_visits) * 100).round %>%;"></i></div>
+              <strong><%= number_with_delimiter(count) %></strong>
+            </div>
+          <% end %>
+        </div>
+      </section>
+
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Top tools</h2>
+            <p>Grouped from paths over the last 30 days.</p>
+          </div>
+        </div>
+        <div class="tb-dash-list">
+          <% @top_tools.each do |tool, count| %>
+            <div class="tb-dash-row tb-admin-path-row">
+              <div class="tb-dash-maincell">
+                <div class="tb-dash-name"><%= tool.presence || "home" %></div>
+              </div>
+              <span class="tb-dash-money"><%= number_with_delimiter(count) %> visits</span>
+            </div>
+          <% end %>
+        </div>
+      </section>
+
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Conversion health</h2>
+            <p>Server-side conversion success and failure counts.</p>
+          </div>
+        </div>
+        <div class="tb-dash-list">
+          <% @conversion_stats.group_by { |(operation, _status), _count| operation }.each do |operation, rows| %>
+            <% succeeded = rows.find { |(_, status), _| status == "succeeded" }&.last.to_i %>
+            <% failed = rows.find { |(_, status), _| status == "failed" }&.last.to_i %>
+            <div class="tb-dash-row tb-admin-path-row">
+              <div class="tb-dash-maincell">
+                <div class="tb-dash-name"><%= operation.tr("-", " ").upcase %></div>
+                <div class="tb-dash-meta"><%= number_with_delimiter(succeeded) %> succeeded · <%= number_with_delimiter(failed) %> failed</div>
+              </div>
+              <span class="tb-pill <%= failed.zero? ? "tb-pill-ok" : "tb-pill-warn" %>"><%= failed.zero? ? "healthy" : "watch" %></span>
+            </div>
+          <% end %>
+        </div>
+      </section>
+
       <section class="tb-dash-section">
         <div class="tb-dash-section-head">
           <div>
@@ -89,6 +155,26 @@
     </main>
 
     <aside class="tb-dashboard-side">
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Recent conversions</h2>
+            <p>Latest server-side tool runs.</p>
+          </div>
+        </div>
+        <div class="tb-dash-list">
+          <% @recent_tool_runs.each do |run| %>
+            <div class="tb-dash-row tb-admin-user-row">
+              <div class="tb-dash-maincell">
+                <div class="tb-dash-name"><%= run.operation_label %></div>
+                <div class="tb-dash-meta"><%= run.user&.email_address || "guest" %> · <%= time_ago_in_words(run.occurred_at) %> ago</div>
+              </div>
+              <span class="tb-pill <%= run.status == "succeeded" ? "tb-pill-ok" : "tb-pill-warn" %>"><%= run.status %></span>
+            </div>
+          <% end %>
+        </div>
+      </section>
+
       <section class="tb-dash-section">
         <div class="tb-dash-section-head">
           <div>

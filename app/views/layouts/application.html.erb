@@ -3,6 +3,17 @@
   <head>
     <title><%= content_for?(:title) ? yield(:title) : (page_title || app_name) %></title>
     <% if meta_description %><meta name="description" content="<%= meta_description %>"><% end %>
+    <link rel="canonical" href="<%= canonical_url %>">
+    <meta property="og:site_name" content="Arolel">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="<%= social_title %>">
+    <meta property="og:description" content="<%= social_description %>">
+    <meta property="og:url" content="<%= canonical_url %>">
+    <meta property="og:image" content="<%= social_image_url %>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<%= social_title %>">
+    <meta name="twitter:description" content="<%= social_description %>">
+    <meta name="twitter:image" content="<%= social_image_url %>">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="<%= app_name %>">

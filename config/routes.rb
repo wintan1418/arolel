@@ -36,11 +36,21 @@ Rails.application.routes.draw do
   get "about",     to: "pages#about",     as: :about
   get "privacy",   to: "pages#privacy",   as: :privacy
   get "changelog", to: "pages#changelog", as: :changelog
+  get "robots.txt",  to: "seo#robots",  defaults: { format: :text }
+  get "sitemap.xml", to: "seo#sitemap", defaults: { format: :xml }
 
   # Tool 01 — HEIC → JPG (client-side)
   get "heic-to-jpg", to: "pages#heic", as: :heic
 
   # Tool 02 — PDF (client-side, multiple ops)
+  get "merge-pdf",   to: "pages#pdf", defaults: { op: "merge" }
+  get "split-pdf",   to: "pages#pdf", defaults: { op: "split" }
+  get "rotate-pdf",  to: "pages#pdf", defaults: { op: "rotate" }
+  get "compress-pdf", to: "pages#pdf", defaults: { op: "compress" }
+  get "pdf-to-docx", to: "pages#pdf", defaults: { op: "pdf-to-docx" }
+  get "docx-to-pdf", to: "pages#pdf", defaults: { op: "docx-to-pdf" }
+  get "pdf-to-jpg",  to: "pages#pdf", defaults: { op: "pdf-to-jpg" }
+  get "pdf-to-png",  to: "pages#pdf", defaults: { op: "pdf-to-png" }
   get "pdf",        to: redirect("/pdf/merge"), as: :pdf_root
   get "pdf/:op",    to: "pages#pdf",
                     as: :pdf,
