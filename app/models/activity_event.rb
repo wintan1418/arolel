@@ -5,6 +5,7 @@ class ActivityEvent < ApplicationRecord
 
   USER_AGENT_LIMIT = 240
   REFERRER_LIMIT = 500
+  PAGE_VIEW_METHODS = %w[GET HEAD].freeze
 
   scope :recent, -> { order(occurred_at: :desc) }
   scope :since, ->(time) { where(occurred_at: time..) }
@@ -14,7 +15,7 @@ class ActivityEvent < ApplicationRecord
 
     create!(
       user: user,
-      event_name: request.get? ? "page_view" : "request",
+      event_name: page_view_request?(request) ? "page_view" : "request",
       controller_action: "#{request.params[:controller]}##{request.params[:action]}",
       request_method: request.request_method,
       path: request.fullpath.to_s.first(500),
@@ -34,6 +35,10 @@ class ActivityEvent < ApplicationRecord
     return false if request.path.in?([ "/favicon.ico", "/service-worker", "/manifest", "/media-debug" ])
 
     true
+  end
+
+  def self.page_view_request?(request)
+    PAGE_VIEW_METHODS.include?(request.request_method)
   end
 
   def self.hash_ip(ip)
