@@ -1,5 +1,6 @@
 require "cgi"
 require "fileutils"
+require "nokogiri"
 require "open3"
 require "securerandom"
 require "timeout"
@@ -35,6 +36,8 @@ class DocumentConverter
       case operation
       when "docx-to-pdf"
         convert_with_libreoffice(input_path, dir, "pdf", "#{base_name}.pdf", "application/pdf")
+      when "word-to-csv"
+        convert_word_to_csv(input_path, dir)
       when "pdf-to-docx"
         convert_pdf_to_docx(input_path, dir)
       when "pdf-to-jpg"
@@ -59,6 +62,8 @@ class DocumentConverter
 
     case operation
     when "docx-to-pdf"
+      raise InvalidInput, "Upload a DOC, DOCX, ODT, RTF, or TXT file." unless DOCUMENT_EXTENSIONS.include?(extension)
+    when "word-to-csv"
       raise InvalidInput, "Upload a DOC, DOCX, ODT, RTF, or TXT file." unless DOCUMENT_EXTENSIONS.include?(extension)
     when "pdf-to-docx", "pdf-to-jpg", "pdf-to-png"
       raise InvalidInput, "Upload a PDF file." unless extension == PDF_EXTENSION
@@ -108,6 +113,90 @@ class DocumentConverter
     raise ConversionFailed, "This PDF did not contain extractable text." if text.blank?
 
     Result.new(build_text_docx(text), "#{base_name}.docx", docx_content_type)
+  end
+
+  def convert_word_to_csv(input_path, dir)
+    csv = extension == ".docx" ? extract_docx_tables_csv(input_path) : nil
+    csv = text_to_csv(extract_document_text(input_path, dir)) if csv.blank?
+
+    raise ConversionFailed, "This document did not contain extractable table or text content." if csv.blank?
+
+    Result.new(csv, "#{base_name}.csv", "text/csv")
+  end
+
+  def extract_docx_tables_csv(input_path)
+    document_xml = nil
+    Zip::File.open(input_path) do |zip|
+      entry = zip.find_entry("word/document.xml")
+      document_xml = entry&.get_input_stream&.read
+    end
+    return if document_xml.blank?
+
+    doc = Nokogiri::XML(document_xml)
+    namespaces = { "w" => "http://schemas.openxmlformats.org/wordprocessingml/2006/main" }
+    rows = doc.xpath("//w:tbl/w:tr", namespaces).map do |row|
+      row.xpath("./w:tc", namespaces).map { |cell| cell.xpath(".//w:t", namespaces).map(&:text).join(" ").squish }
+    end.reject(&:blank?)
+
+    return if rows.blank?
+
+    generate_csv(rows)
+  rescue Zip::Error
+    nil
+  end
+
+  def extract_document_text(input_path, dir)
+    return File.read(input_path) if extension == ".txt"
+
+    out_dir = File.join(dir, "text")
+    FileUtils.mkdir_p(out_dir)
+
+    run_command(
+      libreoffice_path,
+      "--headless",
+      "--nologo",
+      "--nofirststartwizard",
+      "--nodefault",
+      "--nolockcheck",
+      "-env:UserInstallation=file://#{File.join(dir, "lo-profile-text")}",
+      "--convert-to",
+      "txt:Text",
+      "--outdir",
+      out_dir,
+      input_path
+    )
+
+    output_path = Dir.glob(File.join(out_dir, "*.txt")).first
+    raise ConversionFailed, "The converter did not produce a TXT file." unless output_path
+
+    File.read(output_path)
+  end
+
+  def text_to_csv(text)
+    rows = text.to_s.lines.map(&:strip).reject(&:blank?).map do |line|
+      if line.include?("\t")
+        line.split("\t").map(&:strip)
+      elsif line.count(",").positive?
+        line.split(",").map(&:strip)
+      else
+        [ line ]
+      end
+    end
+
+    return if rows.blank?
+
+    generate_csv(rows)
+  end
+
+  def generate_csv(rows)
+    rows.map { |row| row.map { |value| csv_cell(value) }.join(",") }.join("\n") + "\n"
+  end
+
+  def csv_cell(value)
+    text = value.to_s
+    return text unless text.match?(/[",\r\n]/)
+
+    "\"#{text.gsub("\"", "\"\"")}\""
   end
 
   def convert_pdf_to_images(input_path, dir, image_format)

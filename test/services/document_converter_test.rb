@@ -36,4 +36,45 @@ class DocumentConverterTest < ActiveSupport::TestCase
       assert_includes document, "Arolel &amp; friends"
     end
   end
+
+  test "extracts docx table rows into csv" do
+    bytes = Zip::OutputStream.write_buffer do |zip|
+      zip.put_next_entry("word/document.xml")
+      zip.write <<~XML
+        <?xml version="1.0" encoding="UTF-8"?>
+        <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+          <w:body>
+            <w:tbl>
+              <w:tr>
+                <w:tc><w:p><w:r><w:t>Name</w:t></w:r></w:p></w:tc>
+                <w:tc><w:p><w:r><w:t>Email</w:t></w:r></w:p></w:tc>
+              </w:tr>
+              <w:tr>
+                <w:tc><w:p><w:r><w:t>Ada</w:t></w:r></w:p></w:tc>
+                <w:tc><w:p><w:r><w:t>ada@example.com</w:t></w:r></w:p></w:tc>
+              </w:tr>
+            </w:tbl>
+          </w:body>
+        </w:document>
+      XML
+    end.string
+    upload = FakeUpload.new("contacts.docx", bytes.bytesize, bytes)
+    converter = DocumentConverter.new(operation: "word-to-csv", upload: upload)
+
+    result = converter.call
+
+    assert_equal "contacts.csv", result.filename
+    assert_equal "text/csv", result.content_type
+    assert_equal "Name,Email\nAda,ada@example.com\n", result.bytes
+  end
+
+  test "converts plain text rows to csv fallback" do
+    upload = FakeUpload.new("notes.txt", 19, "Name\tEmail\nAda\ta@b.test\n")
+    converter = DocumentConverter.new(operation: "word-to-csv", upload: upload)
+
+    result = converter.call
+
+    assert_equal "notes.csv", result.filename
+    assert_equal "Name,Email\nAda,a@b.test\n", result.bytes
+  end
 end

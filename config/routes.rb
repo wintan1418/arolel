@@ -52,15 +52,16 @@ Rails.application.routes.draw do
   get "compress-pdf", to: "pages#pdf", defaults: { op: "compress" }
   get "pdf-to-docx", to: "pages#pdf", defaults: { op: "pdf-to-docx" }
   get "docx-to-pdf", to: "pages#pdf", defaults: { op: "docx-to-pdf" }
+  get "word-to-csv", to: "pages#pdf", defaults: { op: "word-to-csv" }
   get "pdf-to-jpg",  to: "pages#pdf", defaults: { op: "pdf-to-jpg" }
   get "pdf-to-png",  to: "pages#pdf", defaults: { op: "pdf-to-png" }
   get "pdf",        to: redirect("/pdf/merge"), as: :pdf_root
   get "pdf/:op",    to: "pages#pdf",
                     as: :pdf,
-                    constraints: { op: /merge|split|rotate|compress|pdf-to-docx|docx-to-pdf|pdf-to-jpg|pdf-to-png/ }
+                    constraints: { op: /merge|split|rotate|compress|pdf-to-docx|docx-to-pdf|word-to-csv|pdf-to-jpg|pdf-to-png/ }
   post "document-conversions/:op", to: "document_conversions#create",
                                    as: :document_conversion,
-                                   constraints: { op: /pdf-to-docx|docx-to-pdf|pdf-to-jpg|pdf-to-png/ }
+                                   constraints: { op: /pdf-to-docx|docx-to-pdf|word-to-csv|pdf-to-jpg|pdf-to-png/ }
 
   # Tool 05 — Image tools (client-side)
   get "images",        to: redirect("/images/compress"), as: :images_root

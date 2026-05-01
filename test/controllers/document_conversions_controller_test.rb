@@ -10,6 +10,14 @@ class DocumentConversionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=file][name=file]"
   end
 
+  test "shows word to csv conversion form" do
+    get pdf_path(op: "word-to-csv")
+
+    assert_response :success
+    assert_select "form[action='#{document_conversion_path(op: "word-to-csv")}']"
+    assert_includes response.body, "Convert to CSV"
+  end
+
   test "redirects with validation error when no file is attached" do
     post document_conversion_path(op: "docx-to-pdf")
 

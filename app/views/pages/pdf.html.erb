@@ -1,5 +1,5 @@
 <%
-  server_pdf_ops = %w[pdf-to-docx docx-to-pdf pdf-to-jpg pdf-to-png]
+  server_pdf_ops = %w[pdf-to-docx docx-to-pdf word-to-csv pdf-to-jpg pdf-to-png]
   server_pdf_op = server_pdf_ops.include?(@op)
 
   labels = {
@@ -9,6 +9,7 @@
     "compress" => { drop: "Drop a PDF to compress",              cta: "Compress & download", out: "compressed.pdf", seo_title: "compress" },
     "pdf-to-docx" => { drop: "Choose a PDF to convert",           cta: "Convert to DOCX",     out: "document.docx",  seo_title: "convert PDF to DOCX", accept: "application/pdf,.pdf", note: ".pdf · up to 25MB · uploaded temporarily" },
     "docx-to-pdf" => { drop: "Choose a document to convert",      cta: "Convert to PDF",      out: "document.pdf",   seo_title: "convert DOCX to PDF", accept: ".doc,.docx,.odt,.rtf,.txt,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document", note: ".doc, .docx, .odt, .rtf, .txt · up to 25MB · uploaded temporarily" },
+    "word-to-csv" => { drop: "Choose a Word document",            cta: "Convert to CSV",      out: "document.csv",   seo_title: "convert Word to CSV", accept: ".doc,.docx,.odt,.rtf,.txt,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document", note: ".doc, .docx, .odt, .rtf, .txt · extracts tables first · uploaded temporarily" },
     "pdf-to-jpg"  => { drop: "Choose a PDF to render as JPG",     cta: "Convert to JPG",      out: "pages.zip",      seo_title: "convert PDF to JPG",  accept: "application/pdf,.pdf", note: ".pdf · first 50 pages · uploaded temporarily" },
     "pdf-to-png"  => { drop: "Choose a PDF to render as PNG",     cta: "Convert to PNG",      out: "pages.zip",      seo_title: "convert PDF to PNG",  accept: "application/pdf,.pdf", note: ".pdf · first 50 pages · uploaded temporarily" }
   }.fetch(@op)
@@ -20,6 +21,7 @@
     "compress" => "Drop a PDF and pick a compression level. Arolel re-saves the document with object streams and removes metadata in your browser. For aggressive compression of scanned documents, server-side tools like Ghostscript still do better.",
     "pdf-to-docx" => "Upload a PDF and Arolel converts it with LibreOffice on the server, then immediately returns a DOCX download. Complex scanned PDFs may convert imperfectly because true PDF-to-Word conversion depends on the source document structure.",
     "docx-to-pdf" => "Upload a DOC, DOCX, ODT, RTF or TXT file and Arolel converts it to PDF with LibreOffice. The temporary upload is deleted after the response is generated.",
+    "word-to-csv" => "Upload a DOC, DOCX, ODT, RTF or TXT file and Arolel extracts tables into CSV. If no table is found, text content is converted into rows so you can clean it up in Excel, Google Sheets or another spreadsheet app.",
     "pdf-to-jpg" => "Upload a PDF and Arolel renders up to the first 50 pages as JPG images using Poppler. Single-page PDFs return one image; multi-page PDFs return a ZIP.",
     "pdf-to-png" => "Upload a PDF and Arolel renders up to the first 50 pages as PNG images using Poppler. Single-page PDFs return one image; multi-page PDFs return a ZIP."
   }[@op]
@@ -35,8 +37,8 @@
   <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
     <div>
       <div class="tb-eyebrow">Tool 02</div>
-      <h1 class="tb-h1" style="font-size: 48px; margin-top: 14px;">PDF tools</h1>
-      <p class="tb-text" style="margin-top: 8px;">Merge · split · rotate · compress locally. DOCX and image conversions use temporary uploads.</p>
+      <h1 class="tb-h1" style="font-size: 48px; margin-top: 14px;">PDF & document tools</h1>
+      <p class="tb-text" style="margin-top: 8px;">Merge · split · rotate · compress locally. DOCX, CSV and image conversions use temporary uploads.</p>
     </div>
     <div class="tb-tabs">
       <%= link_to "Merge",    pdf_path(op: "merge"),    class: ["tb-tab", ("is-active" if @op == "merge")] %>
@@ -45,6 +47,7 @@
       <%= link_to "Compress", pdf_path(op: "compress"), class: ["tb-tab", ("is-active" if @op == "compress")] %>
       <%= link_to "PDF → DOCX", pdf_path(op: "pdf-to-docx"), class: ["tb-tab", ("is-active" if @op == "pdf-to-docx")] %>
       <%= link_to "DOCX → PDF", pdf_path(op: "docx-to-pdf"), class: ["tb-tab", ("is-active" if @op == "docx-to-pdf")] %>
+      <%= link_to "Word → CSV", pdf_path(op: "word-to-csv"), class: ["tb-tab", ("is-active" if @op == "word-to-csv")] %>
       <%= link_to "PDF → JPG",  pdf_path(op: "pdf-to-jpg"),  class: ["tb-tab", ("is-active" if @op == "pdf-to-jpg")] %>
       <%= link_to "PDF → PNG",  pdf_path(op: "pdf-to-png"),  class: ["tb-tab", ("is-active" if @op == "pdf-to-png")] %>
     </div>

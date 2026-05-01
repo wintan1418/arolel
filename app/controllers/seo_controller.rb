@@ -20,6 +20,7 @@ class SeoController < ApplicationController
       [ url_for(controller: "pages", action: "pdf", op: "compress", only_path: false), "weekly", "0.8" ],
       [ url_for(controller: "pages", action: "pdf", op: "pdf-to-docx", only_path: false), "weekly", "0.9" ],
       [ url_for(controller: "pages", action: "pdf", op: "docx-to-pdf", only_path: false), "weekly", "0.9" ],
+      [ url_for(controller: "pages", action: "pdf", op: "word-to-csv", only_path: false), "weekly", "0.9" ],
       [ url_for(controller: "pages", action: "pdf", op: "pdf-to-jpg", only_path: false), "weekly", "0.9" ],
       [ url_for(controller: "pages", action: "pdf", op: "pdf-to-png", only_path: false), "weekly", "0.9" ],
       [ image_url(op: "compress"), "weekly", "0.8" ],
