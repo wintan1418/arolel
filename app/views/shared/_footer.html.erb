@@ -16,6 +16,54 @@
       <% if (coffee = ENV["COFFEE_URL"].presence) %>
         <a href="<%= coffee %>" target="_blank" rel="noopener">Buy a coffee ☕</a>
       <% end %>
+      <button type="button" class="tb-footer-credit" popovertarget="wintech-card" aria-label="Open Wintech profile card">
+        Developed by <span>Wintech</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="wintech-card" class="tb-wintech-card" popover>
+    <div class="tb-wintech-head">
+      <div class="tb-wintech-avatar">W</div>
+      <div>
+        <div class="tb-wintech-name">Wintech</div>
+        <div class="tb-wintech-kicker">Independent dev · Lagos</div>
+      </div>
+    </div>
+
+    <div class="tb-wintech-links">
+      <a href="https://wa.me/2348145804206" target="_blank" rel="noopener" class="tb-wintech-link">
+        <span class="tb-wintech-icon tb-wintech-icon-whatsapp">◌</span>
+        <span>
+          <strong>WhatsApp</strong>
+          <small>+234 814 580 4206</small>
+        </span>
+        <span class="tb-wintech-open" aria-hidden="true">↗</span>
+      </a>
+      <a href="https://oluwintan.com" target="_blank" rel="noopener" class="tb-wintech-link">
+        <span class="tb-wintech-icon tb-wintech-icon-site">●</span>
+        <span>
+          <strong>Portfolio</strong>
+          <small>oluwintan.com</small>
+        </span>
+        <span class="tb-wintech-open" aria-hidden="true">↗</span>
+      </a>
+      <a href="https://github.com/wintan1418" target="_blank" rel="noopener" class="tb-wintech-link">
+        <span class="tb-wintech-icon tb-wintech-icon-github">gh</span>
+        <span>
+          <strong>GitHub</strong>
+          <small>@wintan1418</small>
+        </span>
+        <span class="tb-wintech-open" aria-hidden="true">↗</span>
+      </a>
+      <a href="https://www.linkedin.com/in/oluwintan" target="_blank" rel="noopener" class="tb-wintech-link">
+        <span class="tb-wintech-icon tb-wintech-icon-linkedin">in</span>
+        <span>
+          <strong>LinkedIn</strong>
+          <small>in/oluwintan</small>
+        </span>
+        <span class="tb-wintech-open" aria-hidden="true">↗</span>
+      </a>
     </div>
   </div>
 </footer>

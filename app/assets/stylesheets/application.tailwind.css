@@ -323,6 +323,166 @@ a {
 .tb-footer-links {
   display: flex;
   gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.tb-footer-credit {
+  border: 0;
+  background: transparent;
+  color: var(--tb-muted);
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+}
+
+.tb-footer-credit span {
+  color: #ff6b16;
+  font-family: var(--font-sans);
+  font-weight: 800;
+}
+
+.tb-footer-credit:hover,
+.tb-footer-credit:hover span {
+  color: var(--tb-red);
+}
+
+.tb-wintech-card {
+  width: min(278px, calc(100vw - 28px));
+  padding: 0;
+  border: 1px solid #d8c7ad;
+  border-radius: 10px;
+  background: #f8f0e2;
+  color: #29231d;
+  box-shadow: 0 16px 40px -18px rgba(32, 22, 12, 0.42), 0 8px 18px rgba(32, 22, 12, 0.12);
+  overflow: hidden;
+  inset: auto 18px 72px auto;
+  font-family: var(--font-sans);
+}
+
+.tb-wintech-card::backdrop {
+  background: transparent;
+}
+
+.tb-wintech-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #dec9a8;
+}
+
+.tb-wintech-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #ff6b16;
+  color: #fff;
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.tb-wintech-name {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.tb-wintech-kicker {
+  margin-top: 5px;
+  color: #7d705e;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.tb-wintech-links {
+  display: grid;
+}
+
+.tb-wintech-link {
+  display: grid;
+  grid-template-columns: 26px 1fr 18px;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 12px 18px;
+  border-bottom: 1px solid #e5d4b7;
+}
+
+.tb-wintech-link:last-child {
+  border-bottom: 0;
+}
+
+.tb-wintech-link:hover {
+  background: rgba(255, 255, 255, 0.32);
+  color: #29231d;
+}
+
+.tb-wintech-icon {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.tb-wintech-icon-whatsapp {
+  color: #25d366;
+  font-size: 21px;
+}
+
+.tb-wintech-icon-site {
+  color: #ff6b16;
+  font-size: 18px;
+}
+
+.tb-wintech-icon-github {
+  color: #181717;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.tb-wintech-icon-linkedin {
+  color: #0a66c2;
+  font-size: 16px;
+}
+
+.tb-wintech-link strong,
+.tb-wintech-link small {
+  display: block;
+}
+
+.tb-wintech-link strong {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.tb-wintech-link small {
+  margin-top: 2px;
+  color: #7d705e;
+  font-family: var(--font-mono);
+  font-size: 10px;
+}
+
+.tb-wintech-open {
+  color: #8b7a62;
+  font-size: 15px;
+}
+
+@media (max-width: 640px) {
+  .tb-wintech-card {
+    inset: auto 14px 64px 14px;
+    margin: auto;
+  }
 }
 
 /* ----- session receipt (hero) ----- */
