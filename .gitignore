@@ -9,6 +9,7 @@
 
 # Ignore all environment files.
 /.env*
+!/.env.example
 
 # Ignore all logfiles and tempfiles.
 /log/*
@@ -46,6 +47,8 @@
 # Remove these lines or `git add -f` them if you want them tracked.
 /TOOLBENCH_BRIEF*.md
 /TOOLBENCH_DESIGN_BRIEF.md
+/AROLEL_LOGO_HANDOFF.md
+/juwon.zip
 /pdfpon.png
 
 # Screenshot artifacts

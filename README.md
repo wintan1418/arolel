@@ -4,6 +4,22 @@ A small suite of everyday web utilities. Nine tools under one roof. Most of them
 
 Built on Rails 8 + Stimulus + Tailwind. No ads, no trackers, no email walls. Accounts are optional; the tools work signed-out.
 
+## Open Source
+
+Arolel is open source under the MIT License and maintained by Oluwadare Juwon.
+
+Contributions are welcome. Start with:
+
+- [CONTRIBUTING.md](CONTRIBUTING.md) for local setup, project direction, and pull request expectations.
+- [SECURITY.md](SECURITY.md) for private vulnerability reporting.
+- [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for community behavior.
+
+The intended public repository name is `arolel`. If the GitHub repository is still using an older name, rename it in GitHub settings and update your local remote:
+
+```sh
+git remote set-url origin git@github.com:wintan1418/arolel.git
+```
+
 ## The tools
 
 | # | Tool | URL | Where it runs |
@@ -43,6 +59,8 @@ bin/rails db:create db:migrate
 bin/dev
 # → http://localhost:7000
 ```
+
+Copy `.env.example` when you need local environment variables. Never commit real `.env` files or production secrets.
 
 ## Production
 
