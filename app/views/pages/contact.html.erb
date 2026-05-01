@@ -1,0 +1,47 @@
+<section class="tb-roadmap">
+  <div class="tb-roadmap-head">
+    <div>
+      <div class="tb-eyebrow">Contact</div>
+      <h1 class="tb-h1" style="margin-top: 14px;">Send a message</h1>
+      <p class="tb-text" style="margin-top: 14px; max-width: 62ch;">
+        Drop a comment, bug report, partnership note, or anything users should be able to send directly to the maintainer.
+      </p>
+    </div>
+    <div class="tb-card tb-card-pad">
+      <div class="tb-eyebrow">For feature ideas</div>
+      <p class="tb-text-sm" style="margin-top: 8px;">
+        Use the roadmap form when the message is about a missing tool or a feature you may pay for.
+      </p>
+      <%= link_to "Open roadmap", roadmap_path, class: "tb-btn tb-btn-ghost", style: "margin-top: 14px;" %>
+    </div>
+  </div>
+
+  <div class="tb-contact-wrap">
+    <%= form_with scope: :feedback_submission, url: feedback_submissions_path, method: :post, class: "tb-card tb-card-pad tb-stack-14", local: true do |f| %>
+      <%= f.hidden_field :kind, value: "contact" %>
+
+      <div class="tb-two-col">
+        <div>
+          <label class="tb-label">Your name</label>
+          <%= f.text_field :name, class: "tb-input", placeholder: "Optional" %>
+        </div>
+        <div>
+          <label class="tb-label">Email</label>
+          <%= f.email_field :email, value: current_user&.email_address, class: "tb-input", placeholder: "you@example.com" %>
+        </div>
+      </div>
+
+      <div>
+        <label class="tb-label">Subject</label>
+        <%= f.text_field :subject, class: "tb-input", placeholder: "Bug report, comment, partnership, support..." %>
+      </div>
+
+      <div>
+        <label class="tb-label">Message</label>
+        <%= f.text_area :message, class: "tb-textarea", required: true, placeholder: "Write your message here." %>
+      </div>
+
+      <%= f.submit "Send message", class: "tb-btn tb-btn-primary tb-btn-lg" %>
+    <% end %>
+  </div>
+</section>

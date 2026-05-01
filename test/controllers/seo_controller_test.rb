@@ -16,5 +16,7 @@ class SeoControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "/heic-to-jpg"
     assert_includes response.body, "/pdf-to-docx"
     assert_includes response.body, "/media/mp4-to-mp3"
+    assert_includes response.body, "/roadmap"
+    assert_includes response.body, "/contact"
   end
 end

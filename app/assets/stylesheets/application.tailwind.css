@@ -718,9 +718,38 @@ a {
   resize: vertical;
 }
 
+.tb-textarea-sm {
+  min-height: 150px;
+}
+
 .tb-textarea:focus {
   border-color: var(--tb-ink);
   box-shadow: 0 0 0 3px rgba(23, 23, 23, 0.06);
+}
+
+.tb-label {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tb-muted);
+}
+
+.tb-check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--tb-ink-2);
+}
+
+.tb-check-row input {
+  margin-top: 3px;
+  accent-color: var(--tb-red);
 }
 
 /* ----- cards / tiles ----- */
@@ -1641,8 +1670,95 @@ a {
   align-items: flex-start;
 }
 
+.tb-roadmap {
+  padding: 20px 0 64px;
+}
+
+.tb-roadmap-head {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 40px;
+  align-items: end;
+}
+
+.tb-roadmap-grid {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 40px;
+  align-items: flex-start;
+  margin-top: 42px;
+}
+
+.tb-roadmap-main {
+  min-width: 0;
+}
+
+.tb-roadmap-signal strong,
+.tb-roadmap-signal span {
+  display: block;
+}
+
+.tb-roadmap-signal strong {
+  margin-top: 10px;
+  font-size: 18px;
+}
+
+.tb-roadmap-signal span {
+  margin-top: 6px;
+  color: var(--tb-ink-2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.tb-roadmap-lanes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.tb-roadmap-lane {
+  background: var(--tb-paper);
+  border: 1px solid var(--tb-line);
+  border-radius: var(--tb-r-tile);
+  padding: 18px;
+  box-shadow: var(--tb-shadow);
+}
+
+.tb-roadmap-lane h3,
+.tb-form-title {
+  margin: 14px 0 10px;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+
+.tb-roadmap-lane ul {
+  margin: 0;
+  padding-left: 18px;
+  color: var(--tb-ink-2);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.tb-contact-wrap {
+  max-width: 760px;
+  margin-top: 42px;
+}
+
+.tb-two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
 @media (max-width: 960px) {
   .tb-tool-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .tb-roadmap-head,
+  .tb-roadmap-grid,
+  .tb-roadmap-lanes,
+  .tb-two-col {
     grid-template-columns: 1fr;
   }
 }

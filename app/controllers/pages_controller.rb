@@ -71,6 +71,18 @@ class PagesController < ApplicationController
     page_title "About — Arolel"
   end
 
+  def roadmap
+    set_nav :roadmap
+    page_title "Roadmap — suggest a tool · Arolel"
+    meta_description "See what is planned for Arolel, suggest missing tools, and tell us if you would subscribe or pay for a feature."
+  end
+
+  def contact
+    set_nav :contact
+    page_title "Contact — Arolel"
+    meta_description "Send comments, bug reports, partnership notes, and support messages to the Arolel maintainer."
+  end
+
   def privacy
     page_title "Privacy — Arolel"
   end

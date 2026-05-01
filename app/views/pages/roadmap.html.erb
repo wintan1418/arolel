@@ -1,0 +1,112 @@
+<section class="tb-roadmap">
+  <div class="tb-roadmap-head">
+    <div>
+      <div class="tb-eyebrow">Public roadmap</div>
+      <h1 class="tb-h1" style="margin-top: 14px;">Help shape Arolel</h1>
+      <p class="tb-text" style="margin-top: 14px; max-width: 62ch;">
+        Tell us what tool is missing, what workflow is painful, and whether you would subscribe or pay for a feature that solves it well.
+      </p>
+    </div>
+    <div class="tb-card tb-card-pad">
+      <div class="tb-eyebrow">Signal we care about</div>
+      <div class="tb-roadmap-signal">
+        <strong>Real problems first.</strong>
+        <span>Suggestions with clear use cases and pricing intent help decide what gets built next.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="tb-roadmap-grid">
+    <div class="tb-roadmap-main">
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Roadmap</h2>
+            <p>Current direction for the open-source app.</p>
+          </div>
+        </div>
+
+        <div class="tb-roadmap-lanes">
+          <div class="tb-roadmap-lane">
+            <span class="tb-pill tb-pill-ok">Now</span>
+            <h3>Make the existing tools stronger</h3>
+            <ul>
+              <li>Improve mobile layouts and touch flows.</li>
+              <li>Make conversion errors easier to understand.</li>
+              <li>Add clearer limits before upload.</li>
+            </ul>
+          </div>
+
+          <div class="tb-roadmap-lane">
+            <span class="tb-pill tb-pill-warn">Next</span>
+            <h3>More document workflows</h3>
+            <ul>
+              <li>OCR for scanned PDFs.</li>
+              <li>PDF watermark, unlock, protect, and reorder pages.</li>
+              <li>Saved templates for invoices and signatures.</li>
+            </ul>
+          </div>
+
+          <div class="tb-roadmap-lane">
+            <span class="tb-pill tb-pill-neu">Later</span>
+            <h3>Power-user features</h3>
+            <ul>
+              <li>Batch jobs for larger file queues.</li>
+              <li>Team workspaces and shared tool history.</li>
+              <li>Optional hosted storage for users who want it.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <aside>
+      <section class="tb-card tb-card-pad">
+        <div class="tb-eyebrow">Suggest a feature</div>
+        <h2 class="tb-form-title">What should Arolel build?</h2>
+
+        <%= form_with scope: :feedback_submission, url: feedback_submissions_path, method: :post, class: "tb-stack-14", local: true do |f| %>
+          <%= f.hidden_field :kind, value: "suggestion" %>
+
+          <div>
+            <label class="tb-label">Your name</label>
+            <%= f.text_field :name, class: "tb-input", placeholder: "Optional" %>
+          </div>
+
+          <div>
+            <label class="tb-label">Email</label>
+            <%= f.email_field :email, value: current_user&.email_address, class: "tb-input", placeholder: "you@example.com" %>
+          </div>
+
+          <div>
+            <label class="tb-label">Feature area</label>
+            <%= f.select :feature_area,
+                         [["PDF", "pdf"], ["Images", "images"], ["Media", "media"], ["Signatures", "signatures"], ["Invoices", "invoices"], ["Dashboard", "dashboard"], ["Other", "other"]],
+                         { include_blank: "Choose one" },
+                         class: "tb-input" %>
+          </div>
+
+          <div>
+            <label class="tb-label">Suggestion</label>
+            <%= f.text_area :message, class: "tb-textarea tb-textarea-sm", required: true, placeholder: "Tell us the feature, the problem, and how you would use it." %>
+          </div>
+
+          <label class="tb-check-row">
+            <%= f.check_box :willing_to_pay %>
+            <span>Yes, I may subscribe or pay for this if it solves my problem.</span>
+          </label>
+
+          <div>
+            <label class="tb-label">Possible budget</label>
+            <%= f.select :budget_range,
+                         [["Not sure yet", "not_sure"], ["Under $5/month", "under_5"], ["$5-$15/month", "5_15"], ["$15-$50/month", "15_50"], ["One-time payment", "one_time"]],
+                         {},
+                         class: "tb-input" %>
+          </div>
+
+          <%= f.submit "Send suggestion", class: "tb-btn tb-btn-primary tb-btn-lg", style: "width: 100%;" %>
+        <% end %>
+      </section>
+    </aside>
+  </div>
+</section>

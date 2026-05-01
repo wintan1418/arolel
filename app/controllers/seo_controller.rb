@@ -29,6 +29,8 @@ class SeoController < ApplicationController
       [ media_url(op: "webm-to-mp4"), "weekly", "0.8" ],
       [ down_url, "weekly", "0.7" ],
       [ open_urls_url, "weekly", "0.7" ],
+      [ roadmap_url, "weekly", "0.6" ],
+      [ contact_url, "monthly", "0.5" ],
       [ about_url, "monthly", "0.4" ],
       [ privacy_url, "monthly", "0.4" ],
       [ changelog_url, "monthly", "0.3" ]

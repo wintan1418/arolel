@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_01_172000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_01_185000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -72,6 +72,31 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_172000) do
     t.bigint "user_id", null: false
     t.index ["user_id", "created_at"], name: "index_digital_signatures_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_digital_signatures_on_user_id"
+  end
+
+  create_table "feedback_submissions", force: :cascade do |t|
+    t.string "budget_range"
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.string "feature_area"
+    t.string "ip_hash"
+    t.string "kind", null: false
+    t.text "message", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.string "name"
+    t.datetime "occurred_at", null: false
+    t.string "status", default: "new", null: false
+    t.string "subject"
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.bigint "user_id"
+    t.boolean "willing_to_pay", default: false, null: false
+    t.index ["feature_area"], name: "index_feedback_submissions_on_feature_area"
+    t.index ["kind"], name: "index_feedback_submissions_on_kind"
+    t.index ["occurred_at"], name: "index_feedback_submissions_on_occurred_at"
+    t.index ["status"], name: "index_feedback_submissions_on_status"
+    t.index ["user_id"], name: "index_feedback_submissions_on_user_id"
+    t.index ["willing_to_pay"], name: "index_feedback_submissions_on_willing_to_pay"
   end
 
   create_table "invoices", force: :cascade do |t|
@@ -156,6 +181,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_172000) do
   add_foreign_key "boards", "users"
   add_foreign_key "checks", "boards"
   add_foreign_key "digital_signatures", "users"
+  add_foreign_key "feedback_submissions", "users"
   add_foreign_key "invoices", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "tool_runs", "users"

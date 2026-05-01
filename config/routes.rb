@@ -34,10 +34,13 @@ Rails.application.routes.draw do
 
   # Static pages
   get "about",     to: "pages#about",     as: :about
+  get "roadmap",   to: "pages#roadmap",   as: :roadmap
+  get "contact",   to: "pages#contact",   as: :contact
   get "privacy",   to: "pages#privacy",   as: :privacy
   get "changelog", to: "pages#changelog", as: :changelog
   get "robots.txt",  to: "seo#robots",  defaults: { format: :text }
   get "sitemap.xml", to: "seo#sitemap", defaults: { format: :xml }
+  resources :feedback_submissions, only: :create
 
   # Tool 01 — HEIC → JPG (client-side)
   get "heic-to-jpg", to: "pages#heic", as: :heic

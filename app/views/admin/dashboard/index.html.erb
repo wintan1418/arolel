@@ -36,6 +36,11 @@
       <strong><%= number_with_delimiter(@totals[:conversions_7d]) %></strong>
       <span class="tb-stat-note"><%= number_with_delimiter(@totals[:conversion_failures_7d]) %> failed</span>
     </div>
+    <div class="tb-stat">
+      <span class="tb-stat-label">Feedback 7d</span>
+      <strong><%= number_with_delimiter(@totals[:feedback_7d]) %></strong>
+      <span class="tb-stat-note"><%= number_with_delimiter(@totals[:paid_interest]) %> paid-feature signals</span>
+    </div>
   </div>
 
   <div class="tb-dashboard-grid">
@@ -198,6 +203,27 @@
           </div>
           <%= f.submit "Send test email", class: "tb-btn tb-btn-primary tb-btn-lg" %>
         <% end %>
+      </section>
+
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Roadmap feedback</h2>
+            <p>Latest suggestions and contact messages.</p>
+          </div>
+        </div>
+        <div class="tb-dash-list">
+          <% @recent_feedback.each do |feedback| %>
+            <div class="tb-dash-row tb-admin-user-row">
+              <div class="tb-dash-maincell">
+                <div class="tb-dash-name"><%= feedback.subject.presence || feedback.feature_area.presence || feedback.kind.humanize %></div>
+                <div class="tb-dash-meta"><%= feedback.sender_label %> · <%= time_ago_in_words(feedback.occurred_at) %> ago</div>
+                <div class="tb-dash-meta"><%= truncate(feedback.message, length: 120) %></div>
+              </div>
+              <span class="tb-pill <%= feedback.willing_to_pay? ? "tb-pill-ok" : "tb-pill-neu" %>"><%= feedback.willing_to_pay? ? "paid" : feedback.kind %></span>
+            </div>
+          <% end %>
+        </div>
       </section>
 
       <section class="tb-dash-section">

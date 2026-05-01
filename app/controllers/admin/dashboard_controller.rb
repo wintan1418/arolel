@@ -14,7 +14,9 @@ module Admin
         url_sets: UrlSet.count,
         signatures: DigitalSignature.count,
         conversions_7d: ToolRun.since(7.days.ago).count,
-        conversion_failures_7d: ToolRun.failed.since(7.days.ago).count
+        conversion_failures_7d: ToolRun.failed.since(7.days.ago).count,
+        feedback_7d: FeedbackSubmission.where(occurred_at: 7.days.ago..).count,
+        paid_interest: FeedbackSubmission.paid_interest.count
       }
 
       @visits_by_day = ActivityEvent
@@ -44,6 +46,7 @@ module Admin
 
       @recent_events = ActivityEvent.includes(:user).recent.limit(30)
       @recent_tool_runs = ToolRun.includes(:user).recent.limit(20)
+      @recent_feedback = FeedbackSubmission.includes(:user).recent.limit(12)
       @recent_users = User.order(created_at: :desc).limit(10)
     end
   end
