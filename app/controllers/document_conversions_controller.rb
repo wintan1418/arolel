@@ -9,6 +9,6 @@ class DocumentConversionsController < ApplicationController
               type: result.content_type,
               disposition: "attachment"
   rescue DocumentConverter::Error => e
-    redirect_to pdf_path(op: params[:op]), alert: e.message
+    redirect_to pdf_path(op: params[:op]), alert: e.message, status: :see_other
   end
 end

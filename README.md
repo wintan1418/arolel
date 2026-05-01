@@ -86,6 +86,7 @@ Deployed via Hatchbox. App reads:
 | `SOURCE_URL` | Optional public source-code link — if unset, hidden from the footer |
 | `LIBREOFFICE_PATH` | Optional path override for DOC/PDF conversion binary |
 | `PDFTOPPM_PATH` | Optional path override for Poppler PDF-to-image binary |
+| `PDFTOTEXT_PATH` | Optional path override for Poppler PDF text extraction binary |
 | `SECRET_KEY_BASE` | Standard Rails secret |
 | `DATABASE_URL` | Standard Rails PG URL |
 

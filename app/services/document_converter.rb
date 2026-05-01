@@ -1,3 +1,4 @@
+require "cgi"
 require "fileutils"
 require "open3"
 require "securerandom"
@@ -35,7 +36,7 @@ class DocumentConverter
       when "docx-to-pdf"
         convert_with_libreoffice(input_path, dir, "pdf", "#{base_name}.pdf", "application/pdf")
       when "pdf-to-docx"
-        convert_with_libreoffice(input_path, dir, "docx", "#{base_name}.docx", docx_content_type)
+        convert_pdf_to_docx(input_path, dir)
       when "pdf-to-jpg"
         convert_pdf_to_images(input_path, dir, "jpg")
       when "pdf-to-png"
@@ -97,6 +98,18 @@ class DocumentConverter
     Result.new(File.binread(output_path), filename, content_type)
   end
 
+  def convert_pdf_to_docx(input_path, dir)
+    convert_with_libreoffice(input_path, dir, "docx", "#{base_name}.docx", docx_content_type)
+  rescue ConversionFailed
+    text_path = File.join(dir, "extracted.txt")
+    run_command(pdftotext_path, "-layout", input_path, text_path)
+
+    text = File.read(text_path).strip
+    raise ConversionFailed, "This PDF did not contain extractable text." if text.blank?
+
+    Result.new(build_text_docx(text), "#{base_name}.docx", docx_content_type)
+  end
+
   def convert_pdf_to_images(input_path, dir, image_format)
     out_prefix = File.join(dir, "page")
     args = [
@@ -148,6 +161,57 @@ class DocumentConverter
     end.string
   end
 
+  def build_text_docx(text)
+    Zip::OutputStream.write_buffer do |zip|
+      zip.put_next_entry("[Content_Types].xml")
+      zip.write <<~XML
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+          <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+          <Default Extension="xml" ContentType="application/xml"/>
+          <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+        </Types>
+      XML
+
+      zip.put_next_entry("_rels/.rels")
+      zip.write <<~XML
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+          <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+        </Relationships>
+      XML
+
+      zip.put_next_entry("word/document.xml")
+      zip.write <<~XML
+        <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+        <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+          <w:body>
+            #{docx_paragraphs(text)}
+            <w:sectPr><w:pgSz w:w="12240" w:h="15840"/><w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440"/></w:sectPr>
+          </w:body>
+        </w:document>
+      XML
+    end.string
+  end
+
+  def docx_paragraphs(text)
+    text
+      .split(/\n{2,}/)
+      .map { |paragraph| paragraph.lines.map(&:rstrip).reject(&:blank?).join("\n") }
+      .reject(&:blank?)
+      .map { |paragraph| docx_paragraph(paragraph) }
+      .join
+  end
+
+  def docx_paragraph(paragraph)
+    runs = CGI.escapeHTML(paragraph).split("\n").map.with_index do |line, index|
+      break_tag = index.zero? ? "" : "<w:br/>"
+      "#{break_tag}<w:t xml:space=\"preserve\">#{line}</w:t>"
+    end.join
+
+    "<w:p><w:r>#{runs}</w:r></w:p>"
+  end
+
   def libreoffice_path
     command_path(ENV["LIBREOFFICE_PATH"].presence) ||
       command_path("soffice") ||
@@ -158,6 +222,12 @@ class DocumentConverter
   def pdftoppm_path
     command_path(ENV["PDFTOPPM_PATH"].presence) ||
       command_path("pdftoppm") ||
+      raise(MissingDependency, "Poppler is not installed on this server.")
+  end
+
+  def pdftotext_path
+    command_path(ENV["PDFTOTEXT_PATH"].presence) ||
+      command_path("pdftotext") ||
       raise(MissingDependency, "Poppler is not installed on this server.")
   end
 

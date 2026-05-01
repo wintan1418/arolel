@@ -53,7 +53,7 @@
   <% if server_pdf_op %>
     <div class="tb-tool-layout" style="margin-top: 28px;">
       <div>
-        <%= form_with url: document_conversion_path(op: @op), method: :post, multipart: true, local: true do |form| %>
+        <%= form_with url: document_conversion_path(op: @op), method: :post, multipart: true, local: true, data: { turbo: false } do |form| %>
           <label class="tb-drop" for="document-conversion-file" style="margin-top: 0; cursor: pointer;">
             <svg class="tb-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>

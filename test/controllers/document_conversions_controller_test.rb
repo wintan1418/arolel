@@ -6,6 +6,7 @@ class DocumentConversionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "form[action='#{document_conversion_path(op: "pdf-to-docx")}']"
+    assert_select "form[data-turbo=false]"
     assert_select "input[type=file][name=file]"
   end
 
