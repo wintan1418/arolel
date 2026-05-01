@@ -15,15 +15,20 @@ class PagesController < ApplicationController
 
   def pdf
     @op = params[:op]
+    @server_side_file_tool = @op.in?(%w[pdf-to-docx docx-to-pdf pdf-to-jpg pdf-to-png])
     set_nav :pdf
     titles = {
       "merge"    => [ "Merge PDF", "Combine multiple PDFs into one, in your browser. No upload." ],
       "split"    => [ "Split PDF", "Split a PDF into separate pages. Runs on your device only." ],
       "rotate"   => [ "Rotate PDF", "Rotate PDF pages without uploading the file." ],
-      "compress" => [ "Compress PDF", "Shrink a PDF in your browser. No upload, no account." ]
+      "compress" => [ "Compress PDF", "Shrink a PDF in your browser. No upload, no account." ],
+      "pdf-to-docx" => [ "PDF to DOCX", "Convert a PDF to an editable Word document. Uploaded temporarily for conversion." ],
+      "docx-to-pdf" => [ "DOCX to PDF", "Convert Word documents to PDF. Uploaded temporarily for conversion." ],
+      "pdf-to-jpg" => [ "PDF to JPG", "Render PDF pages as JPG images. Uploaded temporarily for conversion." ],
+      "pdf-to-png" => [ "PDF to PNG", "Render PDF pages as PNG images. Uploaded temporarily for conversion." ]
     }
     t, d = titles[@op]
-    page_title "#{t} — runs in your browser · Arolel"
+    page_title @server_side_file_tool ? "#{t} · Arolel" : "#{t} — runs in your browser · Arolel"
     meta_description d
   end
 

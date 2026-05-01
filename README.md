@@ -1,6 +1,6 @@
 # Arolel
 
-A small suite of everyday web utilities. Nine tools under one roof. Most of them run entirely in your browser — your files never leave your device.
+A small suite of everyday web utilities. Nine tools under one roof. Most file tools run entirely in your browser; document conversion tools use temporary server-side processing.
 
 Built on Rails 8 + Stimulus + Tailwind. No ads, no trackers, no email walls. Accounts are optional; the tools work signed-out.
 
@@ -26,6 +26,7 @@ git remote set-url origin git@github.com:wintan1418/arolel.git
 |---|---|---|---|
 | 01 | HEIC → JPG / PNG / WebP | `/heic-to-jpg` | Browser (`heic2any`) |
 | 02 | PDF merge / split / rotate / compress | `/pdf/:op` | Browser (`pdf-lib`) |
+| 02b | PDF ↔ DOCX, PDF → JPG / PNG | `/pdf/:op` | Server (`LibreOffice`, `Poppler`) |
 | 03 | Is It Down? — shareable uptime boards | `/down`, `/down/b/:slug` | Server |
 | 04 | Bulk URL opener + saveable sets | `/open`, `/o/:slug` | Server |
 | 05 | Image compress (JPG / PNG / WebP) | `/images/compress` | Browser (`canvas.toBlob`) |
@@ -34,7 +35,7 @@ git remote set-url origin git@github.com:wintan1418/arolel.git
 | 08 | MP4 → MP3 audio extract | `/media/mp4-to-mp3` | Browser (`ffmpeg.wasm`) |
 | 09 | WebM → MP4 | `/media/webm-to-mp4` | Browser (`ffmpeg.wasm`) |
 
-Each in-browser tool shows a live "0 bytes sent" receipt that reads the browser's own `performance.getEntriesByType('resource')` API — so the privacy claim is verifiable, not just promised.
+Each in-browser tool shows a live "0 bytes sent" receipt that reads the browser's own `performance.getEntriesByType('resource')` API — so the privacy claim is verifiable, not just promised. Server-side document conversions process files in temporary directories and do not attach uploads to Active Storage.
 
 ## Stack
 
@@ -51,6 +52,9 @@ Each in-browser tool shows a live "0 bytes sent" receipt that reads the browser'
 bundle install
 yarn install
 bin/fetch_ffmpeg
+
+# Optional server-side document conversion tools
+sudo apt-get install libreoffice poppler-utils
 
 # Database
 bin/rails db:create db:migrate
@@ -80,6 +84,8 @@ Deployed via Hatchbox. App reads:
 | `SUPER_ADMIN_EMAILS` | Comma-separated emails that can access `/admin` without flipping the DB flag |
 | `COFFEE_URL` | Optional Buy Me A Coffee link — if unset, the button is hidden |
 | `SOURCE_URL` | Optional public source-code link — if unset, hidden from the footer |
+| `LIBREOFFICE_PATH` | Optional path override for DOC/PDF conversion binary |
+| `PDFTOPPM_PATH` | Optional path override for Poppler PDF-to-image binary |
 | `SECRET_KEY_BASE` | Standard Rails secret |
 | `DATABASE_URL` | Standard Rails PG URL |
 

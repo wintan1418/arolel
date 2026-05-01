@@ -20,7 +20,7 @@
     <div class="tb-header-spacer"></div>
 
     <div class="tb-header-right">
-      <% if %i[heic pdf images sign invoice media].include?(current_nav) %>
+      <% if %i[heic pdf images sign invoice media].include?(current_nav) && !@server_side_file_tool %>
         <span class="tb-receipt-compact" data-receipt-target="compact" title="We can't see your files. This counter is live.">
           <span class="tb-receipt-dot"></span>
           <span><span data-receipt-target="bytes">0</span> bytes sent</span>

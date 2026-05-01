@@ -1,36 +1,113 @@
 <%
+  server_pdf_ops = %w[pdf-to-docx docx-to-pdf pdf-to-jpg pdf-to-png]
+  server_pdf_op = server_pdf_ops.include?(@op)
+
   labels = {
     "merge"    => { drop: "Drop PDFs to merge",                  cta: "Merge & download",    out: "merged.pdf",     seo_title: "merge" },
     "split"    => { drop: "Drop a PDF to split into pages",      cta: "Split & download",    out: "split.zip",      seo_title: "split" },
     "rotate"   => { drop: "Drop a PDF to rotate pages",          cta: "Rotate & download",   out: "rotated.pdf",    seo_title: "rotate" },
-    "compress" => { drop: "Drop a PDF to compress",              cta: "Compress & download", out: "compressed.pdf", seo_title: "compress" }
+    "compress" => { drop: "Drop a PDF to compress",              cta: "Compress & download", out: "compressed.pdf", seo_title: "compress" },
+    "pdf-to-docx" => { drop: "Choose a PDF to convert",           cta: "Convert to DOCX",     out: "document.docx",  seo_title: "convert PDF to DOCX", accept: "application/pdf,.pdf", note: ".pdf · up to 25MB · uploaded temporarily" },
+    "docx-to-pdf" => { drop: "Choose a document to convert",      cta: "Convert to PDF",      out: "document.pdf",   seo_title: "convert DOCX to PDF", accept: ".doc,.docx,.odt,.rtf,.txt,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document", note: ".doc, .docx, .odt, .rtf, .txt · up to 25MB · uploaded temporarily" },
+    "pdf-to-jpg"  => { drop: "Choose a PDF to render as JPG",     cta: "Convert to JPG",      out: "pages.zip",      seo_title: "convert PDF to JPG",  accept: "application/pdf,.pdf", note: ".pdf · first 50 pages · uploaded temporarily" },
+    "pdf-to-png"  => { drop: "Choose a PDF to render as PNG",     cta: "Convert to PNG",      out: "pages.zip",      seo_title: "convert PDF to PNG",  accept: "application/pdf,.pdf", note: ".pdf · first 50 pages · uploaded temporarily" }
   }.fetch(@op)
 
   seo_body = {
     "merge"    => "Drop two or more PDFs onto the box. Drag to reorder them if needed, then hit Merge & download. One combined PDF is generated in your browser using pdf-lib. No upload, no page limit, no email wall.",
     "split"    => "Drop a PDF, pick the pages you want to keep (or split into individual pages), and download the result as a ZIP. Everything happens on your device — the source PDF is never uploaded.",
     "rotate"   => "Drop a PDF and rotate individual pages 90° clockwise. The operation is done with pdf-lib and preserves the original document structure. No upload.",
-    "compress" => "Drop a PDF and pick a compression level. Pages are re-rasterised in-browser at a lower DPI then re-encoded. Typical savings are 20–60%. For aggressive compression of scanned documents, server-side tools like Ghostscript still do better — we're honest about that."
+    "compress" => "Drop a PDF and pick a compression level. Arolel re-saves the document with object streams and removes metadata in your browser. For aggressive compression of scanned documents, server-side tools like Ghostscript still do better.",
+    "pdf-to-docx" => "Upload a PDF and Arolel converts it with LibreOffice on the server, then immediately returns a DOCX download. Complex scanned PDFs may convert imperfectly because true PDF-to-Word conversion depends on the source document structure.",
+    "docx-to-pdf" => "Upload a DOC, DOCX, ODT, RTF or TXT file and Arolel converts it to PDF with LibreOffice. The temporary upload is deleted after the response is generated.",
+    "pdf-to-jpg" => "Upload a PDF and Arolel renders up to the first 50 pages as JPG images using Poppler. Single-page PDFs return one image; multi-page PDFs return a ZIP.",
+    "pdf-to-png" => "Upload a PDF and Arolel renders up to the first 50 pages as PNG images using Poppler. Single-page PDFs return one image; multi-page PDFs return a ZIP."
   }[@op]
 %>
 
-<section data-controller="pdf dropzone"
-         data-pdf-op-value="<%= @op %>"
-         data-action="dragover@window->dropzone#over drop@window->pdf#drop">
+<% if server_pdf_op %>
+  <section>
+<% else %>
+  <section data-controller="pdf dropzone"
+           data-pdf-op-value="<%= @op %>"
+           data-action="dragover@window->dropzone#over drop@window->pdf#drop">
+<% end %>
   <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
     <div>
       <div class="tb-eyebrow">Tool 02</div>
       <h1 class="tb-h1" style="font-size: 48px; margin-top: 14px;">PDF tools</h1>
-      <p class="tb-text" style="margin-top: 8px;">Merge · split · rotate · compress — all locally, no uploads.</p>
+      <p class="tb-text" style="margin-top: 8px;">Merge · split · rotate · compress locally. DOCX and image conversions use temporary uploads.</p>
     </div>
     <div class="tb-tabs">
       <%= link_to "Merge",    pdf_path(op: "merge"),    class: ["tb-tab", ("is-active" if @op == "merge")] %>
       <%= link_to "Split",    pdf_path(op: "split"),    class: ["tb-tab", ("is-active" if @op == "split")] %>
       <%= link_to "Rotate",   pdf_path(op: "rotate"),   class: ["tb-tab", ("is-active" if @op == "rotate")] %>
       <%= link_to "Compress", pdf_path(op: "compress"), class: ["tb-tab", ("is-active" if @op == "compress")] %>
+      <%= link_to "PDF → DOCX", pdf_path(op: "pdf-to-docx"), class: ["tb-tab", ("is-active" if @op == "pdf-to-docx")] %>
+      <%= link_to "DOCX → PDF", pdf_path(op: "docx-to-pdf"), class: ["tb-tab", ("is-active" if @op == "docx-to-pdf")] %>
+      <%= link_to "PDF → JPG",  pdf_path(op: "pdf-to-jpg"),  class: ["tb-tab", ("is-active" if @op == "pdf-to-jpg")] %>
+      <%= link_to "PDF → PNG",  pdf_path(op: "pdf-to-png"),  class: ["tb-tab", ("is-active" if @op == "pdf-to-png")] %>
     </div>
   </div>
 
+  <% if server_pdf_op %>
+    <div class="tb-tool-layout" style="margin-top: 28px;">
+      <div>
+        <%= form_with url: document_conversion_path(op: @op), method: :post, multipart: true, local: true do |form| %>
+          <label class="tb-drop" for="document-conversion-file" style="margin-top: 0; cursor: pointer;">
+            <svg class="tb-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
+              <path d="M14 2v6h6"/>
+              <path d="M9 13h6M9 17h4"/>
+            </svg>
+            <div class="tb-drop-title"><%= labels[:drop] %></div>
+            <div class="tb-drop-sub"><%= labels[:note] %></div>
+          </label>
+
+          <div class="tb-card tb-card-pad" style="margin-top: 18px;">
+            <%= form.file_field :file,
+                                id: "document-conversion-file",
+                                accept: labels[:accept],
+                                required: true,
+                                class: "tb-input",
+                                style: "padding-top: 8px;" %>
+            <div class="tb-text-sm" style="margin-top: 10px;">
+              This conversion needs server software, so the selected file is uploaded once, processed in a temporary directory, returned as a download, and deleted.
+            </div>
+          </div>
+
+          <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+            <%= form.submit labels[:cta], class: "tb-btn tb-btn-primary tb-btn-lg" %>
+            <%= link_to "Use local PDF tools", pdf_path(op: "merge"), class: "tb-btn tb-btn-ghost tb-btn-lg" %>
+          </div>
+        <% end %>
+      </div>
+
+      <aside>
+        <div class="tb-card tb-card-pad">
+          <div class="tb-eyebrow">Output</div>
+          <div class="tb-mono" style="font-size: 13px; margin: 10px 0 16px; color: var(--tb-ink-2); word-break: break-all;">
+            <%= labels[:out] %>
+          </div>
+          <div class="tb-stack-6">
+            <div class="tb-receipt-row"><span>server engine</span><span><%= @op == "pdf-to-jpg" || @op == "pdf-to-png" ? "Poppler" : "LibreOffice" %></span></div>
+            <div class="tb-receipt-row"><span>max upload</span><span>25MB</span></div>
+            <% if @op == "pdf-to-jpg" || @op == "pdf-to-png" %>
+              <div class="tb-receipt-row"><span>page limit</span><span>50</span></div>
+            <% end %>
+            <div class="tb-receipt-row"><span>stored</span><span>no</span></div>
+          </div>
+        </div>
+
+        <div class="tb-card tb-card-pad" style="margin-top: 16px;">
+          <div class="tb-eyebrow" style="color: var(--tb-red);">Temporary upload</div>
+          <div class="tb-text-sm" style="margin-top: 8px;">
+            Unlike merge, split, rotate and sign, this tool cannot run fully in the browser. Do not upload highly sensitive documents here.
+          </div>
+        </div>
+      </aside>
+    </div>
+  <% else %>
   <div class="tb-tool-layout" style="margin-top: 28px;">
     <div>
       <div class="tb-drop"
@@ -99,6 +176,7 @@
       </div>
     </aside>
   </div>
+  <% end %>
 </section>
 
 <section class="tb-seo">

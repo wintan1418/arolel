@@ -44,7 +44,10 @@ Rails.application.routes.draw do
   get "pdf",        to: redirect("/pdf/merge"), as: :pdf_root
   get "pdf/:op",    to: "pages#pdf",
                     as: :pdf,
-                    constraints: { op: /merge|split|rotate|compress/ }
+                    constraints: { op: /merge|split|rotate|compress|pdf-to-docx|docx-to-pdf|pdf-to-jpg|pdf-to-png/ }
+  post "document-conversions/:op", to: "document_conversions#create",
+                                   as: :document_conversion,
+                                   constraints: { op: /pdf-to-docx|docx-to-pdf|pdf-to-jpg|pdf-to-png/ }
 
   # Tool 05 — Image tools (client-side)
   get "images",        to: redirect("/images/compress"), as: :images_root

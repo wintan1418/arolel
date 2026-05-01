@@ -4,9 +4,14 @@
 
   <div class="tb-text" style="margin-top: 20px;">
     <p>
-      <strong>HEIC and PDF tools run entirely in your browser.</strong> We do not receive your files.
+      <strong>HEIC, image compression, signing, invoices and the basic PDF tools run entirely in your browser.</strong> We do not receive those files.
       You can verify this in DevTools — the receipt on each tool reads live from
       <span class="tb-mono">performance.getEntriesByType('resource')</span>.
+    </p>
+    <p style="margin-top: 14px;">
+      <strong>Document conversion tools</strong> such as PDF to DOCX, DOCX to PDF and PDF to image upload
+      the selected file temporarily because they require server conversion software. We process the file
+      in a temporary directory, return the converted download, and do not attach it to Active Storage.
     </p>
     <p style="margin-top: 14px;">
       <strong>Is It Down? checks</strong> are performed by our servers. We store each check's host,
