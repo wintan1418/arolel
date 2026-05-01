@@ -18,9 +18,15 @@
     <link rel="icon" type="image/png" sizes="48x48" href="<%= asset_path("logo/favicon-48.png") %>">
     <link rel="icon" type="image/svg+xml" href="<%= asset_path("logo/arolel-bundle.svg") %>">
     <link rel="apple-touch-icon" href="<%= asset_path("logo/arolel-app-icon-1024.png") %>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600&display=swap">
 
-    <%= stylesheet_link_tag :app, "data-turbo-track": "reload" %>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
+    <% if (entrypoint = page_javascript_entrypoint) %>
+      <%= javascript_include_tag entrypoint, "data-turbo-track": "reload", type: "module" %>
+    <% end %>
   </head>
 
   <body data-controller="receipt">
