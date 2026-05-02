@@ -2,8 +2,8 @@ import { Controller } from "@hotwired/stimulus"
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib"
 
 // Invoice maker — three templates, all rendered client-side with pdf-lib.
-// State lives in `this.data`; every field edit updates `this.data`, re-renders
-// the preview, and recomputes totals. Save POSTs JSON when signed in.
+// State lives in `this.invoiceData`; every field edit updates that state,
+// re-renders the preview, and recomputes totals. Save POSTs JSON when signed in.
 export default class extends Controller {
   static targets = [
     "templates", "items",
@@ -21,7 +21,7 @@ export default class extends Controller {
   }
 
   connect () {
-    this.data = Object.assign({
+    this.invoiceData = Object.assign({
       number: "",
       template: "plain",
       currency: "USD",
@@ -38,8 +38,8 @@ export default class extends Controller {
       line_items: []
     }, this.seedValue || {})
 
-    if (!this.data.line_items || this.data.line_items.length === 0) {
-      this.data.line_items = [{ description: "", quantity: 1, unit_price: 0 }]
+    if (!this.invoiceData.line_items || this.invoiceData.line_items.length === 0) {
+      this.invoiceData.line_items = [{ description: "", quantity: 1, unit_price: 0 }]
     }
 
     this.hydrateFields()
@@ -50,44 +50,44 @@ export default class extends Controller {
   // ----- field sync -----
 
   hydrateFields () {
-    this.fNumberTarget.value     = this.data.number || ""
-    this.fCurrencyTarget.value   = this.data.currency || "USD"
-    this.fIssuedTarget.value     = this.data.issued_on || this.today()
-    this.fDueTarget.value        = this.data.due_on || this.in14Days()
-    this.fFromNameTarget.value   = this.data.from_name || ""
-    this.fFromAddressTarget.value = this.data.from_address || ""
-    this.fFromEmailTarget.value  = this.data.from_email || ""
-    this.fToNameTarget.value     = this.data.to_name || ""
-    this.fToAddressTarget.value  = this.data.to_address || ""
-    this.fToEmailTarget.value    = this.data.to_email || ""
-    this.fTaxTarget.value        = this.data.tax_rate || 0
-    this.fNotesTarget.value      = this.data.notes || ""
+    this.fNumberTarget.value     = this.invoiceData.number || ""
+    this.fCurrencyTarget.value   = this.invoiceData.currency || "USD"
+    this.fIssuedTarget.value     = this.invoiceData.issued_on || this.today()
+    this.fDueTarget.value        = this.invoiceData.due_on || this.in14Days()
+    this.fFromNameTarget.value   = this.invoiceData.from_name || ""
+    this.fFromAddressTarget.value = this.invoiceData.from_address || ""
+    this.fFromEmailTarget.value  = this.invoiceData.from_email || ""
+    this.fToNameTarget.value     = this.invoiceData.to_name || ""
+    this.fToAddressTarget.value  = this.invoiceData.to_address || ""
+    this.fToEmailTarget.value    = this.invoiceData.to_email || ""
+    this.fTaxTarget.value        = this.invoiceData.tax_rate || 0
+    this.fNotesTarget.value      = this.invoiceData.notes || ""
     // activate template tab
     this.templatesTarget.querySelectorAll(".tb-tab").forEach((b) => {
-      b.classList.toggle("is-active", b.dataset.template === this.data.template)
+      b.classList.toggle("is-active", b.dataset.template === this.invoiceData.template)
     })
   }
 
   change () {
-    this.data.number       = this.fNumberTarget.value
-    this.data.currency     = this.fCurrencyTarget.value
-    this.data.issued_on    = this.fIssuedTarget.value
-    this.data.due_on       = this.fDueTarget.value
-    this.data.from_name    = this.fFromNameTarget.value
-    this.data.from_address = this.fFromAddressTarget.value
-    this.data.from_email   = this.fFromEmailTarget.value
-    this.data.to_name      = this.fToNameTarget.value
-    this.data.to_address   = this.fToAddressTarget.value
-    this.data.to_email     = this.fToEmailTarget.value
-    this.data.tax_rate     = parseFloat(this.fTaxTarget.value) || 0
-    this.data.notes        = this.fNotesTarget.value
+    this.invoiceData.number       = this.fNumberTarget.value
+    this.invoiceData.currency     = this.fCurrencyTarget.value
+    this.invoiceData.issued_on    = this.fIssuedTarget.value
+    this.invoiceData.due_on       = this.fDueTarget.value
+    this.invoiceData.from_name    = this.fFromNameTarget.value
+    this.invoiceData.from_address = this.fFromAddressTarget.value
+    this.invoiceData.from_email   = this.fFromEmailTarget.value
+    this.invoiceData.to_name      = this.fToNameTarget.value
+    this.invoiceData.to_address   = this.fToAddressTarget.value
+    this.invoiceData.to_email     = this.fToEmailTarget.value
+    this.invoiceData.tax_rate     = parseFloat(this.fTaxTarget.value) || 0
+    this.invoiceData.notes        = this.fNotesTarget.value
     this.syncItems()
     this.render()
   }
 
   setTemplate (e) {
     e.preventDefault()
-    this.data.template = e.currentTarget.dataset.template
+    this.invoiceData.template = e.currentTarget.dataset.template
     this.templatesTarget.querySelectorAll(".tb-tab").forEach((b) => b.classList.remove("is-active"))
     e.currentTarget.classList.add("is-active")
     this.render()
@@ -97,7 +97,7 @@ export default class extends Controller {
 
   addItem (e) {
     e?.preventDefault()
-    this.data.line_items.push({ description: "", quantity: 1, unit_price: 0 })
+    this.invoiceData.line_items.push({ description: "", quantity: 1, unit_price: 0 })
     this.renderItems()
     this.render()
   }
@@ -105,8 +105,8 @@ export default class extends Controller {
   removeItem (e) {
     e.preventDefault()
     const idx = parseInt(e.currentTarget.dataset.idx, 10)
-    this.data.line_items.splice(idx, 1)
-    if (this.data.line_items.length === 0) this.addItem()
+    this.invoiceData.line_items.splice(idx, 1)
+    if (this.invoiceData.line_items.length === 0) this.addItem()
     this.renderItems()
     this.render()
   }
@@ -117,12 +117,12 @@ export default class extends Controller {
       const desc = row.querySelector("[data-f=description]").value
       const qty  = parseFloat(row.querySelector("[data-f=quantity]").value) || 0
       const unit = parseFloat(row.querySelector("[data-f=unit_price]").value) || 0
-      this.data.line_items[idx] = { description: desc, quantity: qty, unit_price: unit }
+      this.invoiceData.line_items[idx] = { description: desc, quantity: qty, unit_price: unit }
     })
   }
 
   renderItems () {
-    this.itemsTarget.innerHTML = this.data.line_items.map((it, i) => `
+    this.itemsTarget.innerHTML = this.invoiceData.line_items.map((it, i) => `
       <div class="tb-invoice-item-row" data-row="${i}">
         <input class="tb-input"        data-f="description" placeholder="Description"  value="${this.esc(it.description || "")}">
         <input class="tb-input tb-mono" data-f="quantity"    type="number" step="1" min="0" value="${it.quantity || 0}">
@@ -138,14 +138,14 @@ export default class extends Controller {
   // ----- totals + preview -----
 
   subtotal () {
-    return this.data.line_items.reduce((n, it) => n + (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0), 0)
+    return this.invoiceData.line_items.reduce((n, it) => n + (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0), 0)
   }
 
-  taxAmount () { return this.subtotal() * ((parseFloat(this.data.tax_rate) || 0) / 100) }
+  taxAmount () { return this.subtotal() * ((parseFloat(this.invoiceData.tax_rate) || 0) / 100) }
   total     () { return this.subtotal() + this.taxAmount() }
 
   fmt (n) {
-    const c = this.data.currency || "USD"
+    const c = this.invoiceData.currency || "USD"
     try { return new Intl.NumberFormat("en-US", { style: "currency", currency: c }).format(n || 0) }
     catch (_) { return `${c} ${Number(n || 0).toFixed(2)}` }
   }
@@ -158,7 +158,7 @@ export default class extends Controller {
 
   // HTML preview that mirrors each template's PDF layout at a smaller scale.
   previewHtml () {
-    const d = this.data
+    const d = this.invoiceData
     const items = d.line_items.map((it, i) => `
       <tr>
         <td style="padding: 6px 0;">${this.esc(it.description || "—")}</td>
@@ -212,7 +212,7 @@ export default class extends Controller {
       <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
         <div style="width: 220px;">
           <div style="display:flex; justify-content:space-between; padding: 3px 0;" class="tb-mono"><span style="color: var(--tb-muted);">Subtotal</span><span>${this.fmt(this.subtotal())}</span></div>
-          <div style="display:flex; justify-content:space-between; padding: 3px 0;" class="tb-mono"><span style="color: var(--tb-muted);">Tax ${this.data.tax_rate || 0}%</span><span>${this.fmt(this.taxAmount())}</span></div>
+          <div style="display:flex; justify-content:space-between; padding: 3px 0;" class="tb-mono"><span style="color: var(--tb-muted);">Tax ${this.invoiceData.tax_rate || 0}%</span><span>${this.fmt(this.taxAmount())}</span></div>
           <div style="display:flex; justify-content:space-between; padding: 6px 0; border-top: 1px solid var(--tb-line); font-weight:600;">
             <span>Total</span><span class="tb-mono">${this.fmt(this.total())}</span>
           </div>
@@ -227,11 +227,11 @@ export default class extends Controller {
   async download (e) {
     e?.preventDefault()
     const pdf = await PDFDocument.create()
-    const renderer = { plain: this.renderPlain, classic: this.renderClassic, modern: this.renderModern }[this.data.template] || this.renderPlain
+    const renderer = { plain: this.renderPlain, classic: this.renderClassic, modern: this.renderModern }[this.invoiceData.template] || this.renderPlain
     await renderer.call(this, pdf)
     const bytes = await pdf.save()
     const blob = new Blob([bytes], { type: "application/pdf" })
-    const fileName = `${(this.data.number || "invoice").replace(/\s+/g, "-")}.pdf`
+    const fileName = `${(this.invoiceData.number || "invoice").replace(/\s+/g, "-")}.pdf`
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a"); a.href = url; a.download = fileName
     document.body.appendChild(a); a.click(); a.remove()
@@ -294,7 +294,7 @@ export default class extends Controller {
     const f = await this.fonts(pdf)
     const ink = rgb(0.09, 0.09, 0.09)
     const muted = rgb(0.45, 0.45, 0.45)
-    const d = this.data
+    const d = this.invoiceData
 
     page.drawText("Invoice", { x: 40, y: 790, size: 28, font: f.bold, color: ink })
     page.drawText(`${this.asText(d.number)} · ${this.asText(d.issued_on)}`,
@@ -323,7 +323,7 @@ export default class extends Controller {
     const f = await this.fonts(pdf)
     const ink = rgb(0.09, 0.09, 0.09)
     const muted = rgb(0.45, 0.45, 0.45)
-    const d = this.data
+    const d = this.invoiceData
 
     // centred serif title
     const title = "Invoice"
@@ -357,7 +357,7 @@ export default class extends Controller {
     const red = rgb(0.863, 0.15, 0.11)
     const muted = rgb(0.45, 0.45, 0.45)
     const white = rgb(1, 1, 1)
-    const d = this.data
+    const d = this.invoiceData
 
     // red hero band
     page.drawRectangle({ x: 0, y: 770, width: 595, height: 60, color: red })
@@ -408,7 +408,7 @@ export default class extends Controller {
 
     const rows = [
       ["Subtotal", this.fmt(this.subtotal())],
-      [`Tax ${this.data.tax_rate || 0}%`, this.fmt(this.taxAmount())]
+      [`Tax ${this.invoiceData.tax_rate || 0}%`, this.fmt(this.taxAmount())]
     ]
     rows.forEach(([k, v]) => {
       page.drawText(k, { x, y, size: 10, font: f.regular, color: muted })
@@ -428,21 +428,21 @@ export default class extends Controller {
     e?.preventDefault()
     if (!this.signedInValue) { window.location.href = "/login"; return }
     const body = new FormData()
-    body.append("invoice[number]",       this.data.number || "")
-    body.append("invoice[template]",     this.data.template)
-    body.append("invoice[currency]",     this.data.currency)
-    body.append("invoice[issued_on]",    this.data.issued_on || "")
-    body.append("invoice[due_on]",       this.data.due_on || "")
-    body.append("invoice[from_name]",    this.data.from_name || "")
-    body.append("invoice[from_address]", this.data.from_address || "")
-    body.append("invoice[from_email]",   this.data.from_email || "")
-    body.append("invoice[to_name]",      this.data.to_name || "")
-    body.append("invoice[to_address]",   this.data.to_address || "")
-    body.append("invoice[to_email]",     this.data.to_email || "")
-    body.append("invoice[notes]",        this.data.notes || "")
-    body.append("invoice[tax_rate]",     this.data.tax_rate || 0)
+    body.append("invoice[number]",       this.invoiceData.number || "")
+    body.append("invoice[template]",     this.invoiceData.template)
+    body.append("invoice[currency]",     this.invoiceData.currency)
+    body.append("invoice[issued_on]",    this.invoiceData.issued_on || "")
+    body.append("invoice[due_on]",       this.invoiceData.due_on || "")
+    body.append("invoice[from_name]",    this.invoiceData.from_name || "")
+    body.append("invoice[from_address]", this.invoiceData.from_address || "")
+    body.append("invoice[from_email]",   this.invoiceData.from_email || "")
+    body.append("invoice[to_name]",      this.invoiceData.to_name || "")
+    body.append("invoice[to_address]",   this.invoiceData.to_address || "")
+    body.append("invoice[to_email]",     this.invoiceData.to_email || "")
+    body.append("invoice[notes]",        this.invoiceData.notes || "")
+    body.append("invoice[tax_rate]",     this.invoiceData.tax_rate || 0)
     body.append("invoice[total_cents]",  this.total().toFixed(2))
-    this.data.line_items.forEach((it) => {
+    this.invoiceData.line_items.forEach((it) => {
       body.append("invoice[line_items][][description]", it.description || "")
       body.append("invoice[line_items][][quantity]",    it.quantity    || 0)
       body.append("invoice[line_items][][unit_price]",  it.unit_price  || 0)
