@@ -5,8 +5,9 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get media_path(op: "compress-video")
 
     assert_response :success
-    assert_select "[data-media-op-value='compress-video']"
-    assert_select "input[accept*='video/mp4']"
+    assert_select "[data-media-op-value='compress-video']", false
+    assert_select "a[href='#{new_session_path}']", text: "Log in"
+    assert_includes response.body, "Protected queue"
     assert_includes response.body, "Compress video"
   end
 

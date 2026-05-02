@@ -30,24 +30,27 @@
       title:   "Compress video",
       tool_no: "10",
       accept:  "video/mp4,video/quicktime,video/webm,.mp4,.m4v,.mov,.webm",
-      drop:    "Drop heavy videos to compress",
+      drop:    "Choose a heavy video to compress",
       cta:     "Compress video",
       ext_in:  "video",
       ext_out: "mp4",
-      note:    "Compress MP4, MOV and WebM locally. Best for short clips; very large videos are better handled by desktop or server-side FFmpeg.",
-      seo_q:   "How do I compress a heavy video online without uploading it?",
-      seo_a:   "Drop an MP4, MOV or WebM file onto the box. Arolel uses FFmpeg WebAssembly in your browser to re-encode the video as a smaller H.264 MP4. The file stays on your device, but heavy videos can take a long time and use a lot of memory.",
+      note:    "Compress MP4, MOV and WebM through a protected server queue with strict limits.",
+      seo_q:   "How do I compress a heavy video online?",
+      seo_a:   "Upload one MP4, MOV or WebM file to Arolel's protected queue. FFmpeg compresses it as an H.264 MP4 with low server priority, one thread, a size limit, and temporary output files.",
       max_mb:  250
     }
   }.fetch(@op)
+  browser_media_tool = @op != "compress-video"
 %>
 
 <section class="tb-tool-layout"
+         <% if browser_media_tool %>
          data-controller="media dropzone"
          data-media-op-value="<%= @op %>"
          data-media-ext-in-value="<%= meta[:ext_in] %>"
          data-media-ext-out-value="<%= meta[:ext_out] %>"
-         data-action="dragover@window->dropzone#over drop@window->media#drop">
+         data-action="dragover@window->dropzone#over drop@window->media#drop"
+         <% end %>>
   <div>
     <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
       <div>
@@ -62,81 +65,98 @@
       </div>
     </div>
 
-    <div class="tb-drop"
-         data-media-target="drop"
-         data-dropzone-target="zone"
-         data-action="click->media#pick dragover->dropzone#over dragleave->dropzone#leave drop->media#drop"
-         style="margin-top: 26px;">
-      <svg class="tb-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M23 7 16 12l7 5V7z"/>
-        <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-      </svg>
-      <div class="tb-drop-title"><%= meta[:drop] %></div>
-      <div class="tb-drop-sub">
-        up to ~<%= meta[:max_mb] %>MB per file · 0 bytes uploaded to our servers
-      </div>
-    </div>
-
-    <input type="file" accept="<%= meta[:accept] %>" multiple
-           data-media-target="input" data-action="change->media#picked" hidden>
-
-    <div data-media-target="list" class="tb-card" style="margin-top: 18px; display: none;"></div>
-
-    <div data-media-target="ffmpegStatus" class="tb-card tb-card-pad" style="margin-top: 14px; display: none;">
-      <div class="tb-eyebrow">FFmpeg runtime</div>
-      <div class="tb-mono tb-muted" style="font-size: 12px; margin-top: 6px;">
-        <span data-media-target="ffmpegStatusText">ready.</span>
-      </div>
-    </div>
-  </div>
-
-  <aside>
-    <div class="tb-receipt">
-      <div class="tb-receipt-title">
-        <span class="tb-receipt-dot"></span>
-        <span>Live receipt</span>
-      </div>
-      <div class="tb-stack-6">
-        <div class="tb-receipt-row is-good"><span>bytes sent to us</span><span data-receipt-target="bytes">0</span></div>
-        <div class="tb-receipt-row is-good"><span>files uploaded</span><span>0</span></div>
-        <div class="tb-receipt-row"><span>worker</span><span>ffmpeg.wasm</span></div>
-        <div class="tb-receipt-row"><span>files queued</span><span data-media-target="queued">0</span></div>
-        <div class="tb-receipt-row"><span>files done</span><span data-media-target="done">0</span></div>
-      </div>
-      <div class="tb-receipt-foot">
-        FFmpeg itself (the WebAssembly runtime) is loaded from Arolel the first time
-        you use this tool, then cached by your browser. Your media files never leave this tab.
-      </div>
-    </div>
-
-    <% if @op == "compress-video" %>
-      <div class="tb-card tb-card-pad" style="margin-top: 16px;">
-        <div class="tb-eyebrow">Heavy video mode</div>
-        <div class="tb-text-sm" style="margin-top: 8px;">
-          Browser compression is safest for the server. If the file is too heavy for your browser, signed-in users can upload one video to a protected server queue.
+    <% if browser_media_tool %>
+      <div class="tb-drop"
+           data-media-target="drop"
+           data-dropzone-target="zone"
+           data-action="click->media#pick dragover->dropzone#over dragleave->dropzone#leave drop->media#drop"
+           style="margin-top: 26px;">
+        <svg class="tb-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M23 7 16 12l7 5V7z"/>
+          <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+        </svg>
+        <div class="tb-drop-title"><%= meta[:drop] %></div>
+        <div class="tb-drop-sub">
+          up to ~<%= meta[:max_mb] %>MB per file · 0 bytes uploaded to our servers
         </div>
+      </div>
+
+      <input type="file" accept="<%= meta[:accept] %>" multiple
+             data-media-target="input" data-action="change->media#picked" hidden>
+
+      <div data-media-target="list" class="tb-card" style="margin-top: 18px; display: none;"></div>
+
+      <div data-media-target="ffmpegStatus" class="tb-card tb-card-pad" style="margin-top: 14px; display: none;">
+        <div class="tb-eyebrow">FFmpeg runtime</div>
+        <div class="tb-mono tb-muted" style="font-size: 12px; margin-top: 6px;">
+          <span data-media-target="ffmpegStatusText">ready.</span>
+        </div>
+      </div>
+    <% else %>
+      <div class="tb-card tb-card-pad" style="margin-top: 26px;">
+        <div class="tb-eyebrow">Protected queue</div>
+        <h2 class="tb-h2" style="margin-top: 10px;">Server-side video compression</h2>
+        <p class="tb-text" style="margin-top: 8px;">
+          This avoids the browser FFmpeg runtime and is better for heavier screen recordings.
+        </p>
 
         <% if signed_in? %>
-          <%= form_with url: video_compressions_path, method: :post, multipart: true, local: true, class: "tb-stack-14", style: "margin-top: 14px;" do |form| %>
+          <%= form_with url: video_compressions_path, method: :post, multipart: true, local: true, class: "tb-stack-14", style: "margin-top: 18px;" do |form| %>
             <div>
               <label class="tb-label">Video file</label>
               <%= form.file_field :file,
-                                  accept: "video/mp4,video/quicktime,video/webm,.mp4,.m4v,.mov,.webm",
+                                  accept: meta[:accept],
                                   required: true,
                                   class: "tb-input",
                                   style: "padding-top: 8px;" %>
             </div>
             <div class="tb-mono tb-muted" style="font-size: 11px; line-height: 1.55;">
-              Limit: <%= VideoCompression::MAX_BYTES / 1.megabyte %>MB. Queue: one active job per user, <%= VideoCompression::MAX_QUEUE %> total active jobs. Files are temporary.
+              Limit: <%= VideoCompression::MAX_BYTES / 1.megabyte %>MB. One active upload per user. Outputs expire after <%= VideoCompression::OUTPUT_TTL / 1.hour %> hours.
             </div>
-            <%= form.submit "Upload to protected queue", class: "tb-btn tb-btn-primary", style: "width: 100%;" %>
+            <%= form.submit "Upload and compress", class: "tb-btn tb-btn-primary tb-btn-lg" %>
           <% end %>
         <% else %>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
-            <%= link_to "Log in", new_session_path, class: "tb-btn tb-btn-ghost" %>
-            <%= link_to "Register", new_registration_path, class: "tb-btn tb-btn-primary" %>
+          <div class="tb-card tb-card-pad" style="margin-top: 18px; box-shadow: none;">
+            <div class="tb-text-sm">Log in or create an account to use server-side compression.</div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
+              <%= link_to "Log in", new_session_path, class: "tb-btn tb-btn-ghost" %>
+              <%= link_to "Register", new_registration_path, class: "tb-btn tb-btn-primary" %>
+            </div>
           </div>
         <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <aside>
+    <% if browser_media_tool %>
+      <div class="tb-receipt">
+        <div class="tb-receipt-title">
+          <span class="tb-receipt-dot"></span>
+          <span>Live receipt</span>
+        </div>
+        <div class="tb-stack-6">
+          <div class="tb-receipt-row is-good"><span>bytes sent to us</span><span data-receipt-target="bytes">0</span></div>
+          <div class="tb-receipt-row is-good"><span>files uploaded</span><span>0</span></div>
+          <div class="tb-receipt-row"><span>worker</span><span>ffmpeg.wasm</span></div>
+          <div class="tb-receipt-row"><span>files queued</span><span data-media-target="queued">0</span></div>
+          <div class="tb-receipt-row"><span>files done</span><span data-media-target="done">0</span></div>
+        </div>
+        <div class="tb-receipt-foot">
+          FFmpeg itself (the WebAssembly runtime) is loaded from Arolel the first time
+          you use this tool, then cached by your browser. Your media files never leave this tab.
+        </div>
+      </div>
+    <% else %>
+      <div class="tb-card tb-card-pad" style="margin-top: 16px;">
+        <div class="tb-eyebrow">Server protection</div>
+        <div class="tb-stack-10" style="margin-top: 12px;">
+          <div class="tb-receipt-row"><span>upload cap</span><span><%= VideoCompression::MAX_BYTES / 1.megabyte %>MB</span></div>
+          <div class="tb-receipt-row"><span>per user</span><span>1 active</span></div>
+          <div class="tb-receipt-row"><span>global queue</span><span><%= VideoCompression::MAX_QUEUE %></span></div>
+          <div class="tb-receipt-row"><span>ffmpeg threads</span><span><%= ENV.fetch("VIDEO_COMPRESSION_THREADS", "1") %></span></div>
+          <div class="tb-receipt-row"><span>priority</span><span>low</span></div>
+        </div>
       </div>
     <% end %>
   </aside>
