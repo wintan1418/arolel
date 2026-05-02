@@ -18,27 +18,26 @@
            tax_rate: @invoice.tax_rate&.to_f,
            line_items: (@invoice.line_items || [])
          }.to_json %>'>
-  <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+  <div class="tb-invoice-hero">
     <div>
       <div class="tb-eyebrow">Tool 06</div>
-      <h1 class="tb-h1" style="font-size: 44px; margin-top: 14px;">Invoice maker</h1>
-      <p class="tb-text" style="margin-top: 8px;">
-        Pick a template, fill in the numbers, download a PDF. Runs in your browser.
+      <h1 class="tb-h1 tb-invoice-title">Invoice maker</h1>
+      <p class="tb-text tb-invoice-subtitle">
+        Build the invoice, preview it live, and download the PDF. Runs in your browser.
       </p>
     </div>
     <div class="tb-tabs" data-invoice-target="templates">
-      <button class="tb-tab is-active" data-action="click->invoice#setTemplate" data-template="plain">Plain</button>
-      <button class="tb-tab"            data-action="click->invoice#setTemplate" data-template="classic">Classic</button>
-      <button class="tb-tab"            data-action="click->invoice#setTemplate" data-template="modern">Modern</button>
+      <button type="button" class="tb-tab is-active" data-action="click->invoice#setTemplate" data-template="plain">Plain</button>
+      <button type="button" class="tb-tab" data-action="click->invoice#setTemplate" data-template="classic">Classic</button>
+      <button type="button" class="tb-tab" data-action="click->invoice#setTemplate" data-template="modern">Modern</button>
     </div>
   </div>
 
-  <div class="tb-tool-layout" style="grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 28px;">
-    <%# ----- left: form ----- %>
-    <div class="tb-stack-20">
+  <div class="tb-invoice-shell">
+    <div class="tb-invoice-editor">
       <div class="tb-card tb-card-pad">
         <div class="tb-eyebrow" style="margin-bottom: 10px;">Meta</div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="tb-invoice-meta-grid">
           <div>
             <label class="tb-eyebrow" style="display:block; margin-bottom:4px;">Invoice #</label>
             <input class="tb-input tb-mono" data-invoice-target="fNumber" data-action="input->invoice#change" placeholder="INV-1001">
@@ -82,10 +81,16 @@
 
       <div class="tb-card tb-card-pad">
         <div class="tb-eyebrow" style="margin-bottom: 10px;">Line items</div>
-        <div data-invoice-target="items"></div>
-        <button class="tb-btn tb-btn-ghost" data-action="click->invoice#addItem" style="margin-top: 10px; border-style: dashed;">+ Add item</button>
+        <div class="tb-invoice-item-head">
+          <span>Description</span>
+          <span>Qty</span>
+          <span>Rate</span>
+          <span></span>
+        </div>
+        <div data-invoice-target="items" class="tb-invoice-item-list"></div>
+        <button type="button" class="tb-btn tb-btn-ghost tb-invoice-add" data-action="click->invoice#addItem">+ Add item</button>
 
-        <div style="margin-top: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="tb-invoice-tax-grid">
           <div>
             <label class="tb-eyebrow" style="display:block; margin-bottom:4px;">Tax rate %</label>
             <input type="number" step="0.01" class="tb-input tb-mono" data-invoice-target="fTax" data-action="input->invoice#change" placeholder="0">
@@ -99,23 +104,22 @@
       </div>
     </div>
 
-    <%# ----- right: preview + actions ----- %>
-    <aside class="tb-stack-14">
-      <div class="tb-card" style="padding: 0; overflow: hidden;">
-        <div class="tb-card-pad" style="padding-bottom: 10px; display:flex; justify-content:space-between; align-items:baseline;">
+    <aside class="tb-invoice-preview">
+      <div class="tb-card tb-invoice-preview-card">
+        <div class="tb-card-pad tb-invoice-preview-head">
           <div class="tb-eyebrow">Preview</div>
-          <div class="tb-mono tb-muted" style="font-size: 12px;">
+          <div class="tb-mono tb-muted tb-invoice-preview-total">
             subtotal <span data-invoice-target="subtotal">—</span> · total <span data-invoice-target="total" style="color: var(--tb-ink); font-weight: 500;">—</span>
           </div>
         </div>
-        <div data-invoice-target="preview" style="padding: 18px 22px 22px; border-top: 1px dashed var(--tb-line); background: var(--tb-paper-2); min-height: 420px; font-size: 12px;"></div>
+        <div data-invoice-target="preview" class="tb-invoice-preview-pane"></div>
       </div>
 
       <div class="tb-card tb-card-pad">
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <button class="tb-btn tb-btn-primary tb-btn-lg" data-action="click->invoice#download">Download PDF</button>
+        <div class="tb-invoice-actions">
+          <button type="button" class="tb-btn tb-btn-primary tb-btn-lg" data-action="click->invoice#download">Download PDF</button>
           <% if signed_in? %>
-            <button class="tb-btn tb-btn-ghost tb-btn-lg" data-action="click->invoice#save">
+            <button type="button" class="tb-btn tb-btn-ghost tb-btn-lg" data-action="click->invoice#save">
               <%= @invoice.persisted? ? "Update saved" : "Save to dashboard" %>
             </button>
           <% else %>

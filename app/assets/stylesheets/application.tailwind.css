@@ -1328,6 +1328,10 @@ a {
   align-items: start;
 }
 
+.tb-admin-content-grid-single {
+  grid-template-columns: 1fr;
+}
+
 .tb-admin-maincol,
 .tb-admin-sidecol {
   display: grid;
@@ -1635,6 +1639,16 @@ a {
   min-width: 640px;
 }
 
+.tb-user-directory-table .tb-table {
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.tb-user-directory-table .tb-table td,
+.tb-user-directory-table .tb-table th {
+  overflow-wrap: anywhere;
+}
+
 /* ----- SEO marketing footer ----- */
 
 .tb-seo {
@@ -1903,6 +1917,117 @@ a {
   align-items: flex-start;
 }
 
+.tb-invoice-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.tb-invoice-title {
+  font-size: 44px;
+  margin-top: 14px;
+}
+
+.tb-invoice-subtitle {
+  margin-top: 8px;
+}
+
+.tb-invoice-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.08fr) minmax(360px, 0.92fr);
+  gap: 28px;
+  margin-top: 28px;
+  align-items: start;
+}
+
+.tb-invoice-editor,
+.tb-invoice-preview {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+
+.tb-invoice-preview {
+  position: sticky;
+  top: 88px;
+}
+
+.tb-invoice-preview-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.tb-invoice-preview-head {
+  padding-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.tb-invoice-preview-total {
+  font-size: 12px;
+}
+
+.tb-invoice-preview-pane {
+  padding: 18px 22px 22px;
+  border-top: 1px dashed var(--tb-line);
+  background: var(--tb-paper-2);
+  min-height: 420px;
+  font-size: 12px;
+}
+
+.tb-invoice-meta-grid,
+.tb-invoice-tax-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.tb-invoice-item-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px 120px 40px;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 0 2px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tb-muted);
+}
+
+.tb-invoice-item-list {
+  display: grid;
+  gap: 10px;
+}
+
+.tb-invoice-item-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px 120px 40px;
+  gap: 10px;
+  align-items: center;
+}
+
+.tb-invoice-add {
+  margin-top: 12px;
+  border-style: dashed;
+}
+
+.tb-invoice-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.tb-invoice-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
 .tb-roadmap {
   padding: 20px 0 64px;
 }
@@ -1988,10 +2113,54 @@ a {
     grid-template-columns: 1fr;
   }
 
+  .tb-invoice-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .tb-invoice-preview {
+    position: static;
+  }
+
+  .tb-invoice-guide-grid {
+    grid-template-columns: 1fr;
+  }
+
   .tb-roadmap-head,
   .tb-roadmap-grid,
   .tb-roadmap-lanes,
   .tb-two-col {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .tb-invoice-title {
+    font-size: 36px;
+  }
+
+  .tb-invoice-meta-grid,
+  .tb-invoice-tax-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tb-invoice-item-head {
+    display: none;
+  }
+
+  .tb-invoice-item-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .tb-invoice-item-row input:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .tb-invoice-item-row .tb-btn-icon {
+    justify-self: end;
+  }
+
+  .tb-invoice-preview-head {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

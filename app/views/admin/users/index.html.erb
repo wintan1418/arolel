@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <div class="tb-admin-content-grid">
+    <div class="tb-admin-content-grid tb-admin-content-grid-single">
       <main class="tb-admin-maincol">
         <section class="tb-dash-section">
           <div class="tb-dash-section-head">
@@ -83,6 +83,23 @@
         </section>
 
         <section class="tb-dash-section">
+          <div class="tb-card tb-card-pad tb-invoice-guide-grid">
+            <div>
+              <div class="tb-eyebrow">Search</div>
+              <div class="tb-text-sm">Use partial email search to find one account quickly.</div>
+            </div>
+            <div>
+              <div class="tb-eyebrow">Segment</div>
+              <div class="tb-text-sm">Role, activity, and signup filters stay in the query string, so useful views can be bookmarked.</div>
+            </div>
+            <div>
+              <div class="tb-eyebrow">Scale guardrail</div>
+              <div class="tb-text-sm">The page is capped at <%= Admin::UsersController::USER_LIMIT %> rows to keep the shared server responsive.</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="tb-dash-section">
           <div class="tb-dash-section-head">
             <div>
               <h2>Matched users</h2>
@@ -90,7 +107,7 @@
             </div>
             <div class="tb-eyebrow">Results <%= number_with_delimiter(@users.length) %></div>
           </div>
-          <div class="tb-card tb-table-wrap">
+          <div class="tb-card tb-table-wrap tb-user-directory-table">
             <table class="tb-table">
               <thead>
                 <tr>
@@ -142,34 +159,6 @@
           </div>
         </section>
       </main>
-
-      <aside class="tb-admin-sidecol">
-        <section class="tb-dash-section">
-          <div class="tb-dash-section-head">
-            <div>
-              <h2>How to use this</h2>
-              <p>A stable review screen instead of an overloaded dashboard block.</p>
-            </div>
-          </div>
-          <div class="tb-card tb-card-pad tb-stack-14">
-            <div>
-              <div class="tb-eyebrow">Search</div>
-              <div class="tb-text-sm">Use partial email search to find one account quickly.</div>
-            </div>
-            <div>
-              <div class="tb-eyebrow">Segment</div>
-              <div class="tb-text-sm">Role, activity, and signup filters stay in the query string, so useful views can be bookmarked.</div>
-            </div>
-            <div>
-              <div class="tb-eyebrow">Scale guardrail</div>
-              <div class="tb-text-sm">The page is capped at <%= Admin::UsersController::USER_LIMIT %> rows to keep the shared server responsive.</div>
-            </div>
-            <div class="tb-text-sm tb-muted">
-              For outbound email, use the Mail desk link in the left navigation.
-            </div>
-          </div>
-        </section>
-      </aside>
     </div>
   </div>
 </section>

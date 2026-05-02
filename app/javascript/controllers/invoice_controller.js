@@ -86,6 +86,7 @@ export default class extends Controller {
   }
 
   setTemplate (e) {
+    e.preventDefault()
     this.data.template = e.currentTarget.dataset.template
     this.templatesTarget.querySelectorAll(".tb-tab").forEach((b) => b.classList.remove("is-active"))
     e.currentTarget.classList.add("is-active")
@@ -94,13 +95,15 @@ export default class extends Controller {
 
   // ----- line items -----
 
-  addItem () {
+  addItem (e) {
+    e?.preventDefault()
     this.data.line_items.push({ description: "", quantity: 1, unit_price: 0 })
     this.renderItems()
     this.render()
   }
 
   removeItem (e) {
+    e.preventDefault()
     const idx = parseInt(e.currentTarget.dataset.idx, 10)
     this.data.line_items.splice(idx, 1)
     if (this.data.line_items.length === 0) this.addItem()
@@ -120,11 +123,11 @@ export default class extends Controller {
 
   renderItems () {
     this.itemsTarget.innerHTML = this.data.line_items.map((it, i) => `
-      <div class="tb-file-row" data-row="${i}" style="grid-template-columns: 1fr 70px 100px 28px; gap: 8px; padding: 8px 0;">
+      <div class="tb-invoice-item-row" data-row="${i}">
         <input class="tb-input"        data-f="description" placeholder="Description"  value="${this.esc(it.description || "")}">
         <input class="tb-input tb-mono" data-f="quantity"    type="number" step="1" min="0" value="${it.quantity || 0}">
         <input class="tb-input tb-mono" data-f="unit_price"  type="number" step="0.01" min="0" value="${it.unit_price || 0}">
-        <button class="tb-btn-icon" data-action="click->invoice#removeItem" data-idx="${i}" aria-label="Remove">×</button>
+        <button type="button" class="tb-btn-icon" data-action="click->invoice#removeItem" data-idx="${i}" aria-label="Remove line item">×</button>
       </div>
     `).join("")
     this.itemsTarget.querySelectorAll("input").forEach((el) => {
@@ -221,7 +224,8 @@ export default class extends Controller {
 
   // ----- PDF ---------------
 
-  async download () {
+  async download (e) {
+    e?.preventDefault()
     const pdf = await PDFDocument.create()
     const renderer = { plain: this.renderPlain, classic: this.renderClassic, modern: this.renderModern }[this.data.template] || this.renderPlain
     await renderer.call(this, pdf)
@@ -420,7 +424,8 @@ export default class extends Controller {
 
   // ----- save ---------------
 
-  async save () {
+  async save (e) {
+    e?.preventDefault()
     if (!this.signedInValue) { window.location.href = "/login"; return }
     const body = new FormData()
     body.append("invoice[number]",       this.data.number || "")
