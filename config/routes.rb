@@ -29,6 +29,11 @@ Rails.application.routes.draw do
                               as: :media,
                               constraints: { op: /mp4-to-mp3|webm-to-mp4|compress-video/ }
   get  "media-debug",         to: "pages#media_debug"
+  resources :video_compressions, only: [ :create, :show ] do
+    member do
+      get :download
+    end
+  end
 
   root "pages#home"
 

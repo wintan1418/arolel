@@ -9,6 +9,7 @@ class User < ApplicationRecord
   has_many :activity_events, dependent: :nullify
   has_many :tool_runs, dependent: :nullify
   has_many :feedback_submissions, dependent: :nullify
+  has_many :video_compressions, dependent: :destroy
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 

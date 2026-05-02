@@ -1,0 +1,56 @@
+<section class="tb-tool-layout">
+  <div>
+    <div class="tb-eyebrow">Heavy video compression</div>
+    <h1 class="tb-h1" style="font-size: 44px; margin-top: 14px;">Compression job</h1>
+    <p class="tb-text" style="margin-top: 8px; max-width: 62ch;">
+      This job runs in a protected queue with one FFmpeg thread and low OS priority so it does not take over the server.
+    </p>
+
+    <% if @video_compression.active? %>
+      <meta http-equiv="refresh" content="12">
+    <% end %>
+
+    <% status_class = @video_compression.failed? ? "tb-pill-down" : (@video_compression.succeeded? ? "tb-pill-ok" : "tb-pill-warn") %>
+
+    <div class="tb-card tb-card-pad" style="margin-top: 24px;">
+      <div class="tb-stack-10">
+        <div class="tb-receipt-row"><span>Status</span><span class="tb-pill <%= status_class %>"><%= @video_compression.status %></span></div>
+        <div class="tb-receipt-row"><span>Input</span><span><%= @video_compression.original_filename %></span></div>
+        <div class="tb-receipt-row"><span>Size in</span><span><%= number_to_human_size(@video_compression.input_bytes) %></span></div>
+        <% if @video_compression.output_bytes.present? %>
+          <div class="tb-receipt-row"><span>Size out</span><span><%= number_to_human_size(@video_compression.output_bytes) %></span></div>
+        <% end %>
+        <% if @video_compression.expires_at.present? %>
+          <div class="tb-receipt-row"><span>Download expires</span><span><%= time_ago_in_words(@video_compression.expires_at) %> from now</span></div>
+        <% end %>
+      </div>
+
+      <% if @video_compression.failed? %>
+        <div class="tb-card tb-card-pad" style="margin-top: 16px; border-color: var(--tb-red); color: var(--tb-red-deep); box-shadow: none;">
+          <%= @video_compression.error_message.presence || "Compression failed." %>
+        </div>
+      <% end %>
+
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px;">
+        <% if @video_compression.output_available? %>
+          <%= link_to "Download compressed MP4", download_video_compression_path(@video_compression), class: "tb-btn tb-btn-primary tb-btn-lg" %>
+        <% else %>
+          <%= link_to "Refresh status", video_compression_path(@video_compression), class: "tb-btn tb-btn-ghost tb-btn-lg" %>
+        <% end %>
+        <%= link_to "Back to video tools", media_path(op: "compress-video"), class: "tb-btn tb-btn-ghost tb-btn-lg" %>
+      </div>
+    </div>
+  </div>
+
+  <aside>
+    <div class="tb-card tb-card-pad">
+      <div class="tb-eyebrow">Server protection</div>
+      <div class="tb-stack-10" style="margin-top: 12px;">
+        <div class="tb-receipt-row"><span>per user</span><span>1 active</span></div>
+        <div class="tb-receipt-row"><span>global active queue</span><span><%= VideoCompression::MAX_QUEUE %></span></div>
+        <div class="tb-receipt-row"><span>ffmpeg threads</span><span><%= ENV.fetch("VIDEO_COMPRESSION_THREADS", "1") %></span></div>
+        <div class="tb-receipt-row"><span>priority</span><span>low</span></div>
+      </div>
+    </div>
+  </aside>
+</section>

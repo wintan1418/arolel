@@ -1,0 +1,17 @@
+{
+  "ignored_warnings": [
+    {
+      "fingerprint": "026c1a46225031ee60cf9d97742eb98743eec3d98d932ecd4006b5c142367733",
+      "note": "Video compression downloads are scoped through current_user, use an integer job id and fixed output.mp4 path under storage/video_compressions, and safe_output_path checks the storage prefix before send_file."
+    },
+    {
+      "fingerprint": "e08f17bc87c4b2e7258fbb1a20ff3c2da10127163345c711101c55e7d663c372",
+      "note": "Cleanup only removes files under storage/video_compressions for the newly created job id; upload extension is allowlisted before path construction."
+    },
+    {
+      "fingerprint": "f6dda56d502c651c2e3872aafceae08ddbb245d79494ae9936c86e6085b8d7ea",
+      "note": "Input directories are built from the newly created integer job id under storage/video_compressions; upload extensions are allowlisted before copying."
+    }
+  ],
+  "updated": "2026-05-02"
+}

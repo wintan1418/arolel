@@ -108,6 +108,37 @@
         you use this tool, then cached by your browser. Your media files never leave this tab.
       </div>
     </div>
+
+    <% if @op == "compress-video" %>
+      <div class="tb-card tb-card-pad" style="margin-top: 16px;">
+        <div class="tb-eyebrow">Heavy video mode</div>
+        <div class="tb-text-sm" style="margin-top: 8px;">
+          Browser compression is safest for the server. If the file is too heavy for your browser, signed-in users can upload one video to a protected server queue.
+        </div>
+
+        <% if signed_in? %>
+          <%= form_with url: video_compressions_path, method: :post, multipart: true, local: true, class: "tb-stack-14", style: "margin-top: 14px;" do |form| %>
+            <div>
+              <label class="tb-label">Video file</label>
+              <%= form.file_field :file,
+                                  accept: "video/mp4,video/quicktime,video/webm,.mp4,.m4v,.mov,.webm",
+                                  required: true,
+                                  class: "tb-input",
+                                  style: "padding-top: 8px;" %>
+            </div>
+            <div class="tb-mono tb-muted" style="font-size: 11px; line-height: 1.55;">
+              Limit: <%= VideoCompression::MAX_BYTES / 1.megabyte %>MB. Queue: one active job per user, <%= VideoCompression::MAX_QUEUE %> total active jobs. Files are temporary.
+            </div>
+            <%= form.submit "Upload to protected queue", class: "tb-btn tb-btn-primary", style: "width: 100%;" %>
+          <% end %>
+        <% else %>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
+            <%= link_to "Log in", new_session_path, class: "tb-btn tb-btn-ghost" %>
+            <%= link_to "Register", new_registration_path, class: "tb-btn tb-btn-primary" %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
   </aside>
 </section>
 

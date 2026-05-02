@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_01_185000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_02_115000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -167,6 +167,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_185000) do
     t.index ["user_id"], name: "index_url_sets_on_user_id"
   end
 
+  create_table "video_compressions", force: :cascade do |t|
+    t.string "active_job_id"
+    t.datetime "completed_at"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.datetime "expires_at"
+    t.bigint "input_bytes", null: false
+    t.string "input_path", null: false
+    t.bigint "output_bytes"
+    t.string "output_filename"
+    t.string "output_path"
+    t.string "original_filename", null: false
+    t.datetime "started_at"
+    t.string "status", default: "queued", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["active_job_id"], name: "index_video_compressions_on_active_job_id"
+    t.index ["expires_at"], name: "index_video_compressions_on_expires_at"
+    t.index ["status"], name: "index_video_compressions_on_status"
+    t.index ["user_id", "status"], name: "index_video_compressions_on_user_id_and_status"
+    t.index ["user_id"], name: "index_video_compressions_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email_address", null: false
@@ -186,4 +210,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_01_185000) do
   add_foreign_key "sessions", "users"
   add_foreign_key "tool_runs", "users"
   add_foreign_key "url_sets", "users"
+  add_foreign_key "video_compressions", "users"
 end

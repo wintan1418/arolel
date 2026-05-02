@@ -49,9 +49,9 @@ Rails.application.configure do
   # Keep production deploys simple on a single Hatchbox app/database.
   config.cache_store = :memory_store, { size: 64.megabytes }
 
-  # The app only uses lightweight uptime checks, so avoid requiring a separate
-  # Solid Queue database during deploy.
-  config.active_job.queue_adapter = :async
+  # Heavy video compression must not run inside a web request. Solid Queue keeps
+  # these jobs durable and lets production run them with strict worker limits.
+  config.active_job.queue_adapter = :solid_queue
 
   # Set host to be used by links generated in mailer templates.
   default_host = ENV.fetch("PUBLIC_HOST", ENV.fetch("APP_HOST", "arolel.com")).split(",").first.strip
