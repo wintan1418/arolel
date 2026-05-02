@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   namespace :admin do
     root to: "dashboard#index"
     resources :email_tests, only: :create
+    resources :user_messages, only: :create
   end
 
   # Tool 06 — Invoice maker
