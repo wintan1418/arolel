@@ -14,6 +14,7 @@ Rails.application.routes.draw do
     resources :email_tests, only: :create
     resources :user_messages, only: :create
     resources :users, only: :index
+    resources :feedback_submissions, only: [ :index, :update ]
   end
 
   # Tool 06 — Invoice maker

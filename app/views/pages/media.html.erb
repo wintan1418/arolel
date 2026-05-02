@@ -42,18 +42,20 @@
   }.fetch(@op)
 %>
 
-<section class="tb-tool-layout">
+<section class="tb-tool-layout tb-tool-layout-narrow">
   <div>
-    <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-      <div>
+    <div class="tb-tool-head">
+      <div class="tb-tool-copy">
         <div class="tb-eyebrow">Tool <%= meta[:tool_no] %></div>
-        <h1 class="tb-h1" style="font-size: 44px; margin-top: 14px;"><%= meta[:title] %></h1>
-        <p class="tb-text" style="margin-top: 8px;"><%= meta[:note] %></p>
+        <h1 class="tb-h1 tb-tool-title"><%= meta[:title] %></h1>
+        <p class="tb-text tb-tool-subtitle"><%= meta[:note] %></p>
       </div>
-      <div class="tb-tabs">
-        <%= link_to "MP4 → MP3",  media_path(op: "mp4-to-mp3"),  class: ["tb-tab", ("is-active" if @op == "mp4-to-mp3")] %>
-        <%= link_to "WebM → MP4", media_path(op: "webm-to-mp4"), class: ["tb-tab", ("is-active" if @op == "webm-to-mp4")] %>
-        <%= link_to "Compress", media_path(op: "compress-video"), class: ["tb-tab", ("is-active" if @op == "compress-video")] %>
+      <div class="tb-tool-tabs-wrap">
+        <div class="tb-tabs">
+          <%= link_to "MP4 → MP3",  media_path(op: "mp4-to-mp3"),  class: ["tb-tab", ("is-active" if @op == "mp4-to-mp3")] %>
+          <%= link_to "WebM → MP4", media_path(op: "webm-to-mp4"), class: ["tb-tab", ("is-active" if @op == "webm-to-mp4")] %>
+          <%= link_to "Compress", media_path(op: "compress-video"), class: ["tb-tab", ("is-active" if @op == "compress-video")] %>
+        </div>
       </div>
     </div>
 
@@ -88,7 +90,7 @@
       <% else %>
         <div class="tb-card tb-card-pad" style="margin-top: 18px; box-shadow: none;">
           <div class="tb-text-sm">Log in or create an account to use server-side media conversion.</div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px;">
+          <div class="tb-actions-inline" style="margin-top: 14px;">
             <%= link_to "Log in", new_session_path, class: "tb-btn tb-btn-ghost" %>
             <%= link_to "Register", new_registration_path, class: "tb-btn tb-btn-primary" %>
           </div>

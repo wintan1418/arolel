@@ -11,7 +11,8 @@ class VideoCompressionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "signed in user can enqueue one protected video compression" do
-    sign_in_as users(:one)
+    user = users(:one)
+    sign_in_as user
 
     assert_difference "VideoCompression.count", 1 do
       assert_enqueued_with(job: CompressVideoJob) do
@@ -19,7 +20,7 @@ class VideoCompressionsControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    compression = VideoCompression.last
+    compression = user.video_compressions.order(created_at: :desc).first
     assert_redirected_to video_compression_path(compression)
     assert_equal "queued", compression.status
     assert_equal "mp4-to-mp3", compression.operation
@@ -28,7 +29,7 @@ class VideoCompressionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "clip.mp4", compression.original_filename
     assert File.exist?(compression.input_path)
   ensure
-    VideoCompression.last&.purge_files!
+    user&.video_compressions&.order(created_at: :desc)&.first&.purge_files!
   end
 
   test "user cannot queue a second active video compression" do

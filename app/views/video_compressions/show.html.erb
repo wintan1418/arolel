@@ -1,8 +1,8 @@
-<section class="tb-tool-layout">
+<section class="tb-tool-layout tb-tool-layout-narrow">
   <div>
     <div class="tb-eyebrow">Media conversion</div>
-    <h1 class="tb-h1" style="font-size: 44px; margin-top: 14px;"><%= @video_compression.operation_label %> job</h1>
-    <p class="tb-text" style="margin-top: 8px; max-width: 62ch;">
+    <h1 class="tb-h1 tb-tool-title"><%= @video_compression.operation_label %> job</h1>
+    <p class="tb-text tb-tool-subtitle" style="max-width: 62ch;">
       This job runs in a protected queue with one FFmpeg thread and low OS priority so it does not take over the server.
     </p>
     <div class="tb-card tb-card-pad" style="margin-top: 14px; box-shadow: none;">
@@ -54,7 +54,7 @@
         </div>
       <% end %>
 
-      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px;">
+      <div class="tb-actions-inline" style="margin-top: 18px;">
         <% if @video_compression.output_available? %>
           <%= link_to "Download #{@video_compression.output_extension.upcase}", download_video_compression_path(@video_compression), class: "tb-btn tb-btn-primary tb-btn-lg" %>
         <% else %>

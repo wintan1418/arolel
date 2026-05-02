@@ -1,7 +1,7 @@
 <section>
   <div class="tb-eyebrow">Tool 03</div>
-  <h1 class="tb-h1" style="font-size: 48px; margin-top: 14px;">Is It Down?</h1>
-  <p class="tb-text" style="margin-top: 12px; max-width: 60ch;">
+  <h1 class="tb-h1 tb-tool-title">Is It Down?</h1>
+  <p class="tb-text tb-tool-subtitle" style="max-width: 60ch;">
     Paste one URL or a list of URLs. We'll check them from the server and give you a
     shareable board — no account, no login, just a link.
   </p>
@@ -15,7 +15,7 @@
       </div>
     </div>
 
-    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+    <div class="tb-actions-inline">
       <%= f.text_field :name, class: "tb-input", placeholder: "board name (optional)", style: "max-width: 260px;" %>
       <%= f.submit "Check now", class: "tb-btn tb-btn-primary tb-btn-lg" %>
       <span class="tb-mono tb-muted" style="font-size: 12px;">· up to 25 hosts</span>

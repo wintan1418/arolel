@@ -1,0 +1,163 @@
+<section class="tb-admin-layout">
+  <%= render "admin/sidebar", section: :feedback %>
+
+  <div class="tb-admin-content">
+    <div class="tb-admin-pagehead">
+      <div>
+        <div class="tb-eyebrow">Admin workspace</div>
+        <h1 class="tb-h1 tb-dashboard-title">Feedback inbox</h1>
+        <div class="tb-dashboard-user">Roadmap suggestions, contact notes, and paid-interest signals in one review queue.</div>
+      </div>
+      <div class="tb-dashboard-actions">
+        <%= link_to "Control room", admin_root_path, class: "tb-btn tb-btn-primary" %>
+        <%= link_to "User directory", admin_users_path, class: "tb-btn tb-btn-ghost" %>
+      </div>
+    </div>
+
+    <div class="tb-dashboard-stats tb-admin-stats">
+      <div class="tb-stat">
+        <span class="tb-stat-label">Inbox</span>
+        <strong><%= number_with_delimiter(@totals[:total]) %></strong>
+        <span class="tb-stat-note">All submissions</span>
+      </div>
+      <div class="tb-stat">
+        <span class="tb-stat-label">Suggestions</span>
+        <strong><%= number_with_delimiter(@totals[:suggestions]) %></strong>
+        <span class="tb-stat-note">Roadmap items</span>
+      </div>
+      <div class="tb-stat">
+        <span class="tb-stat-label">Contacts</span>
+        <strong><%= number_with_delimiter(@totals[:contacts]) %></strong>
+        <span class="tb-stat-note">Direct messages</span>
+      </div>
+      <div class="tb-stat">
+        <span class="tb-stat-label">Paid</span>
+        <strong><%= number_with_delimiter(@totals[:paid]) %></strong>
+        <span class="tb-stat-note">Willing-to-pay signals</span>
+      </div>
+      <div class="tb-stat">
+        <span class="tb-stat-label">New</span>
+        <strong><%= number_with_delimiter(@totals[:new_items]) %></strong>
+        <span class="tb-stat-note">Needs review</span>
+      </div>
+    </div>
+
+    <div class="tb-admin-content-grid tb-admin-content-grid-single">
+      <main class="tb-admin-maincol">
+        <section class="tb-dash-section">
+          <div class="tb-dash-section-head">
+            <div>
+              <h2>Search and filter</h2>
+              <p>Filter by sender, message, kind, status, and payment intent.</p>
+            </div>
+          </div>
+
+          <%= form_with url: admin_feedback_submissions_path, method: :get, class: "tb-card tb-card-pad tb-stack-14", local: true do |f| %>
+            <div class="tb-filter-grid">
+              <div>
+                <label class="tb-eyebrow" style="display: block; margin-bottom: 6px;">Search</label>
+                <%= f.text_field :q, value: @filters[:q], class: "tb-input", placeholder: "email, subject, message..." %>
+              </div>
+              <div>
+                <label class="tb-eyebrow" style="display: block; margin-bottom: 6px;">Kind</label>
+                <%= f.select :kind,
+                             [["All kinds", "all"], ["Suggestions", "suggestion"], ["Contact", "contact"]],
+                             { selected: @filters[:kind] },
+                             class: "tb-input" %>
+              </div>
+              <div>
+                <label class="tb-eyebrow" style="display: block; margin-bottom: 6px;">Status</label>
+                <%= f.select :status,
+                             [["All statuses", "all"], ["New", "new"], ["Reviewed", "reviewed"], ["Planned", "planned"], ["Shipped", "shipped"], ["Declined", "declined"]],
+                             { selected: @filters[:status] },
+                             class: "tb-input" %>
+              </div>
+              <div>
+                <label class="tb-eyebrow" style="display: block; margin-bottom: 6px;">Payment signal</label>
+                <%= f.select :paid,
+                             [["All", "all"], ["Willing to pay", "paid"], ["No payment signal", "unpaid"]],
+                             { selected: @filters[:paid] },
+                             class: "tb-input" %>
+              </div>
+            </div>
+            <div class="tb-filter-actions">
+              <%= f.submit "Apply filters", class: "tb-btn tb-btn-primary" %>
+              <%= link_to "Reset", admin_feedback_submissions_path, class: "tb-btn tb-btn-ghost" %>
+            </div>
+          <% end %>
+        </section>
+
+        <section class="tb-dash-section">
+          <div class="tb-dash-section-head">
+            <div>
+              <h2>Messages</h2>
+              <p>Showing up to <%= Admin::FeedbackSubmissionsController::FEEDBACK_LIMIT %> submissions ordered by newest first.</p>
+            </div>
+            <div class="tb-eyebrow">Results <%= number_with_delimiter(@feedback_submissions.length) %></div>
+          </div>
+
+          <div class="tb-feedback-list">
+            <% @feedback_submissions.each do |feedback| %>
+              <article class="tb-feedback-row">
+                <div class="tb-feedback-main">
+                  <div class="tb-feedback-head">
+                    <div>
+                      <div class="tb-feedback-title"><%= feedback.subject.presence || feedback.feature_area.presence || feedback.kind.humanize %></div>
+                      <div class="tb-feedback-meta">
+                        <%= feedback.sender_label %>
+                        <% if feedback.email.present? %>
+                          · <%= feedback.email %>
+                        <% elsif feedback.user.present? %>
+                          · <%= feedback.user.email_address %>
+                        <% end %>
+                        · <%= time_ago_in_words(feedback.occurred_at) %> ago
+                      </div>
+                    </div>
+                    <div class="tb-actions-inline">
+                      <span class="tb-pill <%= feedback.kind == "suggestion" ? "tb-pill-warn" : "tb-pill-neu" %>"><%= feedback.kind %></span>
+                      <% if feedback.willing_to_pay? %>
+                        <span class="tb-pill tb-pill-ok">paid</span>
+                      <% end %>
+                    </div>
+                  </div>
+
+                  <div class="tb-feedback-message"><%= feedback.message %></div>
+
+                  <div class="tb-feedback-meta">
+                    Status <%= feedback.status %>
+                    <% if feedback.feature_area.present? %>
+                      · area <%= feedback.feature_area %>
+                    <% end %>
+                    <% if feedback.budget_range.present? %>
+                      · budget <%= feedback.budget_range %>
+                    <% end %>
+                    <% if feedback.user.present? %>
+                      · user #<%= feedback.user_id %>
+                    <% end %>
+                  </div>
+                </div>
+
+                <div class="tb-feedback-side">
+                  <%= form_with model: [ :admin, feedback ], method: :patch, class: "tb-stack-10", local: true do |f| %>
+                    <div>
+                      <label class="tb-eyebrow" style="display: block; margin-bottom: 6px;">Status</label>
+                      <%= f.select :status,
+                                   FeedbackSubmission::STATUSES.map { |status| [status.humanize, status] },
+                                   {},
+                                   class: "tb-input" %>
+                    </div>
+                    <%= f.submit "Update status", class: "tb-btn tb-btn-primary" %>
+                  <% end %>
+                </div>
+              </article>
+            <% end %>
+
+            <% if @feedback_submissions.empty? %>
+              <div class="tb-card tb-card-pad tb-muted">No feedback matched these filters.</div>
+            <% end %>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</section>

@@ -34,27 +34,29 @@
            data-pdf-op-value="<%= @op %>"
            data-action="dragover@window->dropzone#over drop@window->pdf#drop">
 <% end %>
-  <div style="display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-    <div>
+  <div class="tb-tool-head">
+    <div class="tb-tool-copy">
       <div class="tb-eyebrow">Tool 02</div>
-      <h1 class="tb-h1" style="font-size: 48px; margin-top: 14px;">PDF & document tools</h1>
-      <p class="tb-text" style="margin-top: 8px;">Merge · split · rotate · compress locally. DOCX, CSV and image conversions use temporary uploads.</p>
+      <h1 class="tb-h1 tb-tool-title">PDF & document tools</h1>
+      <p class="tb-text tb-tool-subtitle">Merge · split · rotate · compress locally. DOCX, CSV and image conversions use temporary uploads.</p>
     </div>
-    <div class="tb-tabs">
-      <%= link_to "Merge",    pdf_path(op: "merge"),    class: ["tb-tab", ("is-active" if @op == "merge")] %>
-      <%= link_to "Split",    pdf_path(op: "split"),    class: ["tb-tab", ("is-active" if @op == "split")] %>
-      <%= link_to "Rotate",   pdf_path(op: "rotate"),   class: ["tb-tab", ("is-active" if @op == "rotate")] %>
-      <%= link_to "Compress", pdf_path(op: "compress"), class: ["tb-tab", ("is-active" if @op == "compress")] %>
-      <%= link_to "PDF → DOCX", pdf_path(op: "pdf-to-docx"), class: ["tb-tab", ("is-active" if @op == "pdf-to-docx")] %>
-      <%= link_to "DOCX → PDF", pdf_path(op: "docx-to-pdf"), class: ["tb-tab", ("is-active" if @op == "docx-to-pdf")] %>
-      <%= link_to "Word → CSV", pdf_path(op: "word-to-csv"), class: ["tb-tab", ("is-active" if @op == "word-to-csv")] %>
-      <%= link_to "PDF → JPG",  pdf_path(op: "pdf-to-jpg"),  class: ["tb-tab", ("is-active" if @op == "pdf-to-jpg")] %>
-      <%= link_to "PDF → PNG",  pdf_path(op: "pdf-to-png"),  class: ["tb-tab", ("is-active" if @op == "pdf-to-png")] %>
+    <div class="tb-tool-tabs-wrap">
+      <div class="tb-tabs">
+        <%= link_to "Merge",    pdf_path(op: "merge"),    class: ["tb-tab", ("is-active" if @op == "merge")] %>
+        <%= link_to "Split",    pdf_path(op: "split"),    class: ["tb-tab", ("is-active" if @op == "split")] %>
+        <%= link_to "Rotate",   pdf_path(op: "rotate"),   class: ["tb-tab", ("is-active" if @op == "rotate")] %>
+        <%= link_to "Compress", pdf_path(op: "compress"), class: ["tb-tab", ("is-active" if @op == "compress")] %>
+        <%= link_to "PDF → DOCX", pdf_path(op: "pdf-to-docx"), class: ["tb-tab", ("is-active" if @op == "pdf-to-docx")] %>
+        <%= link_to "DOCX → PDF", pdf_path(op: "docx-to-pdf"), class: ["tb-tab", ("is-active" if @op == "docx-to-pdf")] %>
+        <%= link_to "Word → CSV", pdf_path(op: "word-to-csv"), class: ["tb-tab", ("is-active" if @op == "word-to-csv")] %>
+        <%= link_to "PDF → JPG",  pdf_path(op: "pdf-to-jpg"),  class: ["tb-tab", ("is-active" if @op == "pdf-to-jpg")] %>
+        <%= link_to "PDF → PNG",  pdf_path(op: "pdf-to-png"),  class: ["tb-tab", ("is-active" if @op == "pdf-to-png")] %>
+      </div>
     </div>
   </div>
 
   <% if server_pdf_op %>
-    <div class="tb-tool-layout" style="margin-top: 28px;">
+    <div class="tb-tool-layout tb-tool-layout-narrow" style="margin-top: 28px;">
       <div>
         <%= form_with url: document_conversion_path(op: @op),
                       method: :post,
@@ -96,7 +98,7 @@
             </div>
           </div>
 
-          <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+          <div class="tb-actions-inline" style="margin-top: 16px;">
             <%= form.submit labels[:cta],
                             class: "tb-btn tb-btn-primary tb-btn-lg",
                             data: { document_conversion_target: "submit" } %>

@@ -10,6 +10,7 @@
       </div>
       <div class="tb-dashboard-actions">
         <%= link_to "Control room", admin_root_path, class: "tb-btn tb-btn-primary" %>
+        <%= link_to "Feedback inbox", admin_feedback_submissions_path, class: "tb-btn tb-btn-ghost" %>
         <%= link_to "User dashboard", dashboard_path, class: "tb-btn tb-btn-ghost" %>
       </div>
     </div>
@@ -48,7 +49,7 @@
           </div>
 
           <%= form_with url: admin_users_path, method: :get, class: "tb-card tb-card-pad tb-stack-14", local: true do |f| %>
-            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="tb-filter-grid">
               <div>
                 <label class="tb-eyebrow" style="display: block; margin-bottom: 6px;">Email search</label>
                 <%= f.text_field :q, value: @filters[:q], class: "tb-input", placeholder: "name@example.com" %>
@@ -75,7 +76,7 @@
                              class: "tb-input" %>
               </div>
             </div>
-            <div class="flex flex-wrap gap-3">
+            <div class="tb-filter-actions">
               <%= f.submit "Apply filters", class: "tb-btn tb-btn-primary" %>
               <%= link_to "Reset", admin_users_path, class: "tb-btn tb-btn-ghost" %>
             </div>

@@ -13,6 +13,9 @@
       <%= link_to "Users",
                   admin_users_path,
                   class: ["tb-admin-nav-link", ("is-active" if local_assigns[:section] == :users)] %>
+      <%= link_to "Feedback",
+                  admin_feedback_submissions_path,
+                  class: ["tb-admin-nav-link", ("is-active" if local_assigns[:section] == :feedback)] %>
       <%= link_to "Mail desk",
                   admin_root_path(anchor: "mail-desk"),
                   class: "tb-admin-nav-link" %>

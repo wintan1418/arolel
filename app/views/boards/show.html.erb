@@ -1,15 +1,15 @@
 <section data-controller="down" data-down-slug-value="<%= @board.slug %>" data-down-interval-value="60000">
-  <div style="display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
-    <div>
+  <div class="tb-tool-head">
+    <div class="tb-tool-copy">
       <div class="tb-eyebrow">Tool 03 · Board</div>
-      <h1 class="tb-h1" style="font-size: 40px; margin-top: 10px;"><%= @board.name %></h1>
+      <h1 class="tb-h1 tb-tool-title" style="margin-top: 10px;"><%= @board.name %></h1>
       <div class="tb-mono tb-muted" style="margin-top: 8px; font-size: 13px;">
         <%= @board.hosts.size %> hosts · last checked <span data-down-target="lastCheckedRel">
           <%= @board.last_checked_at ? time_ago_in_words(@board.last_checked_at) + " ago" : "pending" %>
         </span>
       </div>
     </div>
-    <div style="display: flex; gap: 8px;">
+    <div class="tb-actions-inline">
       <button class="tb-btn tb-btn-ghost" data-action="click->down#copyShare">
         Copy share link
       </button>
@@ -19,7 +19,7 @@
     </div>
   </div>
 
-  <div class="tb-tool-layout" style="grid-template-columns: 1fr 300px; margin-top: 28px;">
+  <div class="tb-tool-layout tb-tool-layout-narrow" style="margin-top: 28px;">
     <div class="tb-card" data-down-target="tableWrap">
       <%= render "boards/table", board: @board, checks: @checks, sparklines: @sparklines %>
     </div>
@@ -38,7 +38,7 @@
 
       <div class="tb-card tb-card-pad">
         <div class="tb-eyebrow" style="margin-bottom: 10px;">Share</div>
-        <div style="display: flex; gap: 6px; align-items: center;">
+        <div class="tb-actions-inline">
           <input class="tb-input tb-mono" readonly
                  value="<%= board_url(slug: @board.slug) %>"
                  data-down-target="shareInput"
