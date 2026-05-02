@@ -43,7 +43,7 @@
           <div class="tb-dash-section-head">
             <div>
               <h2>Search and filter</h2>
-              <p>Keep the control room light and do user review here instead.</p>
+              <p>Filter by email, role, activity, and joined date. This page is capped to keep the admin fast.</p>
             </div>
           </div>
 
@@ -80,23 +80,6 @@
               <%= link_to "Reset", admin_users_path, class: "tb-btn tb-btn-ghost" %>
             </div>
           <% end %>
-        </section>
-
-        <section class="tb-dash-section">
-          <div class="tb-card tb-card-pad tb-invoice-guide-grid">
-            <div>
-              <div class="tb-eyebrow">Search</div>
-              <div class="tb-text-sm">Use partial email search to find one account quickly.</div>
-            </div>
-            <div>
-              <div class="tb-eyebrow">Segment</div>
-              <div class="tb-text-sm">Role, activity, and signup filters stay in the query string, so useful views can be bookmarked.</div>
-            </div>
-            <div>
-              <div class="tb-eyebrow">Scale guardrail</div>
-              <div class="tb-text-sm">The page is capped at <%= Admin::UsersController::USER_LIMIT %> rows to keep the shared server responsive.</div>
-            </div>
-          </div>
         </section>
 
         <section class="tb-dash-section">
