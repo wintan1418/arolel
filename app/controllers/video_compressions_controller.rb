@@ -4,6 +4,8 @@ class VideoCompressionsController < ApplicationController
   rate_limit to: 3, within: 1.hour, only: :create,
              with: -> { redirect_to media_path(op: params[:operation].presence || "compress-video"), alert: "Too many media uploads. Please try again later." }
 
+  rescue_from ActiveRecord::RecordNotFound, with: :handle_missing_conversion
+
   before_action :set_video_compression, only: %i[show download]
 
   def create
@@ -128,7 +130,13 @@ class VideoCompressionsController < ApplicationController
   def cleanup_downloaded_conversion(video_compression)
     video_compression.reload
     video_compression.purge_files!
-    video_compression.destroy!
+    video_compression.update_columns(
+      output_path: nil,
+      output_bytes: nil,
+      status_message: "Downloaded and removed from server",
+      expires_at: 10.minutes.from_now,
+      updated_at: Time.current
+    )
   rescue ActiveRecord::RecordNotFound
     nil
   end
@@ -143,5 +151,9 @@ class VideoCompressionsController < ApplicationController
     ensure
       cleanup_downloaded_conversion(video_compression)
     end
+  end
+
+  def handle_missing_conversion
+    redirect_to media_path(op: params[:operation].presence || "mp4-to-mp3"), alert: "That conversion is no longer available.", status: :see_other
   end
 end

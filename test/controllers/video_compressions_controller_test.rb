@@ -60,7 +60,7 @@ class VideoCompressionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to media_path(op: "webm-to-mp4")
   end
 
-  test "successful download deletes converted file and record" do
+  test "successful download deletes converted file but keeps short-lived record" do
     user = users(:one)
     sign_in_as user
 
@@ -82,6 +82,7 @@ class VideoCompressionsControllerTest < ActionDispatch::IntegrationTest
       input_path: Rails.root.join("storage", "video_compressions", video_compression.id.to_s, "input.mp4").to_s,
       output_path: Rails.root.join("storage", "video_compressions", video_compression.id.to_s, "output.mp3").to_s
     )
+    output_path = video_compression.output_path
 
     FileUtils.mkdir_p(File.dirname(video_compression.output_path))
     File.write(video_compression.output_path, "test mp3 data")
@@ -90,8 +91,11 @@ class VideoCompressionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal "attachment; filename=\"clip-audio.mp3\"; filename*=UTF-8''clip-audio.mp3", response.headers["Content-Disposition"]
-    assert_not VideoCompression.exists?(video_compression.id)
-    assert_not File.exist?(video_compression.output_path)
+    assert VideoCompression.exists?(video_compression.id)
+    video_compression.reload
+    assert_nil video_compression.output_path
+    assert_equal "Downloaded and removed from server", video_compression.status_message
+    assert_not File.exist?(output_path)
   end
 
   private

@@ -48,6 +48,10 @@
         <div class="tb-card tb-card-pad" style="margin-top: 16px; border-color: var(--tb-red); color: var(--tb-red-deep); box-shadow: none;">
           <%= @video_compression.error_message.presence || "Conversion failed." %>
         </div>
+      <% elsif @video_compression.succeeded? && !@video_compression.output_available? %>
+        <div class="tb-card tb-card-pad" style="margin-top: 16px; box-shadow: none;">
+          This file was already downloaded and removed from the server.
+        </div>
       <% end %>
 
       <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px;">
