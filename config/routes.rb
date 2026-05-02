@@ -23,7 +23,7 @@ Rails.application.routes.draw do
   get  "sign",                to: "signatures#new",  as: :sign
   resources :digital_signatures, only: [ :create, :destroy ]
 
-  # Tools 08 / 09 — Media (client-side ffmpeg.wasm)
+  # Tools 08 / 09 / 10 — Media (protected server-side FFmpeg)
   get  "media",               to: redirect("/media/mp4-to-mp3"), as: :media_root
   get  "media/:op",           to: "pages#media",
                               as: :media,

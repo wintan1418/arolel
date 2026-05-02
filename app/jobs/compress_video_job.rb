@@ -10,12 +10,14 @@ class CompressVideoJob < ApplicationJob
     return unless video_compression.status == "queued"
 
     with_global_lock(video_compression_id) do
-      video_compression.update!(status: "processing", started_at: Time.current, error_message: nil)
+      video_compression.update!(status: "processing", progress_percent: 5, status_message: "Preparing FFmpeg", started_at: Time.current, error_message: nil)
       output_path = VideoCompressor.new(video_compression).call
       video_compression.update!(
         status: "succeeded",
+        progress_percent: 100,
+        status_message: "Ready to download",
         output_path: output_path,
-        output_filename: "#{video_compression.base_name}-compressed.mp4",
+        output_filename: video_compression.output_name,
         output_bytes: File.size(output_path),
         completed_at: Time.current,
         expires_at: VideoCompression::OUTPUT_TTL.from_now
@@ -23,6 +25,8 @@ class CompressVideoJob < ApplicationJob
     rescue VideoCompressor::Error => e
       video_compression.update!(
         status: "failed",
+        progress_percent: 0,
+        status_message: "Failed",
         error_message: e.message.first(1_000),
         completed_at: Time.current,
         expires_at: 1.hour.from_now

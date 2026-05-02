@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_02_122000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_02_144500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -307,16 +307,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_122000) do
     t.datetime "expires_at"
     t.bigint "input_bytes", null: false
     t.string "input_path", null: false
+    t.string "operation", default: "compress-video", null: false
     t.string "original_filename", null: false
     t.bigint "output_bytes"
     t.string "output_filename"
     t.string "output_path"
+    t.integer "progress_percent", default: 0, null: false
     t.datetime "started_at"
     t.string "status", default: "queued", null: false
+    t.string "status_message"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["active_job_id"], name: "index_video_compressions_on_active_job_id"
     t.index ["expires_at"], name: "index_video_compressions_on_expires_at"
+    t.index ["operation"], name: "index_video_compressions_on_operation"
     t.index ["status"], name: "index_video_compressions_on_status"
     t.index ["user_id", "status"], name: "index_video_compressions_on_user_id_and_status"
     t.index ["user_id"], name: "index_video_compressions_on_user_id"

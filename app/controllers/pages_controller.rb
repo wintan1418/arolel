@@ -37,17 +37,13 @@ class PagesController < ApplicationController
     @op = params[:op]
     set_nav :media
     titles = {
-      "mp4-to-mp3"  => [ "MP4 to MP3",  "Extract audio from MP4 video as MP3, in your browser. No upload." ],
-      "webm-to-mp4" => [ "WebM to MP4", "Convert WebM video to MP4, in your browser. No upload." ],
+      "mp4-to-mp3"  => [ "MP4 to MP3",  "Extract audio from MP4 video as MP3 through a protected server queue." ],
+      "webm-to-mp4" => [ "WebM to MP4", "Convert WebM video to MP4 through a protected server queue." ],
       "compress-video" => [ "Compress video", "Shrink MP4, MOV and WebM videos through a protected server queue." ]
     }
     t, d = titles[@op]
-    page_title @op == "compress-video" ? "#{t} · Arolel" : "#{t} — runs in your browser · Arolel"
+    page_title "#{t} · Arolel"
     meta_description d
-
-    # The media tools use the single-threaded FFmpeg core for reliability.
-    # Multi-threaded FFmpeg needs COOP/COEP, but those headers make browser
-    # worker/WASM loading stricter and can leave the runtime stuck compiling.
   end
 
   def media_debug

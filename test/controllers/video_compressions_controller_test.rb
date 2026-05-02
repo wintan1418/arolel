@@ -15,13 +15,16 @@ class VideoCompressionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_difference "VideoCompression.count", 1 do
       assert_enqueued_with(job: CompressVideoJob) do
-        post video_compressions_path, params: { file: uploaded_video }
+        post video_compressions_path, params: { operation: "mp4-to-mp3", file: uploaded_video }
       end
     end
 
     compression = VideoCompression.last
     assert_redirected_to video_compression_path(compression)
     assert_equal "queued", compression.status
+    assert_equal "mp4-to-mp3", compression.operation
+    assert_equal 0, compression.progress_percent
+    assert_equal "Queued", compression.status_message
     assert_equal "clip.mp4", compression.original_filename
     assert File.exist?(compression.input_path)
   ensure
@@ -32,17 +35,29 @@ class VideoCompressionsControllerTest < ActionDispatch::IntegrationTest
     user = users(:one)
     sign_in_as user
     user.video_compressions.create!(
+      operation: "compress-video",
       status: "queued",
+      progress_percent: 0,
       original_filename: "existing.mp4",
       input_bytes: 10,
       input_path: Rails.root.join("tmp", "existing.mp4").to_s
     )
 
     assert_no_difference "VideoCompression.count" do
-      post video_compressions_path, params: { file: uploaded_video }
+      post video_compressions_path, params: { operation: "mp4-to-mp3", file: uploaded_video }
     end
 
-    assert_redirected_to media_path(op: "compress-video")
+    assert_redirected_to media_path(op: "mp4-to-mp3")
+  end
+
+  test "unsupported file type redirects back to matching media tool" do
+    sign_in_as users(:one)
+
+    assert_no_difference "VideoCompression.count" do
+      post video_compressions_path, params: { operation: "webm-to-mp4", file: uploaded_video }
+    end
+
+    assert_redirected_to media_path(op: "webm-to-mp4")
   end
 
   private

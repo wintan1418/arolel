@@ -1,14 +1,15 @@
 require "test_helper"
 
 class PagesControllerTest < ActionDispatch::IntegrationTest
-  test "media compression page is available" do
-    get media_path(op: "compress-video")
+  test "media pages use protected queue UI" do
+    %w[mp4-to-mp3 webm-to-mp4 compress-video].each do |op|
+      get media_path(op: op)
 
-    assert_response :success
-    assert_select "[data-media-op-value='compress-video']", false
-    assert_select "a[href='#{new_session_path}']", text: "Log in"
-    assert_includes response.body, "Protected queue"
-    assert_includes response.body, "Compress video"
+      assert_response :success
+      assert_select "a[href='#{new_session_path}']", text: "Log in"
+      assert_includes response.body, "Protected queue"
+      assert_includes response.body, "Server protection"
+    end
   end
 
   test "sign page shows uploaded signature preview placeholder" do

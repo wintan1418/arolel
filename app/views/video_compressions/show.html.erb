@@ -1,7 +1,7 @@
 <section class="tb-tool-layout">
   <div>
-    <div class="tb-eyebrow">Heavy video compression</div>
-    <h1 class="tb-h1" style="font-size: 44px; margin-top: 14px;">Compression job</h1>
+    <div class="tb-eyebrow">Media conversion</div>
+    <h1 class="tb-h1" style="font-size: 44px; margin-top: 14px;"><%= @video_compression.operation_label %> job</h1>
     <p class="tb-text" style="margin-top: 8px; max-width: 62ch;">
       This job runs in a protected queue with one FFmpeg thread and low OS priority so it does not take over the server.
     </p>
@@ -13,8 +13,22 @@
     <% status_class = @video_compression.failed? ? "tb-pill-down" : (@video_compression.succeeded? ? "tb-pill-ok" : "tb-pill-warn") %>
 
     <div class="tb-card tb-card-pad" style="margin-top: 24px;">
+      <div class="tb-stack-10" style="margin-bottom: 18px;">
+        <div class="tb-receipt-row">
+          <span>Progress</span>
+          <span><%= @video_compression.progress_percent %>%</span>
+        </div>
+        <div class="tb-progress">
+          <div class="tb-progress-fill" style="width: <%= [@video_compression.progress_percent, @video_compression.active? ? 4 : 0].max %>%"></div>
+        </div>
+        <div class="tb-mono tb-muted" style="font-size: 11px;">
+          <%= @video_compression.status_message.presence || (@video_compression.active? ? "Queued" : @video_compression.status.humanize) %>
+        </div>
+      </div>
+
       <div class="tb-stack-10">
         <div class="tb-receipt-row"><span>Status</span><span class="tb-pill <%= status_class %>"><%= @video_compression.status %></span></div>
+        <div class="tb-receipt-row"><span>Tool</span><span><%= @video_compression.operation_label %></span></div>
         <div class="tb-receipt-row"><span>Input</span><span><%= @video_compression.original_filename %></span></div>
         <div class="tb-receipt-row"><span>Size in</span><span><%= number_to_human_size(@video_compression.input_bytes) %></span></div>
         <% if @video_compression.output_bytes.present? %>
@@ -27,17 +41,17 @@
 
       <% if @video_compression.failed? %>
         <div class="tb-card tb-card-pad" style="margin-top: 16px; border-color: var(--tb-red); color: var(--tb-red-deep); box-shadow: none;">
-          <%= @video_compression.error_message.presence || "Compression failed." %>
+          <%= @video_compression.error_message.presence || "Conversion failed." %>
         </div>
       <% end %>
 
       <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px;">
         <% if @video_compression.output_available? %>
-          <%= link_to "Download compressed MP4", download_video_compression_path(@video_compression), class: "tb-btn tb-btn-primary tb-btn-lg" %>
+          <%= link_to "Download #{@video_compression.output_extension.upcase}", download_video_compression_path(@video_compression), class: "tb-btn tb-btn-primary tb-btn-lg" %>
         <% else %>
           <%= link_to "Refresh status", video_compression_path(@video_compression), class: "tb-btn tb-btn-ghost tb-btn-lg" %>
         <% end %>
-        <%= link_to "Back to video tools", media_path(op: "compress-video"), class: "tb-btn tb-btn-ghost tb-btn-lg" %>
+        <%= link_to "Back to media tools", media_path(op: @video_compression.operation), class: "tb-btn tb-btn-ghost tb-btn-lg" %>
       </div>
     </div>
   </div>
