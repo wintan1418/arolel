@@ -13,6 +13,7 @@ Rails.application.routes.draw do
     root to: "dashboard#index"
     resources :email_tests, only: :create
     resources :user_messages, only: :create
+    resources :users, only: :index
   end
 
   # Tool 06 — Invoice maker

@@ -1,0 +1,36 @@
+<aside class="tb-admin-sidebar">
+  <div class="tb-admin-sidebar-card">
+    <div>
+      <div class="tb-eyebrow">Super admin</div>
+      <div class="tb-admin-sidebar-title">Arolel ops</div>
+      <p class="tb-text-sm tb-muted">A standard control surface for users, queue health, email, and operational review.</p>
+    </div>
+
+    <nav class="tb-admin-nav" aria-label="Admin navigation">
+      <%= link_to "Overview",
+                  admin_root_path,
+                  class: ["tb-admin-nav-link", ("is-active" if local_assigns[:section] == :overview)] %>
+      <%= link_to "Users",
+                  admin_users_path,
+                  class: ["tb-admin-nav-link", ("is-active" if local_assigns[:section] == :users)] %>
+      <%= link_to "Mail desk",
+                  admin_root_path(anchor: "mail-desk"),
+                  class: "tb-admin-nav-link" %>
+      <%= link_to "Queue health",
+                  admin_root_path(anchor: "queue-health"),
+                  class: "tb-admin-nav-link" %>
+    </nav>
+
+    <div class="tb-admin-sidebar-foot">
+      <div>
+        <div class="tb-eyebrow">Signed in</div>
+        <div class="tb-admin-sidebar-email"><%= current_user.email_address %></div>
+      </div>
+
+      <div class="tb-admin-side-links">
+        <%= link_to "User dashboard", dashboard_path, class: "tb-admin-side-link" %>
+        <%= link_to "Public site", root_path, class: "tb-admin-side-link" %>
+      </div>
+    </div>
+  </div>
+</aside>

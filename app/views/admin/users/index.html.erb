@@ -1,0 +1,175 @@
+<section class="tb-admin-layout">
+  <%= render "admin/sidebar", section: :users %>
+
+  <div class="tb-admin-content">
+    <div class="tb-admin-pagehead">
+      <div>
+        <div class="tb-eyebrow">Admin workspace</div>
+        <h1 class="tb-h1 tb-dashboard-title">User directory</h1>
+        <div class="tb-dashboard-user">Search, segment, and review registered accounts without crowding the dashboard.</div>
+      </div>
+      <div class="tb-dashboard-actions">
+        <%= link_to "Control room", admin_root_path, class: "tb-btn tb-btn-primary" %>
+        <%= link_to "User dashboard", dashboard_path, class: "tb-btn tb-btn-ghost" %>
+      </div>
+    </div>
+
+    <div class="tb-dashboard-stats tb-admin-stats">
+      <div class="tb-stat">
+        <span class="tb-stat-label">Users</span>
+        <strong><%= number_with_delimiter(@totals[:users]) %></strong>
+        <span class="tb-stat-note">Registered accounts</span>
+      </div>
+      <div class="tb-stat">
+        <span class="tb-stat-label">Admins</span>
+        <strong><%= number_with_delimiter(@totals[:admins]) %></strong>
+        <span class="tb-stat-note">Super admin access</span>
+      </div>
+      <div class="tb-stat">
+        <span class="tb-stat-label">Active 30d</span>
+        <strong><%= number_with_delimiter(@totals[:active_30d]) %></strong>
+        <span class="tb-stat-note">Users with tracked activity</span>
+      </div>
+      <div class="tb-stat">
+        <span class="tb-stat-label">New 30d</span>
+        <strong><%= number_with_delimiter(@totals[:recent_signups_30d]) %></strong>
+        <span class="tb-stat-note">Recent signups</span>
+      </div>
+    </div>
+
+    <div class="tb-admin-content-grid">
+      <main class="tb-admin-maincol">
+        <section class="tb-dash-section">
+          <div class="tb-dash-section-head">
+            <div>
+              <h2>Search and filter</h2>
+              <p>Keep the control room light and do user review here instead.</p>
+            </div>
+          </div>
+
+          <%= form_with url: admin_users_path, method: :get, class: "tb-card tb-card-pad tb-stack-14", local: true do |f| %>
+            <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <div>
+                <label class="tb-eyebrow" style="display: block; margin-bottom: 6px;">Email search</label>
+                <%= f.text_field :q, value: @filters[:q], class: "tb-input", placeholder: "name@example.com" %>
+              </div>
+              <div>
+                <label class="tb-eyebrow" style="display: block; margin-bottom: 6px;">Role</label>
+                <%= f.select :role,
+                             [["All roles", "all"], ["Admins", "admin"], ["Users", "user"]],
+                             { selected: @filters[:role] },
+                             class: "tb-input" %>
+              </div>
+              <div>
+                <label class="tb-eyebrow" style="display: block; margin-bottom: 6px;">Activity</label>
+                <%= f.select :activity,
+                             [["All activity", "all"], ["Active in last 30 days", "active_30d"], ["Inactive for 30+ days", "inactive_30d"], ["Never active", "never"]],
+                             { selected: @filters[:activity] },
+                             class: "tb-input" %>
+              </div>
+              <div>
+                <label class="tb-eyebrow" style="display: block; margin-bottom: 6px;">Joined</label>
+                <%= f.select :joined,
+                             [["Any time", "all"], ["Last 7 days", "last_7d"], ["Last 30 days", "last_30d"]],
+                             { selected: @filters[:joined] },
+                             class: "tb-input" %>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-3">
+              <%= f.submit "Apply filters", class: "tb-btn tb-btn-primary" %>
+              <%= link_to "Reset", admin_users_path, class: "tb-btn tb-btn-ghost" %>
+            </div>
+          <% end %>
+        </section>
+
+        <section class="tb-dash-section">
+          <div class="tb-dash-section-head">
+            <div>
+              <h2>Matched users</h2>
+              <p>Showing up to <%= Admin::UsersController::USER_LIMIT %> matches ordered by recent activity, then signup date.</p>
+            </div>
+            <div class="tb-eyebrow">Results <%= number_with_delimiter(@users.length) %></div>
+          </div>
+          <div class="tb-card tb-table-wrap">
+            <table class="tb-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>Joined</th>
+                  <th>Last seen</th>
+                  <th>Events</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% @users.each do |user| %>
+                  <% last_seen_at = user.attributes["last_seen_at"]&.to_time&.in_time_zone %>
+                  <% activity_count = user.attributes["activity_count"].to_i %>
+                  <tr>
+                    <td>
+                      <div><%= user.email_address %></div>
+                      <div class="tb-text-sm tb-muted">User #<%= user.id %></div>
+                    </td>
+                    <td>
+                      <% if user.super_admin? %>
+                        <span class="tb-pill tb-pill-ok">admin</span>
+                      <% else %>
+                        <span class="tb-pill tb-pill-neu">user</span>
+                      <% end %>
+                    </td>
+                    <td>
+                      <div class="tb-mono"><%= user.created_at.strftime("%Y-%m-%d") %></div>
+                      <div class="tb-text-sm tb-muted"><%= time_ago_in_words(user.created_at) %> ago</div>
+                    </td>
+                    <td>
+                      <% if last_seen_at.present? %>
+                        <div class="tb-mono"><%= last_seen_at.strftime("%Y-%m-%d %H:%M") %></div>
+                        <div class="tb-text-sm tb-muted"><%= time_ago_in_words(last_seen_at) %> ago</div>
+                      <% else %>
+                        <span class="tb-muted">never</span>
+                      <% end %>
+                    </td>
+                    <td class="tb-mono"><%= number_with_delimiter(activity_count) %></td>
+                  </tr>
+                <% end %>
+                <% if @users.empty? %>
+                  <tr>
+                    <td colspan="5" class="tb-muted">No users matched these filters.</td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+
+      <aside class="tb-admin-sidecol">
+        <section class="tb-dash-section">
+          <div class="tb-dash-section-head">
+            <div>
+              <h2>How to use this</h2>
+              <p>A stable review screen instead of an overloaded dashboard block.</p>
+            </div>
+          </div>
+          <div class="tb-card tb-card-pad tb-stack-14">
+            <div>
+              <div class="tb-eyebrow">Search</div>
+              <div class="tb-text-sm">Use partial email search to find one account quickly.</div>
+            </div>
+            <div>
+              <div class="tb-eyebrow">Segment</div>
+              <div class="tb-text-sm">Role, activity, and signup filters stay in the query string, so useful views can be bookmarked.</div>
+            </div>
+            <div>
+              <div class="tb-eyebrow">Scale guardrail</div>
+              <div class="tb-text-sm">The page is capped at <%= Admin::UsersController::USER_LIMIT %> rows to keep the shared server responsive.</div>
+            </div>
+            <div class="tb-text-sm tb-muted">
+              For outbound email, use the Mail desk link in the left navigation.
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+  </div>
+</section>
