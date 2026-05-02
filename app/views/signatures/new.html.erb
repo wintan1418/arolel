@@ -63,7 +63,11 @@
 
         <div data-sign-target="uploadPanel" hidden>
           <input type="file" accept="image/png,image/jpeg" data-sign-target="sigInput" data-action="change->sign#uploadedSig" class="tb-input" style="padding-top: 8px;">
-          <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 6px;">PNG with transparency preferred.</div>
+          <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 6px;">PNG with transparency preferred. This does not upload to the server; it only loads the image into the signer.</div>
+        </div>
+
+        <div data-sign-target="signaturePreview" class="tb-card tb-card-pad" style="margin-top: 12px; padding: 12px; background: var(--tb-paper-2); box-shadow: none;">
+          <div class="tb-mono tb-muted" style="font-size: 11px;">No signature selected yet.</div>
         </div>
 
         <div data-sign-target="signatureActions" style="display: none; gap: 8px; margin-top: 12px; flex-wrap: wrap;">

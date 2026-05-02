@@ -38,7 +38,8 @@ class PagesController < ApplicationController
     set_nav :media
     titles = {
       "mp4-to-mp3"  => [ "MP4 to MP3",  "Extract audio from MP4 video as MP3, in your browser. No upload." ],
-      "webm-to-mp4" => [ "WebM to MP4", "Convert WebM video to MP4, in your browser. No upload." ]
+      "webm-to-mp4" => [ "WebM to MP4", "Convert WebM video to MP4, in your browser. No upload." ],
+      "compress-video" => [ "Compress video", "Shrink MP4, MOV and WebM videos in your browser. No upload." ]
     }
     t, d = titles[@op]
     page_title "#{t} — runs in your browser · Arolel"

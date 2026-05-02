@@ -45,13 +45,16 @@ export default class extends Controller {
   }
 
   addFiles (files) {
-    const accept = this.extInValue === "mp4"
-      ? /\.(mp4|m4a|mov)$/i
-      : /\.webm$/i
+    const accept = this.extInValue === "video"
+      ? /\.(mp4|m4v|mov|webm)$/i
+      : this.extInValue === "mp4"
+        ? /\.(mp4|m4a|mov)$/i
+        : /\.webm$/i
     const filtered = files.filter((f) => accept.test(f.name))
 
     if (files.length > 0 && filtered.length === 0) {
-      this.toast(`Only ${this.extInValue.toUpperCase()} files supported on this page.`)
+      const label = this.extInValue === "video" ? "MP4, MOV or WebM" : this.extInValue.toUpperCase()
+      this.toast(`Only ${label} files supported on this page.`)
       return
     }
     if (filtered.length === 0) return
@@ -285,7 +288,7 @@ export default class extends Controller {
       next.durationHint = await this.guessDuration(next.file).catch(() => null)
 
       const runId = next.id.replace(/[^a-z0-9]/gi, "")
-      const inputName  = `in-${runId}.${this.extInValue}`
+      const inputName  = `in-${runId}.${this.inputExtension(next.file)}`
       const outputName = `out-${runId}.${this.extOutValue}`
 
       await ff.writeFile(inputName, await this.fetchFile(next.file))
@@ -360,6 +363,21 @@ export default class extends Controller {
         output
       ]
     }
+    if (this.opValue === "compress-video") {
+      // Re-encode to a browser-friendly H.264 MP4. Scale down only when wider
+      // than 1280px so small clips keep their dimensions.
+      return [
+        "-y",
+        "-i", input,
+        "-map", "0:v:0", "-map", "0:a:0?",
+        "-vf", "scale=1280:-2:force_original_aspect_ratio=decrease,format=yuv420p",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "32",
+        "-c:a", "aac", "-b:a", "128k",
+        "-sn", "-dn",
+        "-movflags", "+faststart",
+        output
+      ]
+    }
     // WebM → MP4: H.264 video + AAC audio. Real browser/screen recordings can
     // have odd dimensions or alpha-capable pixel formats; normalize them for
     // reliable H.264/browser playback.
@@ -399,7 +417,8 @@ export default class extends Controller {
   downloadOne (e) {
     const f = this.files.find((x) => x.id === e.currentTarget.dataset.id)
     if (!f || !f.outBlob) return
-    const name = f.name.replace(/\.[^.]+$/, `.${this.extOutValue}`)
+    const suffix = this.opValue === "compress-video" ? "-compressed" : ""
+    const name = f.name.replace(/\.[^.]+$/, `${suffix}.${this.extOutValue}`)
     this.triggerDownload(f.outBlob, name)
   }
 
@@ -447,7 +466,7 @@ export default class extends Controller {
   }
 
   rowHtml (f) {
-    const typeLabel = this.extInValue.toUpperCase()
+    const typeLabel = this.extInValue === "video" ? this.inputExtension(f.file).toUpperCase() : this.extInValue.toUpperCase()
     const meta = f.outSize != null
       ? `${this.fmtBytes(f.size)} → ${this.fmtBytes(f.outSize)}`
       : this.fmtBytes(f.size)
@@ -495,6 +514,11 @@ export default class extends Controller {
     if (n < 1024 * 1024) return `${(n/1024).toFixed(1)} KB`
     if (n < 1024 * 1024 * 1024) return `${(n/1024/1024).toFixed(1)} MB`
     return `${(n/1024/1024/1024).toFixed(2)} GB`
+  }
+
+  inputExtension (file) {
+    const ext = (file.name.match(/\.([^.]+)$/) || [])[1]
+    return (ext || this.extInValue || "media").toLowerCase()
   }
 
   escape (s) {

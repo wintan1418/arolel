@@ -13,7 +13,7 @@ export default class extends Controller {
     "drop", "pdfInput", "pagesWrap", "pages",
     "modeTabs", "drawPanel", "typePanel", "uploadPanel",
     "canvas", "inkColor", "typeText", "sigInput", "variants",
-    "signatureActions", "saveSignatureBtn", "signatureStatus",
+    "signaturePreview", "signatureActions", "saveSignatureBtn", "signatureStatus",
     "savedSeed", "savedList", "downloadBtn"
   ]
   static values = {
@@ -88,6 +88,7 @@ export default class extends Controller {
     this.signatureMeta = null
     this.updateDownloadBtn()
     this.updateSignatureActions()
+    this.updateSignaturePreview()
   }
 
   captureSigFromCanvas () {
@@ -97,6 +98,7 @@ export default class extends Controller {
       this.signature = null
       this.signatureMeta = null
       this.updateSignatureActions()
+      this.updateSignaturePreview()
       return
     }
     this.setSignature(signature, { name: "Drawn signature", sourceText: "", styleKey: "draw" })
@@ -123,6 +125,7 @@ export default class extends Controller {
       this.variantsTarget.innerHTML = ""
       this.updateDownloadBtn()
       this.updateSignatureActions()
+      this.updateSignaturePreview()
       return
     }
 
@@ -213,19 +216,32 @@ export default class extends Controller {
   async uploadedSig () {
     const file = this.sigInputTarget.files[0]
     if (!file) return
+
+    if (!/^image\/(png|jpe?g)$/i.test(file.type) && !/\.(png|jpe?g)$/i.test(file.name)) {
+      this.signatureStatusTarget.textContent = "Upload a PNG or JPG signature image."
+      return
+    }
+
     const url = URL.createObjectURL(file)
-    const img = await this.loadImage(url)
-    URL.revokeObjectURL(url)
-    const c = document.createElement("canvas")
-    const maxW = 520, scale = Math.min(1, maxW / img.width)
-    c.width = img.width * scale; c.height = img.height * scale
-    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height)
-    this.setSignature(c.toDataURL("image/png"), {
-      name: file.name.replace(/\.[^.]+$/, ""),
-      sourceText: "",
-      styleKey: "upload"
-    })
-    this.updateDownloadBtn()
+    try {
+      const img = await this.loadImage(url)
+      const c = document.createElement("canvas")
+      const maxW = 520, scale = Math.min(1, maxW / img.width)
+      c.width = Math.max(1, Math.round(img.width * scale))
+      c.height = Math.max(1, Math.round(img.height * scale))
+      c.getContext("2d").drawImage(img, 0, 0, c.width, c.height)
+      this.setSignature(c.toDataURL("image/png"), {
+        name: file.name.replace(/\.[^.]+$/, ""),
+        sourceText: "",
+        styleKey: "upload"
+      })
+      this.signatureStatusTarget.textContent = "uploaded · click a page to place it"
+      this.updateDownloadBtn()
+    } catch (_) {
+      this.signatureStatusTarget.textContent = "Could not read that image. Try a PNG or JPG."
+    } finally {
+      URL.revokeObjectURL(url)
+    }
   }
 
   setSignature (imageData, meta = {}) {
@@ -237,6 +253,7 @@ export default class extends Controller {
     }
     this.signatureStatusTarget.textContent = ""
     this.updateSignatureActions()
+    this.updateSignaturePreview()
   }
 
   // ----- PDF handling -----
@@ -357,6 +374,24 @@ export default class extends Controller {
   updateSignatureActions () {
     this.signatureActionsTarget.style.display = this.signature ? "flex" : "none"
     if (!this.signature) this.signatureStatusTarget.textContent = ""
+  }
+
+  updateSignaturePreview () {
+    if (!this.hasSignaturePreviewTarget) return
+
+    if (!this.signature) {
+      this.signaturePreviewTarget.innerHTML = `
+        <div class="tb-mono tb-muted" style="font-size: 11px;">No signature selected yet.</div>
+      `
+      return
+    }
+
+    this.signaturePreviewTarget.innerHTML = `
+      <img src="${this.signature}" alt="${this.escape(this.signatureMeta?.name || "Signature preview")}" style="max-height: 72px; max-width: 100%; object-fit: contain;">
+      <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 6px;">
+        ${this.escape(this.signatureMeta?.name || "Signature")} is ready. Click a page preview to place it.
+      </div>
+    `
   }
 
   downloadSignature () {

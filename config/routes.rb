@@ -27,7 +27,7 @@ Rails.application.routes.draw do
   get  "media",               to: redirect("/media/mp4-to-mp3"), as: :media_root
   get  "media/:op",           to: "pages#media",
                               as: :media,
-                              constraints: { op: /mp4-to-mp3|webm-to-mp4/ }
+                              constraints: { op: /mp4-to-mp3|webm-to-mp4|compress-video/ }
   get  "media-debug",         to: "pages#media_debug"
 
   root "pages#home"

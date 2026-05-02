@@ -25,6 +25,19 @@
       seo_q:   "How do I convert a WebM video to MP4 online?",
       seo_a:   "Drop your WebM file onto the box. We transcode the VP8/VP9 video into H.264 MP4 in your browser using FFmpeg compiled to WebAssembly. It takes a while — browser transcoding is slower than desktop — but nothing uploads.",
       max_mb:  200
+    },
+    "compress-video" => {
+      title:   "Compress video",
+      tool_no: "10",
+      accept:  "video/mp4,video/quicktime,video/webm,.mp4,.m4v,.mov,.webm",
+      drop:    "Drop heavy videos to compress",
+      cta:     "Compress video",
+      ext_in:  "video",
+      ext_out: "mp4",
+      note:    "Compress MP4, MOV and WebM locally. Best for short clips; very large videos are better handled by desktop or server-side FFmpeg.",
+      seo_q:   "How do I compress a heavy video online without uploading it?",
+      seo_a:   "Drop an MP4, MOV or WebM file onto the box. Arolel uses FFmpeg WebAssembly in your browser to re-encode the video as a smaller H.264 MP4. The file stays on your device, but heavy videos can take a long time and use a lot of memory.",
+      max_mb:  250
     }
   }.fetch(@op)
 %>
@@ -45,6 +58,7 @@
       <div class="tb-tabs">
         <%= link_to "MP4 → MP3",  media_path(op: "mp4-to-mp3"),  class: ["tb-tab", ("is-active" if @op == "mp4-to-mp3")] %>
         <%= link_to "WebM → MP4", media_path(op: "webm-to-mp4"), class: ["tb-tab", ("is-active" if @op == "webm-to-mp4")] %>
+        <%= link_to "Compress", media_path(op: "compress-video"), class: ["tb-tab", ("is-active" if @op == "compress-video")] %>
       </div>
     </div>
 
@@ -90,7 +104,7 @@
         <div class="tb-receipt-row"><span>files done</span><span data-media-target="done">0</span></div>
       </div>
       <div class="tb-receipt-foot">
-        FFmpeg itself (the WebAssembly runtime) is loaded from a public CDN the first time
+        FFmpeg itself (the WebAssembly runtime) is loaded from Arolel the first time
         you use this tool, then cached by your browser. Your media files never leave this tab.
       </div>
     </div>

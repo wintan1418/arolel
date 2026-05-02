@@ -28,6 +28,7 @@ class SeoController < ApplicationController
       [ sign_url, "weekly", "0.8" ],
       [ media_url(op: "mp4-to-mp3"), "weekly", "0.8" ],
       [ media_url(op: "webm-to-mp4"), "weekly", "0.8" ],
+      [ media_url(op: "compress-video"), "weekly", "0.8" ],
       [ down_url, "weekly", "0.7" ],
       [ open_urls_url, "weekly", "0.7" ],
       [ roadmap_url, "weekly", "0.6" ],
