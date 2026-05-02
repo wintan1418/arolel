@@ -40,10 +40,13 @@ class VideoCompressionsController < ApplicationController
       return
     end
 
-    send_file safe_output_path(@video_compression),
-              filename: @video_compression.output_name,
-              type: @video_compression.output_content_type,
-              disposition: "attachment"
+    video_compression = @video_compression
+    output_path = safe_output_path(video_compression)
+    response.headers["Content-Type"] = video_compression.output_content_type
+    response.headers["Content-Disposition"] = ActionDispatch::Http::ContentDisposition.format(disposition: "attachment", filename: video_compression.output_name)
+    response.headers["Content-Length"] = File.size(output_path).to_s
+    self.status = :ok
+    self.response_body = streamed_file_body(output_path, video_compression)
   end
 
   private
@@ -120,5 +123,25 @@ class VideoCompressionsController < ApplicationController
     raise ArgumentError, "Unknown media conversion." unless VideoCompression::OPERATIONS.key?(operation)
 
     operation
+  end
+
+  def cleanup_downloaded_conversion(video_compression)
+    video_compression.reload
+    video_compression.purge_files!
+    video_compression.destroy!
+  rescue ActiveRecord::RecordNotFound
+    nil
+  end
+
+  def streamed_file_body(path, video_compression)
+    Enumerator.new do |yielder|
+      File.open(path, "rb") do |file|
+        while (chunk = file.read(64.kilobytes))
+          yielder << chunk
+        end
+      end
+    ensure
+      cleanup_downloaded_conversion(video_compression)
+    end
   end
 end

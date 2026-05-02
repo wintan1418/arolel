@@ -9,6 +9,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
       assert_select "a[href='#{new_session_path}']", text: "Log in"
       assert_includes response.body, "Protected queue"
       assert_includes response.body, "Server protection"
+      assert_includes response.body, "Free for now while capacity is being tested"
     end
   end
 

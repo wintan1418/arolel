@@ -63,6 +63,11 @@
       <p class="tb-text" style="margin-top: 8px;">
         This avoids the browser FFmpeg runtime and gives you a real queued conversion.
       </p>
+      <div class="tb-card tb-card-pad" style="margin-top: 14px; box-shadow: none;">
+        <div class="tb-text-sm">
+          Free for now while capacity is being tested. Downloads expire quickly and this feature may move to paid plans as usage grows.
+        </div>
+      </div>
 
       <% if signed_in? %>
         <%= form_with url: video_compressions_path, method: :post, multipart: true, local: true, class: "tb-stack-14", style: "margin-top: 18px;" do |form| %>
@@ -76,7 +81,7 @@
                                 style: "padding-top: 8px;" %>
           </div>
           <div class="tb-mono tb-muted" style="font-size: 11px; line-height: 1.55;">
-            Limit: <%= meta[:max_mb] %>MB. One active upload per user. Outputs expire after <%= VideoCompression::OUTPUT_TTL / 1.hour %> hours.
+            Limit: <%= meta[:max_mb] %>MB. One active upload per user. Converted files are deleted after download and expire after <%= VideoCompression::OUTPUT_TTL / 1.hour %> hours if untouched.
           </div>
           <%= form.submit meta[:cta], class: "tb-btn tb-btn-primary tb-btn-lg" %>
         <% end %>

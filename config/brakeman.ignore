@@ -1,10 +1,6 @@
 {
   "ignored_warnings": [
     {
-      "fingerprint": "7066be090b650a3cb277c8c7729d7ba251479527cf2c23252a26ee33ae644c0d",
-      "note": "Media conversion downloads are scoped through current_user, use a persisted integer job id and a fixed output basename under storage/video_compressions, and safe_output_path checks the storage prefix before send_file."
-    },
-    {
       "fingerprint": "b71caac7133508f62b59c0babcf75747ab9c672b16ffcbfcbba4d2d32c1b3d7c",
       "note": "Input directories are built under storage/video_compressions for the newly created integer job id; upload extensions are allowlisted before path construction."
     },

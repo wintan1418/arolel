@@ -5,6 +5,11 @@
     <p class="tb-text" style="margin-top: 8px; max-width: 62ch;">
       This job runs in a protected queue with one FFmpeg thread and low OS priority so it does not take over the server.
     </p>
+    <div class="tb-card tb-card-pad" style="margin-top: 14px; box-shadow: none;">
+      <div class="tb-text-sm">
+        Free for now while capacity is being tested. The downloaded file is deleted immediately after transfer and expires after <%= VideoCompression::OUTPUT_TTL / 1.hour %> hours if never downloaded.
+      </div>
+    </div>
 
     <% if @video_compression.active? %>
       <meta http-equiv="refresh" content="12">

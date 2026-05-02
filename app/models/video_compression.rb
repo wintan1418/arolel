@@ -31,7 +31,7 @@ class VideoCompression < ApplicationRecord
   INPUT_EXTENSIONS = OPERATIONS.values.flat_map { |config| config[:input_extensions] }.uniq.freeze
   MAX_BYTES = ENV.fetch("MEDIA_CONVERSION_MAX_MB", ENV.fetch("VIDEO_COMPRESSION_MAX_MB", 200)).to_i.megabytes
   MAX_QUEUE = ENV.fetch("VIDEO_COMPRESSION_MAX_QUEUE", 2).to_i
-  OUTPUT_TTL = ENV.fetch("VIDEO_COMPRESSION_TTL_HOURS", 24).to_i.hours
+  OUTPUT_TTL = ENV.fetch("VIDEO_COMPRESSION_TTL_HOURS", 2).to_i.hours
 
   validates :status, inclusion: { in: STATUSES }
   validates :operation, inclusion: { in: OPERATIONS.keys }
