@@ -25,6 +25,7 @@ class SeoController < ApplicationController
       [ url_for(controller: "pages", action: "pdf", op: "pdf-to-png", only_path: false), "weekly", "0.9" ],
       [ image_url(op: "compress"), "weekly", "0.8" ],
       [ new_invoice_url, "weekly", "0.8" ],
+      [ new_contract_url, "weekly", "0.8" ],
       [ sign_url, "weekly", "0.8" ],
       [ media_url(op: "mp4-to-mp3"), "weekly", "0.8" ],
       [ media_url(op: "webm-to-mp4"), "weekly", "0.8" ],

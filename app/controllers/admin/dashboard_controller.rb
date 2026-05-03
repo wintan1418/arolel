@@ -11,6 +11,7 @@ module Admin
         visits_7d: ActivityEvent.since(7.days.ago).count,
         visits_30d: ActivityEvent.since(30.days.ago).count,
         invoices: Invoice.count,
+        contracts: Contract.count,
         boards: Board.count,
         url_sets: UrlSet.count,
         signatures: DigitalSignature.count,

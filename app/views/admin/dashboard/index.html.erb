@@ -42,8 +42,8 @@
       </div>
       <div class="tb-stat">
         <span class="tb-stat-label">Saved items</span>
-        <strong><%= number_with_delimiter(@totals.values_at(:invoices, :boards, :url_sets, :signatures).sum) %></strong>
-        <span class="tb-stat-note">Invoices, boards, sets, signatures</span>
+        <strong><%= number_with_delimiter(@totals.values_at(:invoices, :contracts, :boards, :url_sets, :signatures).sum) %></strong>
+        <span class="tb-stat-note">Invoices, contracts, boards, sets, signatures</span>
       </div>
     </div>
 

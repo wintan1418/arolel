@@ -13,6 +13,7 @@
       <%= link_to "Sign",    sign_path,  class: ["tb-nav-link", ("is-active" if current_nav == :sign)] %>
       <%= link_to "Media",   media_path(op: "mp4-to-mp3"), class: ["tb-nav-link", ("is-active" if current_nav == :media)] %>
       <%= link_to "Invoice", new_invoice_path, class: ["tb-nav-link", ("is-active" if current_nav == :invoice)] %>
+      <%= link_to "Contract", new_contract_path, class: ["tb-nav-link", ("is-active" if current_nav == :contract)] %>
       <%= link_to "Down",    down_path,  class: ["tb-nav-link", ("is-active" if current_nav == :down)] %>
       <%= link_to "URLs",    open_urls_path, class: ["tb-nav-link", ("is-active" if current_nav == :open)] %>
     </nav>

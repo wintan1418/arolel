@@ -2206,6 +2206,70 @@ a {
   gap: 16px;
 }
 
+.tb-contract-section-list {
+  display: grid;
+  gap: 12px;
+}
+
+.tb-contract-section-row {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--tb-line);
+  border-radius: var(--tb-r-tile);
+  background: var(--tb-paper-2);
+}
+
+.tb-contract-signature-preview {
+  min-height: 84px;
+}
+
+.tb-contract-signature-card {
+  border: 1px solid var(--tb-line);
+  border-radius: var(--tb-r-tile);
+  background: var(--tb-paper-2);
+  padding: 14px;
+}
+
+.tb-contract-signature-card img {
+  display: block;
+  max-width: 100%;
+  max-height: 88px;
+}
+
+.tb-contract-saved-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.tb-contract-saved-card {
+  border: 1px solid var(--tb-line);
+  border-radius: var(--tb-r-tile);
+  background: var(--tb-paper-2);
+  overflow: hidden;
+}
+
+.tb-contract-saved-preview {
+  display: grid;
+  place-items: center;
+  min-height: 88px;
+  padding: 12px;
+  border-bottom: 1px solid var(--tb-line);
+}
+
+.tb-contract-saved-preview img {
+  display: block;
+  max-width: 100%;
+  max-height: 64px;
+}
+
+.tb-contract-saved-foot {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
 .tb-roadmap {
   padding: 20px 0 64px;
 }
@@ -2400,5 +2464,9 @@ a {
   .tb-invoice-preview-head {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .tb-contract-section-row {
+    padding: 12px;
   }
 }

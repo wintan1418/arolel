@@ -1,4 +1,4 @@
-<% total_saved = @invoices.size + @boards.size + @url_sets.size + @digital_signatures.size %>
+<% total_saved = @invoices.size + @contracts.size + @boards.size + @url_sets.size + @digital_signatures.size %>
 
 <section class="tb-dashboard">
   <div class="tb-dashboard-head">
@@ -10,6 +10,9 @@
     <div class="tb-dashboard-actions">
       <%= link_to new_invoice_path, class: "tb-btn tb-btn-primary" do %>
         <span class="tb-btn-mark">+</span> Invoice
+      <% end %>
+      <%= link_to new_contract_path, class: "tb-btn tb-btn-ghost" do %>
+        <span class="tb-btn-mark">+</span> Contract
       <% end %>
       <%= link_to down_path, class: "tb-btn tb-btn-ghost" do %>
         <span class="tb-btn-mark">+</span> Board
@@ -33,6 +36,11 @@
       <span class="tb-stat-note">Drafts and saved PDFs</span>
     </div>
     <div class="tb-stat">
+      <span class="tb-stat-label">Contracts</span>
+      <strong><%= @contracts.size %></strong>
+      <span class="tb-stat-note">Draft agreements</span>
+    </div>
+    <div class="tb-stat">
       <span class="tb-stat-label">Boards</span>
       <strong><%= @boards.size %></strong>
       <span class="tb-stat-note">Uptime watchlists</span>
@@ -46,6 +54,40 @@
 
   <div class="tb-dashboard-grid">
     <main class="tb-dashboard-main">
+      <section class="tb-dash-section">
+        <div class="tb-dash-section-head">
+          <div>
+            <h2>Contracts</h2>
+            <p>Saved agreements and drafts.</p>
+          </div>
+          <%= link_to "New contract", new_contract_path, class: "tb-dash-link" %>
+        </div>
+
+        <% if @contracts.any? %>
+          <div class="tb-dash-list">
+            <% @contracts.each do |contract| %>
+              <div class="tb-dash-row tb-dash-row-invoice">
+                <div class="tb-dash-maincell">
+                  <div class="tb-dash-name"><%= contract.title %></div>
+                  <div class="tb-dash-meta"><%= contract.party_b_name.presence || "No counterparty" %> · <%= time_ago_in_words(contract.created_at) %> ago</div>
+                </div>
+                <span class="tb-pill tb-pill-neu"><%= contract.template %></span>
+                <span class="tb-dash-money"><%= contract.effective_on&.strftime("%Y-%m-%d") || "draft" %></span>
+                <div class="tb-dash-row-actions">
+                  <%= link_to "Edit", edit_contract_path(slug: contract.slug), class: "tb-btn tb-btn-ghost tb-btn-sm" %>
+                  <%= button_to "Delete", contract_path(slug: contract.slug),
+                        method: :delete,
+                        form: { data: { turbo_confirm: "Delete this contract?" }, style: "display:inline;" },
+                        class: "tb-btn tb-btn-quiet tb-btn-sm" %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <%= render "empty", message: "No contracts yet.", action_label: "Create contract", action_path: new_contract_path %>
+        <% end %>
+      </section>
+
       <section class="tb-dash-section">
         <div class="tb-dash-section-head">
           <div>

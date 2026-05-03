@@ -64,6 +64,8 @@ class VideoCompressionsControllerTest < ActionDispatch::IntegrationTest
   test "successful download deletes converted file but keeps short-lived record" do
     user = users(:one)
     sign_in_as user
+    token = SecureRandom.hex(4)
+    storage_dir = Rails.root.join("storage", "video_compressions", "test-download-#{token}")
 
     video_compression = user.video_compressions.create!(
       operation: "mp4-to-mp3",
@@ -72,16 +74,11 @@ class VideoCompressionsControllerTest < ActionDispatch::IntegrationTest
       status_message: "Ready to download",
       original_filename: "clip.mp4",
       input_bytes: 10,
-      input_path: Rails.root.join("storage", "video_compressions", "pending", "test-download", "input.mp4").to_s,
-      output_path: Rails.root.join("storage", "video_compressions", "pending", "test-download", "output.mp3").to_s,
+      input_path: storage_dir.join("input.mp4").to_s,
+      output_path: storage_dir.join("output.mp3").to_s,
       output_filename: "clip-audio.mp3",
       output_bytes: 12,
       expires_at: 2.hours.from_now
-    )
-
-    video_compression.update!(
-      input_path: Rails.root.join("storage", "video_compressions", video_compression.id.to_s, "input.mp4").to_s,
-      output_path: Rails.root.join("storage", "video_compressions", video_compression.id.to_s, "output.mp3").to_s
     )
     output_path = video_compression.output_path
 

@@ -1,0 +1,169 @@
+<section data-controller="contract"
+         data-contract-saved-value="<%= @contract.persisted? %>"
+         data-contract-slug-value="<%= @contract.slug || "" %>"
+         data-contract-signed-in-value="<%= signed_in? %>"
+         data-contract-seed-value='<%= {
+           title: @contract.title,
+           template: @contract.template || "service",
+           effective_on: @contract.effective_on&.iso8601,
+           party_a_name: @contract.party_a_name,
+           party_a_address: @contract.party_a_address,
+           party_a_email: @contract.party_a_email,
+           party_b_name: @contract.party_b_name,
+           party_b_address: @contract.party_b_address,
+           party_b_email: @contract.party_b_email,
+           summary: @contract.summary,
+           notes: @contract.notes,
+           signer_name: @contract.signer_name,
+           signer_image_data: @contract.signer_image_data,
+           sections: (@contract.sections || [])
+         }.to_json %>'>
+  <div class="tb-invoice-hero">
+    <div>
+      <div class="tb-eyebrow">Tool 11</div>
+      <h1 class="tb-h1 tb-tool-title">Contract maker</h1>
+      <p class="tb-text tb-tool-subtitle" style="max-width: 62ch;">
+        Draft a service agreement, NDA, or consulting contract. Reuse your saved signature, preview it live, and export a PDF.
+      </p>
+    </div>
+    <div class="tb-tabs" data-contract-target="templates">
+      <button type="button" class="tb-tab is-active" data-action="click->contract#setTemplate" data-template="service">Service</button>
+      <button type="button" class="tb-tab" data-action="click->contract#setTemplate" data-template="nda">NDA</button>
+      <button type="button" class="tb-tab" data-action="click->contract#setTemplate" data-template="consulting">Consulting</button>
+    </div>
+  </div>
+
+  <div class="tb-invoice-shell">
+    <div class="tb-invoice-editor">
+      <div class="tb-card tb-card-pad">
+        <div class="tb-eyebrow" style="margin-bottom: 10px;">Draft assistant</div>
+        <div class="tb-text-sm" style="margin-bottom: 10px;">
+          Describe the deal in plain language and the draft will reshape around it. This first version is brief-guided drafting, not a compliance-grade legal AI.
+        </div>
+        <textarea class="tb-textarea" rows="4" placeholder="Example: Monthly social media management for 3 months, 50% upfront, 2 revision rounds, confidential client assets." data-contract-target="assistantBrief"></textarea>
+        <div class="tb-actions-inline" style="margin-top: 12px;">
+          <button type="button" class="tb-btn tb-btn-primary" data-action="click->contract#applyBrief">Shape draft from brief</button>
+        </div>
+      </div>
+
+      <div class="tb-card tb-card-pad">
+        <div class="tb-eyebrow" style="margin-bottom: 10px;">Meta</div>
+        <div class="tb-field-grid-2">
+          <div>
+            <label class="tb-eyebrow" style="display:block; margin-bottom:4px;">Contract title</label>
+            <input class="tb-input" data-contract-target="fTitle" data-action="input->contract#change" placeholder="Client service agreement">
+          </div>
+          <div>
+            <label class="tb-eyebrow" style="display:block; margin-bottom:4px;">Effective date</label>
+            <input type="date" class="tb-input" data-contract-target="fEffective" data-action="change->contract#change">
+          </div>
+        </div>
+      </div>
+
+      <div class="tb-card tb-card-pad">
+        <div class="tb-eyebrow" style="margin-bottom: 10px;">Parties</div>
+        <div class="tb-field-grid-2">
+          <div class="tb-stack-10">
+            <div class="tb-eyebrow">Party A</div>
+            <input class="tb-input" placeholder="Your name or company" data-contract-target="fPartyAName" data-action="input->contract#change">
+            <textarea class="tb-textarea" rows="3" placeholder="Address" data-contract-target="fPartyAAddress" data-action="input->contract#change"></textarea>
+            <input class="tb-input" placeholder="hello@company.com" data-contract-target="fPartyAEmail" data-action="input->contract#change">
+          </div>
+          <div class="tb-stack-10">
+            <div class="tb-eyebrow">Party B</div>
+            <input class="tb-input" placeholder="Client or counterparty" data-contract-target="fPartyBName" data-action="input->contract#change">
+            <textarea class="tb-textarea" rows="3" placeholder="Address" data-contract-target="fPartyBAddress" data-action="input->contract#change"></textarea>
+            <input class="tb-input" placeholder="client@example.com" data-contract-target="fPartyBEmail" data-action="input->contract#change">
+          </div>
+        </div>
+      </div>
+
+      <div class="tb-card tb-card-pad">
+        <div class="tb-eyebrow" style="margin-bottom: 10px;">Agreement summary</div>
+        <textarea class="tb-textarea" rows="4" placeholder="State the purpose of the contract in a few clear sentences." data-contract-target="fSummary" data-action="input->contract#change"></textarea>
+      </div>
+
+      <div class="tb-card tb-card-pad">
+        <div class="tb-inline-head" style="margin-bottom: 10px;">
+          <div class="tb-eyebrow">Clauses</div>
+          <button type="button" class="tb-btn tb-btn-ghost" data-action="click->contract#addSection">Add clause</button>
+        </div>
+        <div data-contract-target="sections" class="tb-contract-section-list"></div>
+      </div>
+
+      <div class="tb-card tb-card-pad">
+        <div class="tb-inline-head" style="margin-bottom: 10px;">
+          <div class="tb-eyebrow">Signer</div>
+          <span class="tb-mono tb-muted" data-contract-target="signerStatus" style="font-size: 11px;">No saved signature selected.</span>
+        </div>
+
+        <div data-contract-target="signerPreview" class="tb-contract-signature-preview"></div>
+
+        <% if signed_in? %>
+          <script type="application/json" data-contract-target="savedSeed"><%= raw @digital_signatures.map { |sig|
+            {
+              id: sig.id,
+              name: sig.name,
+              source_text: sig.source_text,
+              image_data: sig.image_data
+            }
+          }.to_json %></script>
+          <div data-contract-target="savedList" class="tb-contract-saved-grid" style="margin-top: 14px;"></div>
+        <% else %>
+          <div class="tb-text-sm" style="margin-top: 12px; margin-bottom: 10px;">Sign in to reuse your saved digital signatures inside contracts.</div>
+          <div class="tb-actions-inline">
+            <%= link_to "Sign in", new_session_path, class: "tb-btn tb-btn-ghost" %>
+            <%= link_to "Create signature", sign_path, class: "tb-btn tb-btn-primary" %>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="tb-card tb-card-pad">
+        <div class="tb-eyebrow" style="margin-bottom: 10px;">Notes</div>
+        <textarea class="tb-textarea" rows="4" placeholder="Add optional notes, signing instructions, or deal-specific reminders." data-contract-target="fNotes" data-action="input->contract#change"></textarea>
+      </div>
+    </div>
+
+    <aside class="tb-invoice-preview">
+      <div class="tb-card tb-invoice-preview-card">
+        <div class="tb-card-pad tb-invoice-preview-head">
+          <div class="tb-eyebrow">Preview</div>
+          <div class="tb-mono tb-muted tb-invoice-preview-total">PDF export ready</div>
+        </div>
+        <div data-contract-target="preview" class="tb-invoice-preview-pane"></div>
+      </div>
+
+      <div class="tb-card tb-card-pad">
+        <div class="tb-invoice-actions">
+          <button type="button" class="tb-btn tb-btn-primary tb-btn-lg" data-action="click->contract#download">Download PDF</button>
+          <% if signed_in? %>
+            <button type="button" class="tb-btn tb-btn-ghost tb-btn-lg" data-action="click->contract#save">
+              <%= @contract.persisted? ? "Update saved" : "Save to dashboard" %>
+            </button>
+          <% else %>
+            <%= link_to "Sign in to save", new_session_path, class: "tb-btn tb-btn-ghost tb-btn-lg" %>
+          <% end %>
+        </div>
+        <% unless signed_in? %>
+          <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 10px;">
+            You can draft and download without an account. Saving and signature reuse need sign-in.
+          </div>
+        <% end %>
+      </div>
+
+      <div class="tb-card tb-card-pad">
+        <div class="tb-eyebrow" style="color: var(--tb-red);">Important</div>
+        <div class="tb-text-sm" style="margin-top: 8px;">
+          This helps draft contracts quickly. It is not legal advice, not an audited e-sign flow, and not a replacement for jurisdiction-specific review.
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<section class="tb-seo">
+  <h2>How do I create a contract online and reuse my signature?</h2>
+  <p>
+    Pick a contract template, fill in the parties, review the clauses, and attach one of your saved signature PNGs. Arolel renders the agreement in your browser and exports a PDF draft you can send or sign.
+  </p>
+</section>

@@ -1,5 +1,5 @@
 class InvoicesController < ApplicationController
-  allow_unauthenticated_access only: [ :new ]
+  allow_unauthenticated_access only: [ :new, :create, :update, :destroy, :edit ]
   before_action :require_auth_for_save, only: [ :create, :update, :destroy, :edit ]
   before_action { set_nav :invoice }
 

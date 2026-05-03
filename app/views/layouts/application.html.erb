@@ -35,9 +35,7 @@
 
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
-    <% if (entrypoint = page_javascript_entrypoint) %>
-      <%= javascript_include_tag entrypoint, "data-turbo-track": "reload", type: "module" %>
-    <% end %>
+    <%= page_javascript_include_tag %>
   </head>
 
   <body data-controller="receipt">

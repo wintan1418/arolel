@@ -109,9 +109,9 @@ class VideoCompressionsController < ApplicationController
   end
 
   def safe_output_path(video_compression)
-    path = Rails.root.join("storage", "video_compressions", video_compression.id.to_i.to_s, video_compression.output_basename)
+    path = Pathname.new(video_compression.output_path.presence || Rails.root.join("storage", "video_compressions", video_compression.id.to_i.to_s, video_compression.output_basename).to_s).cleanpath
     root = Rails.root.join("storage", "video_compressions").to_s
-    raise ActionController::RoutingError, "Not Found" unless path.to_s.start_with?(root)
+    raise ActionController::RoutingError, "Not Found" unless path.to_s.start_with?("#{root}/")
 
     path.to_s
   end

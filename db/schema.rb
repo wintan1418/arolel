@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_02_144500) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_03_195000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -60,6 +60,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_144500) do
     t.index ["board_id", "host", "checked_at"], name: "index_checks_on_board_id_and_host_and_checked_at"
     t.index ["board_id"], name: "index_checks_on_board_id"
     t.index ["checked_at"], name: "index_checks_on_checked_at"
+  end
+
+  create_table "contracts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "effective_on"
+    t.text "notes"
+    t.text "party_a_address"
+    t.string "party_a_email"
+    t.string "party_a_name"
+    t.text "party_b_address"
+    t.string "party_b_email"
+    t.string "party_b_name"
+    t.jsonb "sections", default: [], null: false
+    t.text "signer_image_data"
+    t.string "signer_name"
+    t.string "slug", null: false
+    t.text "summary"
+    t.string "template", default: "service", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["slug"], name: "index_contracts_on_slug", unique: true
+    t.index ["user_id", "created_at"], name: "index_contracts_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_contracts_on_user_id"
   end
 
   create_table "digital_signatures", force: :cascade do |t|
@@ -329,6 +353,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_02_144500) do
   add_foreign_key "activity_events", "users"
   add_foreign_key "boards", "users"
   add_foreign_key "checks", "boards"
+  add_foreign_key "contracts", "users"
   add_foreign_key "digital_signatures", "users"
   add_foreign_key "feedback_submissions", "users"
   add_foreign_key "invoices", "users"

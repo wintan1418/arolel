@@ -20,7 +20,12 @@ Rails.application.routes.draw do
   # Tool 06 — Invoice maker
   get "invoice",             to: "invoices#new",    as: :new_invoice
   resources :invoices, only: [ :create, :update, :destroy ], param: :slug
-  get  "invoices/:slug/edit", to: "invoices#edit",   as: :edit_invoice
+  get "invoices/:slug/edit",  to: "invoices#edit",   as: :edit_invoice
+
+  # Tool 06b — Contract maker
+  get "contract",             to: "contracts#new",    as: :new_contract
+  resources :contracts, only: [ :create, :update, :destroy ], param: :slug
+  get  "contracts/:slug/edit", to: "contracts#edit",   as: :edit_contract
 
   # Tool 07 — Sign PDF
   get  "sign",                to: "signatures#new",  as: :sign
