@@ -2,6 +2,7 @@
          data-contract-saved-value="<%= @contract.persisted? %>"
          data-contract-slug-value="<%= @contract.slug || "" %>"
          data-contract-signed-in-value="<%= signed_in? %>"
+         data-contract-ai-enabled-value="<%= @contract_ai_enabled %>"
          data-contract-seed-value='<%= {
            title: @contract.title,
            template: @contract.template || "service",
@@ -36,13 +37,32 @@
   <div class="tb-invoice-shell">
     <div class="tb-invoice-editor">
       <div class="tb-card tb-card-pad">
-        <div class="tb-eyebrow" style="margin-bottom: 10px;">Draft assistant</div>
-        <div class="tb-text-sm" style="margin-bottom: 10px;">
-          Describe the deal in plain language and the draft will reshape around it. This first version is brief-guided drafting, not a compliance-grade legal AI.
+        <div class="tb-inline-head" style="margin-bottom: 10px;">
+          <div>
+            <div class="tb-eyebrow">AI contract assistant</div>
+            <div class="tb-text-sm" style="margin-top: 8px;">
+              Chat through the deal and let the model rewrite the draft. This uses your server-side OpenAI key and applies changes directly into the contract builder.
+            </div>
+          </div>
+          <span class="tb-mono tb-muted" data-contract-target="aiStatus" style="font-size: 11px;">
+            <% if signed_in? && @contract_ai_enabled %>
+              Ready
+            <% elsif !signed_in? %>
+              Sign in required
+            <% else %>
+              OPENAI_API_KEY missing
+            <% end %>
+          </span>
         </div>
-        <textarea class="tb-textarea" rows="4" placeholder="Example: Monthly social media management for 3 months, 50% upfront, 2 revision rounds, confidential client assets." data-contract-target="assistantBrief"></textarea>
+
+        <div data-contract-target="aiThread" class="tb-contract-chat"></div>
+        <textarea class="tb-textarea" rows="4" placeholder="Example: Draft a one-year consulting agreement for monthly design support, paid upfront every month, with confidentiality and IP transfer after full payment." data-contract-target="aiPrompt"></textarea>
         <div class="tb-actions-inline" style="margin-top: 12px;">
-          <button type="button" class="tb-btn tb-btn-primary" data-action="click->contract#applyBrief">Shape draft from brief</button>
+          <button type="button" class="tb-btn tb-btn-primary" data-action="click->contract#askAi">Ask AI</button>
+          <button type="button" class="tb-btn tb-btn-ghost" data-action="click->contract#applyBrief">Quick shape from brief</button>
+        </div>
+        <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 10px;">
+          AI drafting is signed-in only to keep usage controlled. It drafts language, but you still need legal review before using it for real agreements.
         </div>
       </div>
 

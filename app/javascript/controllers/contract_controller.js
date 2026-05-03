@@ -4,7 +4,7 @@ import { PDFDocument, StandardFonts, rgb } from "pdf-lib"
 export default class extends Controller {
   static targets = [
     "templates", "sections", "preview", "savedSeed", "savedList",
-    "assistantBrief", "fTitle", "fEffective",
+    "assistantBrief", "aiPrompt", "aiThread", "aiStatus", "fTitle", "fEffective",
     "fPartyAName", "fPartyAAddress", "fPartyAEmail",
     "fPartyBName", "fPartyBAddress", "fPartyBEmail",
     "fSummary", "fNotes",
@@ -15,11 +15,13 @@ export default class extends Controller {
     saved: Boolean,
     slug: String,
     signedIn: Boolean,
+    aiEnabled: Boolean,
     seed: Object
   }
 
   connect () {
     this.savedSignatures = this.loadSavedSignatures()
+    this.chatMessages = []
     const seed = this.seedValue || {}
     this.contractData = Object.assign(this.blankContract(seed.template || "service"), seed)
 
@@ -30,6 +32,7 @@ export default class extends Controller {
     this.hydrateFields()
     this.renderSections()
     this.renderSavedSignatures()
+    this.renderChat()
     this.render()
   }
 
@@ -203,7 +206,7 @@ export default class extends Controller {
 
   applyBrief (e) {
     e?.preventDefault()
-    const brief = this.assistantBriefTarget.value.trim()
+    const brief = this.promptText()
     if (!brief) {
       this.toast("Add a short deal brief first.")
       return
@@ -211,6 +214,124 @@ export default class extends Controller {
 
     this.shapeDraftFromBrief(brief)
     this.toast("Draft reshaped from brief.")
+  }
+
+  async askAi (e) {
+    e?.preventDefault()
+    const prompt = this.promptText()
+
+    if (!prompt) {
+      this.toast("Add a contract request first.")
+      return
+    }
+
+    if (!this.signedInValue) {
+      window.location.href = "/login"
+      return
+    }
+
+    if (!this.aiEnabledValue) {
+      this.setAiStatus("OPENAI_API_KEY missing")
+      this.toast("Set OPENAI_API_KEY on the server first.")
+      return
+    }
+
+    this.chatMessages.push({ role: "user", content: prompt })
+    this.renderChat()
+    this.setAiStatus("Drafting…")
+    this.aiPromptTarget.value = ""
+    if (this.hasAssistantBriefTarget) this.assistantBriefTarget.value = ""
+
+    const res = await fetch("/contracts/draft", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": this.csrf(),
+        Accept: "application/json"
+      },
+      body: JSON.stringify({
+        template: this.contractData.template,
+        draft: this.currentDraftPayload(),
+        messages: this.chatMessages
+      })
+    })
+
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      this.chatMessages.push({ role: "assistant", content: data.message || "The AI draft request failed." })
+      this.renderChat()
+      this.setAiStatus("Failed")
+      this.toast(data.message || "AI draft failed.")
+      return
+    }
+
+    this.applyAiDraft(data.draft || {})
+    this.chatMessages.push({ role: "assistant", content: data.assistant_message || "Draft updated." })
+    this.renderChat()
+    this.setAiStatus("Ready")
+    this.toast("Contract updated from AI draft.")
+  }
+
+  applyAiDraft (draft) {
+    this.contractData.title = draft.title || this.contractData.title
+    this.contractData.summary = draft.summary || ""
+    this.contractData.notes = draft.notes || ""
+    this.contractData.sections = Array.isArray(draft.sections) && draft.sections.length > 0
+      ? draft.sections.map((section) => ({ heading: section.heading || "", body: section.body || "" }))
+      : this.contractData.sections
+    this.hydrateFields()
+    this.renderSections()
+    this.render()
+  }
+
+  renderChat () {
+    if (!this.hasAiThreadTarget) return
+
+    if (this.chatMessages.length === 0) {
+      this.aiThreadTarget.innerHTML = `
+        <div class="tb-contract-chat-empty">
+          Ask for a redraft, new clauses, payment terms, confidentiality language, or a different tone.
+        </div>
+      `
+      return
+    }
+
+    this.aiThreadTarget.innerHTML = this.chatMessages.map((message) => `
+      <div class="tb-contract-chat-bubble is-${message.role}">
+        <div class="tb-eyebrow">${message.role === "user" ? "You" : "Assistant"}</div>
+        <p>${this.esc(message.content)}</p>
+      </div>
+    `).join("")
+    this.aiThreadTarget.scrollTop = this.aiThreadTarget.scrollHeight
+  }
+
+  setAiStatus(message) {
+    if (this.hasAiStatusTarget) this.aiStatusTarget.textContent = message
+  }
+
+  promptText () {
+    const primary = this.hasAiPromptTarget ? this.aiPromptTarget.value.trim() : ""
+    if (primary) return primary
+    return this.hasAssistantBriefTarget ? this.assistantBriefTarget.value.trim() : ""
+  }
+
+  currentDraftPayload () {
+    return {
+      title: this.contractData.title || "",
+      effective_on: this.contractData.effective_on || "",
+      party_a_name: this.contractData.party_a_name || "",
+      party_a_address: this.contractData.party_a_address || "",
+      party_a_email: this.contractData.party_a_email || "",
+      party_b_name: this.contractData.party_b_name || "",
+      party_b_address: this.contractData.party_b_address || "",
+      party_b_email: this.contractData.party_b_email || "",
+      summary: this.contractData.summary || "",
+      notes: this.contractData.notes || "",
+      sections: this.contractData.sections.map((section) => ({
+        heading: section.heading || "",
+        body: section.body || ""
+      }))
+    }
   }
 
   shapeDraftFromBrief (brief) {

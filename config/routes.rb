@@ -24,6 +24,7 @@ Rails.application.routes.draw do
 
   # Tool 06b — Contract maker
   get "contract",             to: "contracts#new",    as: :new_contract
+  post "contracts/draft",     to: "contracts#draft",  as: :draft_contract
   resources :contracts, only: [ :create, :update, :destroy ], param: :slug
   get  "contracts/:slug/edit", to: "contracts#edit",   as: :edit_contract
 

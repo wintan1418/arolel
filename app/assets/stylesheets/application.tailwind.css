@@ -2270,6 +2270,49 @@ a {
   padding: 12px;
 }
 
+.tb-contract-chat {
+  display: grid;
+  gap: 10px;
+  max-height: 320px;
+  overflow: auto;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px solid var(--tb-line);
+  border-radius: var(--tb-r-tile);
+  background: var(--tb-paper-2);
+}
+
+.tb-contract-chat-empty {
+  color: var(--tb-muted);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.tb-contract-chat-bubble {
+  display: grid;
+  gap: 6px;
+  padding: 12px;
+  border-radius: var(--tb-r-tile);
+  border: 1px solid var(--tb-line);
+  background: var(--tb-paper);
+}
+
+.tb-contract-chat-bubble.is-user {
+  background: #edf5ef;
+  border-color: #c8dfce;
+}
+
+.tb-contract-chat-bubble.is-assistant {
+  background: #f7f5ef;
+}
+
+.tb-contract-chat-bubble p {
+  margin: 0;
+  white-space: pre-line;
+  line-height: 1.6;
+  color: var(--tb-ink-2);
+}
+
 .tb-roadmap {
   padding: 20px 0 64px;
 }
