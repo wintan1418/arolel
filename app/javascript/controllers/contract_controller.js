@@ -135,33 +135,27 @@ export default class extends Controller {
     const nextTemplate = e.currentTarget.dataset.template
     if (nextTemplate === this.contractData.template) return
 
-    if (this.hasMeaningfulDraft() && !window.confirm("Switching templates will replace the current contract body. Continue?")) return
-
+    this.syncSections()
+    const currentDefaults = this.templateDefaults(this.contractData.template)
     const defaults = this.templateDefaults(nextTemplate)
+    const shouldReplaceTitle = !this.contractData.title || this.contractData.title.trim() === currentDefaults.title
+
     this.contractData.template = nextTemplate
-    this.contractData.title = defaults.title
+    if (shouldReplaceTitle) this.contractData.title = defaults.title
     this.contractData.summary = defaults.summary
     this.contractData.notes = defaults.notes
     this.contractData.sections = defaults.sections.map((section) => ({ ...section }))
     this.hydrateFields()
-    this.renderSections()
-    this.render()
-  }
+    const brief = this.assistantBriefTarget.value.trim()
 
-  hasMeaningfulDraft () {
-    const defaults = this.templateDefaults(this.contractData.template)
-    const summaryChanged = (this.contractData.summary || "").trim() !== (defaults.summary || "").trim()
-    const notesChanged = (this.contractData.notes || "").trim() !== (defaults.notes || "").trim()
-    const partyDetails = [
-      this.contractData.party_a_name,
-      this.contractData.party_a_address,
-      this.contractData.party_a_email,
-      this.contractData.party_b_name,
-      this.contractData.party_b_address,
-      this.contractData.party_b_email
-    ].some((value) => value && value.toString().trim().length > 0)
+    if (brief) {
+      this.shapeDraftFromBrief(brief)
+    } else {
+      this.renderSections()
+      this.render()
+    }
 
-    return summaryChanged || notesChanged || partyDetails
+    this.toast(`${e.currentTarget.textContent.trim()} template loaded.`)
   }
 
   addSection (e) {
@@ -215,6 +209,11 @@ export default class extends Controller {
       return
     }
 
+    this.shapeDraftFromBrief(brief)
+    this.toast("Draft reshaped from brief.")
+  }
+
+  shapeDraftFromBrief (brief) {
     const defaults = this.templateDefaults(this.contractData.template)
     const sections = defaults.sections.map((section) => ({ ...section }))
     const lower = brief.toLowerCase()
@@ -255,7 +254,6 @@ export default class extends Controller {
     this.renderSections()
     this.hydrateFields()
     this.render()
-    this.toast("Draft reshaped from brief.")
   }
 
   upsertSection (sections, heading, body) {
