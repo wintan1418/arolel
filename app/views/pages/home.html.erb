@@ -1,19 +1,19 @@
 <section class="tb-hero">
   <div>
-    <div class="tb-eyebrow">Nine everyday tools · one honest app</div>
+    <div class="tb-eyebrow">Ten everyday tools · one honest app</div>
     <h1 class="tb-h1" style="margin-top: 18px;">
       The file tools you need,<br>
       <span style="color: var(--tb-red);">with</span> privacy up front.
     </h1>
     <p class="tb-text" style="margin-top: 22px; max-width: 52ch;">
       Arolel is a small suite of utilities built in Rails. Most file tools run entirely in your browser.
-      Document conversions upload temporarily only when a server engine is required.
+      Contract drafts, saved signatures, and document conversions only touch the server when the feature actually needs it.
     </p>
 
     <div style="margin-top: 28px; display: flex; gap: 12px; flex-wrap: wrap;">
-      <%= link_to "Convert a HEIC", heic_path, class: "tb-btn tb-btn-primary tb-btn-lg" %>
-      <%= link_to "Merge a PDF",     pdf_path(op: "merge"), class: "tb-btn tb-btn-ghost tb-btn-lg" %>
-      <%= link_to "Suggest a tool",  roadmap_path, class: "tb-btn tb-btn-ghost tb-btn-lg" %>
+      <%= link_to "Draft a contract", new_contract_path, class: "tb-btn tb-btn-primary tb-btn-lg" %>
+      <%= link_to "Merge a PDF",      pdf_path(op: "merge"), class: "tb-btn tb-btn-ghost tb-btn-lg" %>
+      <%= link_to "Convert a HEIC",   heic_path, class: "tb-btn tb-btn-ghost tb-btn-lg" %>
     </div>
   </div>
 
@@ -39,7 +39,7 @@
 <section style="margin-top: 24px;">
   <div class="tb-section-title">
     <h2 class="tb-h2" style="font-size: 22px;">The tools</h2>
-    <span class="tb-eyebrow">01 · 02 · 03 · 04 · 05 · 06 · 07 · 08 · 09</span>
+    <span class="tb-eyebrow">01 · 02 · 03 · 04 · 05 · 06 · 07 · 08 · 09 · 10</span>
   </div>
 
   <div class="tb-tile-grid">
@@ -163,8 +163,29 @@
       </div>
     <% end %>
 
-    <%= link_to sign_path, class: "tb-tile" do %>
+    <%= link_to new_contract_path, class: "tb-tile" do %>
       <span class="tb-tile-num">07</span>
+      <span class="tb-tile-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
+          <path d="M14 2v6h6"/>
+          <path d="M8 13h8"/>
+          <path d="M8 17h5"/>
+        </svg>
+      </span>
+      <div class="tb-tile-title">Contract maker</div>
+      <div class="tb-tile-desc">
+        Draft service agreements, NDAs and consulting contracts. Reuse saved signatures,
+        shape the draft with AI, and export a PDF.
+      </div>
+      <div class="tb-tile-meta">
+        <span class="tb-mono tb-muted">browser-first · saved signatures · AI option</span>
+        <span class="tb-mono">/contract</span>
+      </div>
+    <% end %>
+
+    <%= link_to sign_path, class: "tb-tile" do %>
+      <span class="tb-tile-num">08</span>
       <span class="tb-tile-icon">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 3 22l1.5-4.5L17 3Z"/>
@@ -183,7 +204,7 @@
     <% end %>
 
     <%= link_to media_path(op: "mp4-to-mp3"), class: "tb-tile" do %>
-      <span class="tb-tile-num">08</span>
+      <span class="tb-tile-num">09</span>
       <span class="tb-tile-icon">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M9 18V5l12-2v13"/>
@@ -203,7 +224,7 @@
     <% end %>
 
     <%= link_to media_path(op: "webm-to-mp4"), class: "tb-tile" do %>
-      <span class="tb-tile-num">09</span>
+      <span class="tb-tile-num">10</span>
       <span class="tb-tile-icon">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M23 7 16 12l7 5V7z"/>
@@ -227,12 +248,14 @@
   <h2>What is Arolel?</h2>
   <p>
     Arolel is an open-source suite of everyday web utilities: a HEIC-to-JPG photo converter,
-    a PDF merger/splitter/rotater/compressor, a site uptime checker with shareable boards, and
-    a bulk URL opener that saves sets of links you can reopen with one click.
+    a PDF merger/splitter/rotater/compressor, a contract maker with saved signatures, a site
+    uptime checker with shareable boards, and a bulk URL opener that saves sets of links you
+    can reopen with one click.
   </p>
   <p>
     Most of these tools run entirely in your browser. Server-backed tools either need to be
-    shareable, like uptime boards, or need system conversion software, like DOCX/PDF conversion.
-    Everything is free, and accounts are optional.
+    shareable, like uptime boards, need system conversion software, like DOCX/PDF conversion,
+    or use your server-side OpenAI key for contract drafting. Everything is free, and accounts
+    are optional unless you want saved workspace features.
   </p>
 </section>

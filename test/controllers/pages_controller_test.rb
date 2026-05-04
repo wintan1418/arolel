@@ -1,6 +1,15 @@
 require "test_helper"
 
 class PagesControllerTest < ActionDispatch::IntegrationTest
+  test "home page includes contract maker in the tool catalog" do
+    get root_path
+
+    assert_response :success
+    assert_includes response.body, "Ten everyday tools"
+    assert_select "a[href='#{new_contract_path}']", text: /Contract maker/
+    assert_includes response.body, "/contract"
+  end
+
   test "media pages use protected queue UI" do
     %w[mp4-to-mp3 webm-to-mp4 compress-video].each do |op|
       get media_path(op: op)

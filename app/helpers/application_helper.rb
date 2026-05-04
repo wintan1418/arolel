@@ -44,7 +44,7 @@ module ApplicationHelper
   end
 
   def social_description
-    meta_description.presence || "Arolel is a free suite of everyday web utilities for files, PDFs, images, media, invoices, uptime checks, and links."
+    meta_description.presence || "Arolel is a free suite of everyday web utilities for files, PDFs, contracts, images, media, invoices, uptime checks, and links."
   end
 
   def social_image_url

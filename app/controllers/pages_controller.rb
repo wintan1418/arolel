@@ -4,7 +4,7 @@ class PagesController < ApplicationController
   def home
     set_nav :home
     page_title "Arolel — everyday browser-first web utilities"
-    meta_description "Free tools for HEIC conversion, PDFs, signatures, images, media, invoices, uptime checks, and bulk links. Most file tools run in your browser."
+    meta_description "Free tools for HEIC conversion, PDFs, contracts, signatures, images, media, invoices, uptime checks, and bulk links. Most file tools run in your browser."
   end
 
   def heic
