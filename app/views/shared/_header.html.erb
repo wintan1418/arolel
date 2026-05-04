@@ -1,26 +1,39 @@
-<header class="tb-header">
+<header class="tb-header" data-controller="mobile-nav">
   <div class="tb-shell tb-header-inner">
-    <%= link_to root_path, class: "tb-wordmark" do %>
-      <%= image_tag "logo/arolel-bundle.svg", alt: "", class: "tb-wordmark-mark", width: 32, height: 32, aria: { hidden: true } %>
-      <span class="tb-wordmark-text">arolel<span class="tb-wordmark-dot">.</span></span>
-    <% end %>
+    <div class="tb-header-topline">
+      <%= link_to root_path, class: "tb-wordmark" do %>
+        <%= image_tag "logo/arolel-bundle.svg", alt: "", class: "tb-wordmark-mark", width: 32, height: 32, aria: { hidden: true } %>
+        <span class="tb-wordmark-text">arolel<span class="tb-wordmark-dot">.</span></span>
+      <% end %>
+
+      <button type="button"
+              class="tb-mobile-nav-toggle"
+              data-action="click->mobile-nav#toggle"
+              data-mobile-nav-target="toggle"
+              aria-label="Open navigation"
+              aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
 
     <nav class="tb-nav" aria-label="Primary">
-      <%= link_to "Home",    root_path,  class: ["tb-nav-link", ("is-active" if current_nav == :home)] %>
-      <%= link_to "HEIC",    heic_path,  class: ["tb-nav-link", ("is-active" if current_nav == :heic)] %>
-      <%= link_to "Images",  image_path(op: "compress"), class: ["tb-nav-link", ("is-active" if current_nav == :images)] %>
-      <%= link_to "PDF",     pdf_path(op: "merge"), class: ["tb-nav-link", ("is-active" if current_nav == :pdf)] %>
-      <%= link_to "Sign",    sign_path,  class: ["tb-nav-link", ("is-active" if current_nav == :sign)] %>
-      <%= link_to "Media",   media_path(op: "mp4-to-mp3"), class: ["tb-nav-link", ("is-active" if current_nav == :media)] %>
-      <%= link_to "Invoice", new_invoice_path, class: ["tb-nav-link", ("is-active" if current_nav == :invoice)] %>
+      <%= link_to "Home",     root_path, class: ["tb-nav-link", ("is-active" if current_nav == :home)] %>
+      <%= link_to "HEIC",     heic_path, class: ["tb-nav-link", ("is-active" if current_nav == :heic)] %>
+      <%= link_to "Images",   image_path(op: "compress"), class: ["tb-nav-link", ("is-active" if current_nav == :images)] %>
+      <%= link_to "PDF",      pdf_path(op: "merge"), class: ["tb-nav-link", ("is-active" if current_nav == :pdf)] %>
+      <%= link_to "Sign",     sign_path, class: ["tb-nav-link", ("is-active" if current_nav == :sign)] %>
+      <%= link_to "Media",    media_path(op: "mp4-to-mp3"), class: ["tb-nav-link", ("is-active" if current_nav == :media)] %>
+      <%= link_to "Invoice",  new_invoice_path, class: ["tb-nav-link", ("is-active" if current_nav == :invoice)] %>
       <%= link_to "Contract", new_contract_path, class: ["tb-nav-link", ("is-active" if current_nav == :contract)] %>
-      <%= link_to "Down",    down_path,  class: ["tb-nav-link", ("is-active" if current_nav == :down)] %>
-      <%= link_to "URLs",    open_urls_path, class: ["tb-nav-link", ("is-active" if current_nav == :open)] %>
+      <%= link_to "Down",     down_path, class: ["tb-nav-link", ("is-active" if current_nav == :down)] %>
+      <%= link_to "URLs",     open_urls_path, class: ["tb-nav-link", ("is-active" if current_nav == :open)] %>
     </nav>
 
     <div class="tb-header-spacer"></div>
 
-    <div class="tb-header-right">
+    <div class="tb-header-right tb-header-right-desktop">
       <% if %i[heic pdf images sign invoice media].include?(current_nav) && !@server_side_file_tool %>
         <span class="tb-receipt-compact" data-receipt-target="compact" title="We can't see your files. This counter is live.">
           <span class="tb-receipt-dot"></span>
@@ -35,7 +48,7 @@
         <%= link_to "Dashboard", dashboard_path, class: ["tb-nav-link", ("is-active" if current_nav == :dashboard)], style: "font-weight: 600;" %>
       <% else %>
         <%= link_to "Sign in", new_session_path, class: "tb-nav-link" %>
-        <%= link_to "Sign up", signup_path,      class: "tb-btn tb-btn-ghost", style: "height: 32px; padding: 0 12px; font-size: 13px;" %>
+        <%= link_to "Sign up", signup_path, class: "tb-btn tb-btn-ghost", style: "height: 32px; padding: 0 12px; font-size: 13px;" %>
       <% end %>
 
       <% if (coffee = ENV["COFFEE_URL"].presence) %>
@@ -43,6 +56,50 @@
           <span>☕</span><span>Coffee</span>
         </a>
       <% end %>
+    </div>
+  </div>
+
+  <div class="tb-shell tb-mobile-nav-panel"
+       data-mobile-nav-target="panel"
+       hidden>
+    <nav class="tb-mobile-nav-links" aria-label="Mobile primary">
+      <%= link_to "Home", root_path, class: ["tb-mobile-nav-link", ("is-active" if current_nav == :home)], data: { action: "click->mobile-nav#close" } %>
+      <%= link_to "HEIC", heic_path, class: ["tb-mobile-nav-link", ("is-active" if current_nav == :heic)], data: { action: "click->mobile-nav#close" } %>
+      <%= link_to "Images", image_path(op: "compress"), class: ["tb-mobile-nav-link", ("is-active" if current_nav == :images)], data: { action: "click->mobile-nav#close" } %>
+      <%= link_to "PDF", pdf_path(op: "merge"), class: ["tb-mobile-nav-link", ("is-active" if current_nav == :pdf)], data: { action: "click->mobile-nav#close" } %>
+      <%= link_to "Sign", sign_path, class: ["tb-mobile-nav-link", ("is-active" if current_nav == :sign)], data: { action: "click->mobile-nav#close" } %>
+      <%= link_to "Media", media_path(op: "mp4-to-mp3"), class: ["tb-mobile-nav-link", ("is-active" if current_nav == :media)], data: { action: "click->mobile-nav#close" } %>
+      <%= link_to "Invoice", new_invoice_path, class: ["tb-mobile-nav-link", ("is-active" if current_nav == :invoice)], data: { action: "click->mobile-nav#close" } %>
+      <%= link_to "Contract", new_contract_path, class: ["tb-mobile-nav-link", ("is-active" if current_nav == :contract)], data: { action: "click->mobile-nav#close" } %>
+      <%= link_to "Down", down_path, class: ["tb-mobile-nav-link", ("is-active" if current_nav == :down)], data: { action: "click->mobile-nav#close" } %>
+      <%= link_to "URLs", open_urls_path, class: ["tb-mobile-nav-link", ("is-active" if current_nav == :open)], data: { action: "click->mobile-nav#close" } %>
+    </nav>
+
+    <div class="tb-mobile-nav-foot">
+      <% if %i[heic pdf images sign invoice media].include?(current_nav) && !@server_side_file_tool %>
+        <span class="tb-receipt-compact" data-receipt-target="compact" title="We can't see your files. This counter is live.">
+          <span class="tb-receipt-dot"></span>
+          <span><span data-receipt-target="bytes">0</span> bytes sent</span>
+        </span>
+      <% end %>
+
+      <div class="tb-mobile-nav-actions">
+        <% if signed_in? %>
+          <% if current_user.super_admin? %>
+            <%= link_to "Admin", admin_root_path, class: ["tb-mobile-nav-link", ("is-active" if current_nav == :admin)], data: { action: "click->mobile-nav#close" } %>
+          <% end %>
+          <%= link_to "Dashboard", dashboard_path, class: ["tb-mobile-nav-link", ("is-active" if current_nav == :dashboard)], data: { action: "click->mobile-nav#close" } %>
+        <% else %>
+          <%= link_to "Sign in", new_session_path, class: "tb-mobile-nav-link", data: { action: "click->mobile-nav#close" } %>
+          <%= link_to "Sign up", signup_path, class: "tb-btn tb-btn-ghost", data: { action: "click->mobile-nav#close" } %>
+        <% end %>
+
+        <% if (coffee = ENV["COFFEE_URL"].presence) %>
+          <a href="<%= coffee %>" class="tb-coffee" target="_blank" rel="noopener">
+            <span>☕</span><span>Coffee</span>
+          </a>
+        <% end %>
+      </div>
     </div>
   </div>
 </header>

@@ -5,6 +5,8 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
+    assert_select "[data-controller='mobile-nav']"
+    assert_select "[data-mobile-nav-target='toggle']"
     assert_includes response.body, "Ten everyday tools"
     assert_select "a[href='#{new_contract_path}']", text: /Contract maker/
     assert_includes response.body, "/contract"
