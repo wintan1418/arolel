@@ -156,6 +156,25 @@ class ContractsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Mutual NDA"
   end
 
+  test "saved contract edit keeps ai drafting enabled when key exists" do
+    user = users(:one)
+    sign_in_as(user)
+    contract = user.contracts.create!(
+      title: "Consulting agreement",
+      template: "consulting",
+      summary: "Monthly support.",
+      sections: [ { heading: "Services", body: "Ongoing consulting." } ]
+    )
+
+    with_env("OPENAI_API_KEY" => "test-key") do
+      get edit_contract_path(contract.slug)
+    end
+
+    assert_response :success
+    assert_includes response.body, 'data-contract-ai-enabled-value="true"'
+    assert_includes response.body, "Ready"
+  end
+
   test "signed in user can update own contract" do
     user = users(:one)
     sign_in_as(user)

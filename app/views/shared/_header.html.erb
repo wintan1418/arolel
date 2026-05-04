@@ -60,8 +60,7 @@
   </div>
 
   <div class="tb-shell tb-mobile-nav-panel"
-       data-mobile-nav-target="panel"
-       hidden>
+       data-mobile-nav-target="panel">
     <nav class="tb-mobile-nav-links" aria-label="Mobile primary">
       <%= link_to "Home", root_path, class: ["tb-mobile-nav-link", ("is-active" if current_nav == :home)], data: { action: "click->mobile-nav#close" } %>
       <%= link_to "HEIC", heic_path, class: ["tb-mobile-nav-link", ("is-active" if current_nav == :heic)], data: { action: "click->mobile-nav#close" } %>

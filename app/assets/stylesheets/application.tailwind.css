@@ -349,6 +349,10 @@ a {
     padding: 0 0 14px;
   }
 
+  .tb-header[data-mobile-nav-ready="true"] .tb-mobile-nav-panel[hidden] {
+    display: none;
+  }
+
   .tb-mobile-nav-links {
     display: grid;
     gap: 6px;

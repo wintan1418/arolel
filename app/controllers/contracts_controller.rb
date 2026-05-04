@@ -2,6 +2,7 @@ class ContractsController < ApplicationController
   allow_unauthenticated_access only: [ :new, :create, :update, :destroy, :edit, :draft ]
   before_action :require_auth_for_save, only: [ :create, :update, :destroy, :edit ]
   before_action :require_auth_for_ai, only: :draft
+  before_action :set_contract_ai_enabled, only: [ :new, :edit ]
   before_action { set_nav :contract }
   rate_limit to: 8, within: 1.hour, only: :draft,
              with: -> { render json: { error: "rate_limited", message: "Too many AI draft requests. Try again later." }, status: :too_many_requests }
@@ -11,7 +12,6 @@ class ContractsController < ApplicationController
     meta_description "Draft service agreements, NDAs, and consulting contracts in your browser. Reuse your saved signature, export a PDF, and save drafts to your account."
     @contract = load_contract
     @digital_signatures = signed_in? ? current_user.digital_signatures.recent.limit(12) : DigitalSignature.none
-    @contract_ai_enabled = ENV["OPENAI_API_KEY"].present?
   end
 
   def create
@@ -122,5 +122,9 @@ class ContractsController < ApplicationController
       error: "sign_in_required",
       login_url: new_session_path
     }, status: :unauthorized
+  end
+
+  def set_contract_ai_enabled
+    @contract_ai_enabled = ENV["OPENAI_API_KEY"].present?
   end
 end

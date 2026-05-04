@@ -7,9 +7,11 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "[data-controller='mobile-nav']"
     assert_select "[data-mobile-nav-target='toggle']"
+    assert_no_match(/data-mobile-nav-target="panel"[^>]*hidden/, response.body)
     assert_includes response.body, "Ten everyday tools"
     assert_select "a[href='#{new_contract_path}']", text: /Contract maker/
     assert_includes response.body, "/contract"
+    assert_includes response.body, "temporary upload · protected queue"
   end
 
   test "media pages use protected queue UI" do
