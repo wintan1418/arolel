@@ -56,7 +56,7 @@
 
       <div class="tb-actions-inline" style="margin-top: 18px;">
         <% if @video_compression.output_available? %>
-          <%= link_to "Download #{@video_compression.output_extension.upcase}", download_video_compression_path(@video_compression), class: "tb-btn tb-btn-primary tb-btn-lg" %>
+          <%= link_to "Download #{@video_compression.output_extension.upcase}", download_video_compression_path(@video_compression), class: "tb-btn tb-btn-primary tb-btn-lg", data: { turbo: false, turbo_prefetch: false } %>
         <% else %>
           <%= link_to "Refresh status", video_compression_path(@video_compression), class: "tb-btn tb-btn-ghost tb-btn-lg" %>
         <% end %>
