@@ -16,6 +16,8 @@ export default class extends Controller {
     this.maxDim  = 0        // 0 = original
     this.format  = "auto"   // auto | image/jpeg | image/webp
     this.processing = false
+    this.started = false    // no compression until the user hits Compress
+    this.generation = 0     // bumped when settings change mid-flight
   }
 
   pick () { this.inputTarget.click() }
@@ -45,12 +47,24 @@ export default class extends Controller {
     }
     this.optionsTarget.hidden = false
     this.render()
-    this.processNext()
+    if (this.started) this.processNext()
   }
 
-  setQuality (e) { this.selectTab(this.qualityTarget, e.currentTarget); this.quality = parseFloat(e.currentTarget.dataset.q) }
-  setMaxDim  (e) { this.selectTab(this.maxdimTarget,  e.currentTarget); this.maxDim  = parseInt(e.currentTarget.dataset.m, 10) }
-  setFormat  (e) { this.selectTab(this.formatTarget,  e.currentTarget); this.format  = e.currentTarget.dataset.f }
+  setQuality (e) { this.selectTab(this.qualityTarget, e.currentTarget); this.quality = parseFloat(e.currentTarget.dataset.q); this.settingsChanged() }
+  setMaxDim  (e) { this.selectTab(this.maxdimTarget,  e.currentTarget); this.maxDim  = parseInt(e.currentTarget.dataset.m, 10); this.settingsChanged() }
+  setFormat  (e) { this.selectTab(this.formatTarget,  e.currentTarget); this.format  = e.currentTarget.dataset.f; this.settingsChanged() }
+
+  // Once compression has started, any settings change reprocesses everything
+  // so the downloads always reflect the current settings.
+  settingsChanged () {
+    if (this.started) this.reprocess()
+  }
+
+  start () {
+    if (this.started) { this.reprocess(); return }
+    this.started = true
+    this.processNext()
+  }
 
   selectTab (group, active) {
     group.querySelectorAll(".tb-tab").forEach((b) => b.classList.remove("is-active"))
@@ -59,6 +73,8 @@ export default class extends Controller {
 
   clear () {
     this.files = []
+    this.started = false
+    this.generation++
     this.listTarget.style.display = "none"
     this.listTarget.innerHTML = ""
     this.optionsTarget.hidden = true
@@ -68,33 +84,41 @@ export default class extends Controller {
 
   // Re-process all files with the current settings.
   reprocess () {
+    this.generation++
     this.files.forEach((f) => {
       f.status = "queue"
       f.outBlob = null
       f.outSize = null
     })
+    this.updateZipBtn()
     this.render()
     this.processNext()
   }
 
   async processNext () {
-    if (this.processing) return
+    if (this.processing || !this.started) return
     const next = this.files.find((f) => f.status === "queue")
     if (!next) return
     this.processing = true
+    const gen = this.generation
     next.status = "work"
     this.render()
 
     try {
       const { blob, ext, mime } = await this.compress(next)
-      next.outBlob = blob
-      next.outSize = blob.size
-      next.ext = ext
-      next.mime = mime
-      next.status = "done"
+      if (gen === this.generation) {
+        next.outBlob = blob
+        next.outSize = blob.size
+        next.ext = ext
+        next.mime = mime
+        next.status = "done"
+      } else if (next.status === "work") {
+        // Settings changed while this file was in flight — result is stale.
+        next.status = "queue"
+      }
     } catch (err) {
       console.error(err)
-      next.status = "error"
+      next.status = gen === this.generation ? "error" : "queue"
     }
     this.processing = false
     this.render()
