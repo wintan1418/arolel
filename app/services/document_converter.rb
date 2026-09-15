@@ -78,24 +78,22 @@ class DocumentConverter
     path
   end
 
-  def convert_with_libreoffice(input_path, dir, target_format, filename, content_type)
+  def convert_with_libreoffice(input_path, dir, target_format, filename, content_type, infilter: nil)
     out_dir = File.join(dir, "out")
     FileUtils.mkdir_p(out_dir)
 
-    run_command(
+    args = [
       libreoffice_path,
       "--headless",
       "--nologo",
       "--nofirststartwizard",
       "--nodefault",
       "--nolockcheck",
-      "-env:UserInstallation=file://#{File.join(dir, "lo-profile")}",
-      "--convert-to",
-      target_format,
-      "--outdir",
-      out_dir,
-      input_path
-    )
+      "-env:UserInstallation=file://#{File.join(dir, "lo-profile")}"
+    ]
+    args << "--infilter=#{infilter}" if infilter
+    args += [ "--convert-to", target_format, "--outdir", out_dir, input_path ]
+    run_command(*args)
 
     output_path = Dir.glob(File.join(out_dir, "*.#{target_format}")).first
     raise ConversionFailed, "The converter did not produce a #{target_format.upcase} file." unless output_path
@@ -104,8 +102,10 @@ class DocumentConverter
   end
 
   def convert_pdf_to_docx(input_path, dir)
-    convert_with_libreoffice(input_path, dir, "docx", "#{base_name}.docx", docx_content_type)
-  rescue ConversionFailed
+    # Import the PDF into Writer (not Draw, the default) so the DOCX keeps
+    # layout, fonts, and structure rather than losing everything but text.
+    convert_with_libreoffice(input_path, dir, "docx", "#{base_name}.docx", docx_content_type, infilter: "writer_pdf_import")
+  rescue ConversionFailed, MissingDependency
     text_path = File.join(dir, "extracted.txt")
     run_command(pdftotext_path, "-layout", input_path, text_path)
 
@@ -250,7 +250,21 @@ class DocumentConverter
     end.string
   end
 
+  # Characters outside the XML 1.0 character range. pdftotext output can
+  # contain form feeds and other control characters that make Word refuse
+  # the file ("Illegal xml character") if they reach document.xml.
+  XML_ILLEGAL_CHARS = /[^
+ -퟿-�\u{10000}-\u{10FFFF}]/
+
+  def sanitize_docx_text(text)
+    text
+      .encode("UTF-8", invalid: :replace, undef: :replace, replace: "")
+      .gsub("\f", "\n\n")
+      .gsub(XML_ILLEGAL_CHARS, "")
+  end
+
   def build_text_docx(text)
+    text = sanitize_docx_text(text)
     Zip::OutputStream.write_buffer do |zip|
       zip.put_next_entry("[Content_Types].xml")
       zip.write <<~XML
