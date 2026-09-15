@@ -252,41 +252,79 @@ export default class extends Controller {
 
   asText (s) { return (s || "").toString() }
 
+  // Greedy word-wrap using measured glyph widths; hard-breaks words wider
+  // than the column so nothing can escape it.
+  wrapText (font, text, size, maxWidth) {
+    const lines = []
+    for (const raw of this.asText(text).split("\n")) {
+      const words = raw.split(/\s+/).filter(Boolean)
+      if (words.length === 0) { lines.push(""); continue }
+      let line = ""
+      for (let word of words) {
+        while (font.widthOfTextAtSize(word, size) > maxWidth) {
+          let i = 1
+          while (i < word.length && font.widthOfTextAtSize(word.slice(0, i + 1), size) <= maxWidth) i++
+          if (line) { lines.push(line); line = "" }
+          lines.push(word.slice(0, i))
+          word = word.slice(i)
+        }
+        const tryLine = line ? `${line} ${word}` : word
+        if (font.widthOfTextAtSize(tryLine, size) <= maxWidth) line = tryLine
+        else { lines.push(line); line = word }
+      }
+      if (line) lines.push(line)
+    }
+    return lines
+  }
+
+  // Draws the line-item table, wrapping descriptions and flowing onto extra
+  // pages when needed. Returns { page, y } for whatever comes below it.
   drawTable (page, fonts, top, left, width, items, opts) {
-    const { regular, bold, mono } = fonts
+    const { regular, mono } = fonts
     const ink = opts.ink || rgb(0.09, 0.09, 0.09)
     const muted = rgb(0.45, 0.45, 0.45)
     const line = rgb(0.88, 0.88, 0.86)
-    const colW = { desc: width - 200, qty: 50, rate: 70, amt: 80 }
-    let y = top
+    const bottom = 60
+    // Shared right edges — headers and values align on the same boundary.
+    const qtyR  = left + width - 200
+    const rateR = left + width - 100
+    const amtR  = left + width
+    const descW = qtyR - left - 70
 
-    // header
-    page.drawText("DESCRIPTION", { x: left, y, size: 8, font: mono, color: muted })
-    page.drawText("QTY",         { x: left + colW.desc + 20, y, size: 8, font: mono, color: muted })
-    page.drawText("RATE",        { x: left + colW.desc + colW.qty + 40, y, size: 8, font: mono, color: muted })
-    page.drawText("AMOUNT",      { x: left + colW.desc + colW.qty + colW.rate + 50, y, size: 8, font: mono, color: muted })
-    y -= 10
-    page.drawLine({ start: { x: left, y }, end: { x: left + width, y }, thickness: 0.6, color: line })
-    y -= 14
+    const drawHeader = (pg, y) => {
+      pg.drawText("DESCRIPTION", { x: left, y, size: 8, font: mono, color: muted })
+      this.drawRight(pg, "QTY",    { x: qtyR,  y, size: 8, font: mono, color: muted })
+      this.drawRight(pg, "RATE",   { x: rateR, y, size: 8, font: mono, color: muted })
+      this.drawRight(pg, "AMOUNT", { x: amtR,  y, size: 8, font: mono, color: muted })
+      y -= 10
+      pg.drawLine({ start: { x: left, y }, end: { x: left + width, y }, thickness: 0.6, color: line })
+      return y - 14
+    }
 
+    let y = drawHeader(page, top)
     for (const it of items) {
       const amount = (parseFloat(it.quantity) || 0) * (parseFloat(it.unit_price) || 0)
-      page.drawText(this.truncate(this.asText(it.description) || "—", 52),
-        { x: left, y, size: 10, font: regular, color: ink })
-      this.drawRight(page, this.asText(it.quantity), { x: left + colW.desc + 60, y, size: 10, font: mono, color: ink })
-      this.drawRight(page, this.fmt(it.unit_price), { x: left + colW.desc + colW.qty + 110, y, size: 10, font: mono, color: ink })
-      this.drawRight(page, this.fmt(amount),        { x: left + width, y, size: 10, font: mono, color: ink })
-      y -= 16
+      const descLines = this.wrapText(regular, this.asText(it.description) || "—", 10, descW)
+      const rowH = descLines.length * 12 + 4
+      if (y - rowH < bottom) {
+        page = page.doc.addPage([595, 842])
+        y = drawHeader(page, 790)
+      }
+      descLines.forEach((p, i) => {
+        page.drawText(p, { x: left, y: y - i * 12, size: 10, font: regular, color: ink })
+      })
+      this.drawRight(page, this.asText(it.quantity), { x: qtyR,  y, size: 10, font: mono, color: ink })
+      this.drawRight(page, this.fmt(it.unit_price), { x: rateR, y, size: 10, font: mono, color: ink })
+      this.drawRight(page, this.fmt(amount),        { x: amtR,  y, size: 10, font: mono, color: ink })
+      y -= rowH
     }
-    return y
+    return { page, y }
   }
 
   drawRight (page, text, opts) {
     const w = opts.font.widthOfTextAtSize(text, opts.size)
     page.drawText(text, { ...opts, x: opts.x - w })
   }
-
-  truncate (s, n) { return s.length > n ? s.slice(0, n - 1) + "…" : s }
 
   // ----- TEMPLATE: Plain -----
   async renderPlain (pdf) {
@@ -303,17 +341,20 @@ export default class extends Controller {
 
     // From / To
     page.drawText("FROM", { x: 40, y: 735, size: 8, font: f.mono, color: muted })
-    this.drawBlock(page, f, 40, 720, [d.from_name, d.from_address, d.from_email])
+    const fromY = this.drawBlock(page, f, 40, 720, [d.from_name, d.from_address, d.from_email], 255)
     page.drawText("BILL TO", { x: 320, y: 735, size: 8, font: f.mono, color: muted })
-    this.drawBlock(page, f, 320, 720, [d.to_name, d.to_address, d.to_email])
+    const toY = this.drawBlock(page, f, 320, 720, [d.to_name, d.to_address, d.to_email], 235)
 
     // Table
-    let y = this.drawTable(page, f, 650, 40, 515, d.line_items, {})
-    this.drawTotals(page, f, y - 10)
+    const table = this.drawTable(page, f, Math.min(650, Math.min(fromY, toY) - 8), 40, 515, d.line_items, {})
+    const totals = this.drawTotals(table.page, f, table.y - 10)
 
     if (d.notes) {
-      page.drawText(this.truncate(this.asText(d.notes), 120),
-        { x: 40, y: 90, size: 9, font: f.mono, color: muted })
+      const lines = this.wrapText(f.mono, this.asText(d.notes), 9, 515).slice(0, 5)
+      const area = this.notesArea(totals.page, f, totals.y, lines.length)
+      lines.forEach((p, i) => {
+        area.page.drawText(p, { x: 40, y: area.y - i * 12, size: 9, font: f.mono, color: muted })
+      })
     }
   }
 
@@ -335,17 +376,20 @@ export default class extends Controller {
     page.drawLine({ start: { x: 40, y: 758 }, end: { x: 555, y: 758 }, thickness: 0.8, color: ink })
 
     page.drawText("FROM",    { x: 40,  y: 732, size: 8, font: f.mono, color: muted })
-    this.drawBlock(page, f, 40,  717, [d.from_name, d.from_address, d.from_email])
+    const fromY = this.drawBlock(page, f, 40,  717, [d.from_name, d.from_address, d.from_email], 255)
     page.drawText("BILL TO", { x: 320, y: 732, size: 8, font: f.mono, color: muted })
-    this.drawBlock(page, f, 320, 717, [d.to_name, d.to_address, d.to_email])
+    const toY = this.drawBlock(page, f, 320, 717, [d.to_name, d.to_address, d.to_email], 235)
 
-    let y = this.drawTable(page, f, 640, 40, 515, d.line_items, {})
-    this.drawTotals(page, f, y - 10)
+    const table = this.drawTable(page, f, Math.min(640, Math.min(fromY, toY) - 8), 40, 515, d.line_items, {})
+    const totals = this.drawTotals(table.page, f, table.y - 10)
 
     if (d.notes) {
-      page.drawText("NOTE", { x: 40, y: 96, size: 8, font: f.mono, color: muted })
-      page.drawText(this.truncate(this.asText(d.notes), 120),
-        { x: 40, y: 80, size: 10, font: f.serif, color: ink })
+      const lines = this.wrapText(f.serif, this.asText(d.notes), 10, 515).slice(0, 5)
+      const area = this.notesArea(totals.page, f, totals.y, lines.length + 1)
+      area.page.drawText("NOTE", { x: 40, y: area.y, size: 8, font: f.mono, color: muted })
+      lines.forEach((p, i) => {
+        area.page.drawText(p, { x: 40, y: area.y - 16 - i * 13, size: 10, font: f.serif, color: ink })
+      })
     }
   }
 
@@ -369,33 +413,38 @@ export default class extends Controller {
 
     // from / to
     page.drawText("FROM",    { x: 40,  y: 732, size: 8, font: f.mono, color: muted })
-    this.drawBlock(page, f, 40,  717, [d.from_name, d.from_address, d.from_email])
+    const fromY = this.drawBlock(page, f, 40,  717, [d.from_name, d.from_address, d.from_email], 255)
     page.drawText("BILL TO", { x: 320, y: 732, size: 8, font: f.mono, color: muted })
-    this.drawBlock(page, f, 320, 717, [d.to_name, d.to_address, d.to_email])
+    const toY = this.drawBlock(page, f, 320, 717, [d.to_name, d.to_address, d.to_email], 235)
 
-    let y = this.drawTable(page, f, 640, 40, 515, d.line_items, {})
-    this.drawTotals(page, f, y - 10, { accent: red })
+    const table = this.drawTable(page, f, Math.min(640, Math.min(fromY, toY) - 8), 40, 515, d.line_items, {})
+    const totals = this.drawTotals(table.page, f, table.y - 10, { accent: red })
 
-    // thin footer rule in red
-    page.drawLine({ start: { x: 40, y: 70 }, end: { x: 555, y: 70 }, thickness: 0.8, color: red })
-    if (d.notes) {
-      page.drawText(this.truncate(this.asText(d.notes), 120),
-        { x: 40, y: 54, size: 9, font: f.mono, color: muted })
-    }
+    // thin footer rule in red, with wrapped notes beneath it
+    const lines = d.notes ? this.wrapText(f.mono, this.asText(d.notes), 9, 515).slice(0, 5) : []
+    const area = this.notesArea(totals.page, f, totals.y, lines.length + 1)
+    area.page.drawLine({ start: { x: 40, y: area.y }, end: { x: 555, y: area.y }, thickness: 0.8, color: red })
+    lines.forEach((p, i) => {
+      area.page.drawText(p, { x: 40, y: area.y - 16 - i * 12, size: 9, font: f.mono, color: muted })
+    })
   }
 
-  drawBlock (page, f, x, y, lines) {
+  // Address block wrapped to its column width. Returns the y below the block.
+  drawBlock (page, f, x, y, lines, maxWidth) {
     const ink = rgb(0.09, 0.09, 0.09)
     const muted = rgb(0.45, 0.45, 0.45)
     let yy = y
     lines.forEach((l, i) => {
       if (!l) return
-      const parts = String(l).split("\n")
-      parts.forEach((p) => {
-        page.drawText(p.slice(0, 60), { x, y: yy, size: i === 0 ? 11 : 10, font: i === 0 ? f.bold : f.regular, color: i === 0 ? ink : muted })
+      const size = i === 0 ? 11 : 10
+      const font = i === 0 ? f.bold : f.regular
+      const color = i === 0 ? ink : muted
+      this.wrapText(font, l, size, maxWidth).slice(0, 5).forEach((p) => {
+        page.drawText(p, { x, y: yy, size, font, color })
         yy -= 13
       })
     })
+    return yy
   }
 
   drawTotals (page, f, top, opts = {}) {
@@ -405,6 +454,10 @@ export default class extends Controller {
     const x = 360
     const width = 195
     let y = top
+    if (y < 110) {
+      page = page.doc.addPage([595, 842])
+      y = 790
+    }
 
     const rows = [
       ["Subtotal", this.fmt(this.subtotal())],
@@ -420,6 +473,18 @@ export default class extends Controller {
     y -= 16
     page.drawText("Total", { x, y, size: 12, font: f.bold, color: opts.accent || ink })
     this.drawRight(page, this.fmt(this.total()), { x: x + width, y, size: 12, font: f.boldMono, color: opts.accent || ink })
+    return { page, y }
+  }
+
+  // Wrapped note text near the page foot, dropping to a new page if the
+  // totals already reached the bottom. Returns { page, y } of the note top.
+  notesArea (page, f, totalsY, lineCount) {
+    let y = Math.min(90, totalsY - 30)
+    if (y - lineCount * 12 < 30) {
+      page = page.doc.addPage([595, 842])
+      y = 790
+    }
+    return { page, y }
   }
 
   // ----- save ---------------
