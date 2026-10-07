@@ -30,7 +30,7 @@ RUN python3 -m venv /opt/pdf2docx && \
     /opt/pdf2docx/bin/pip install --no-cache-dir --upgrade pip && \
     /opt/pdf2docx/bin/pip install --no-cache-dir "pdf2docx==${PDF2DOCX_VERSION}" && \
     ln -s /opt/pdf2docx/bin/pdf2docx /usr/local/bin/pdf2docx && \
-    /usr/local/bin/pdf2docx --version
+    /opt/pdf2docx/bin/python -c "import pdf2docx"
 
 # Set production environment variables and enable jemalloc for reduced memory usage and latency.
 ENV RAILS_ENV="production" \
