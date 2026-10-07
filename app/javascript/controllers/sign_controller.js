@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import { PDFDocument } from "pdf-lib"
+import { guardUnsavedWork } from "../lib/unsaved_work"
 
 // Sign PDF — client-side.
 // Flow:
@@ -33,10 +34,16 @@ export default class extends Controller {
     this.signatureMode = "draw"
     this.drawing   = false
     this.ink       = "#0f172a"
+    this.exported = false   // true once the stamped PDF has been downloaded
     this.initPad()
     this.loadSavedSignatures()
     this.updateDownloadBtn()
     this.updateSignatureActions()
+    this.unguard = guardUnsavedWork(() => !!this.pdfDoc && !this.exported)
+  }
+
+  disconnect () {
+    if (this.unguard) this.unguard()
   }
 
   // ----- signature pad -----
@@ -272,6 +279,7 @@ export default class extends Controller {
     if (!file || !/\.pdf$/i.test(file.name)) return
     this.pdfBuffer = await file.arrayBuffer()
     this.pdfDoc = await PDFDocument.load(this.pdfBuffer)
+    this.exported = false
 
     this.pageInfos = []
     this.pagesWrapTarget.style.display = "block"
@@ -495,6 +503,7 @@ export default class extends Controller {
     const a = document.createElement("a"); a.href = url; a.download = "signed.pdf"
     document.body.appendChild(a); a.click(); a.remove()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
+    this.exported = true
   }
 
   // ----- util -----

@@ -2,6 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 import { PDFDocument, degrees } from "pdf-lib"
 import { zip } from "fflate"
 import Sortable from "sortablejs"
+import { guardUnsavedWork } from "../lib/unsaved_work"
 
 // Client-side PDF merge / split / rotate / compress.
 export default class extends Controller {
@@ -19,6 +20,12 @@ export default class extends Controller {
     this.items = []  // { id, name, bytes, doc, pages: [ { rotate: 0, include: true, fromIdx } ] }
     this.compress = "medium"
     this.sortable = null
+    this.exported = false   // true once a result has been downloaded
+    this.unguard = guardUnsavedWork(() => this.items.length > 0 && !this.exported)
+  }
+
+  disconnect () {
+    if (this.unguard) this.unguard()
   }
 
   pick () { this.inputTarget.click() }
@@ -34,6 +41,7 @@ export default class extends Controller {
   async addFiles (files) {
     const pdfs = files.filter((f) => /\.pdf$/i.test(f.name) || f.type === "application/pdf")
     if (pdfs.length === 0) return
+    this.exported = false
     if (this.opValue !== "merge" && this.items.length + pdfs.length > 1) {
       // single-file tools — replace
       this.items = []
@@ -239,6 +247,7 @@ export default class extends Controller {
         case "rotate":   await this.runRotate(); break
         case "compress": await this.runCompress(); break
       }
+      this.exported = true
     } catch (err) {
       console.error(err)
       alert("Something went wrong: " + err.message)

@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import { zip } from "fflate"
+import { guardUnsavedWork } from "../lib/unsaved_work"
 
 // In-browser image compressor. Draws the source image to a canvas at a target
 // size, then uses canvas.toBlob to re-encode at the chosen quality. No upload.
@@ -18,6 +19,12 @@ export default class extends Controller {
     this.processing = false
     this.started = false    // no compression until the user hits Compress
     this.generation = 0     // bumped when settings change mid-flight
+    this.exported = false   // true once the user has downloaded a result
+    this.unguard = guardUnsavedWork(() => this.files.length > 0 && !this.exported)
+  }
+
+  disconnect () {
+    if (this.unguard) this.unguard()
   }
 
   pick () { this.inputTarget.click() }
@@ -32,6 +39,7 @@ export default class extends Controller {
   addFiles (files) {
     const imgs = files.filter((f) => /^image\/(jpeg|png|webp)$/.test(f.type))
     if (imgs.length === 0) return
+    this.exported = false
     for (const f of imgs) {
       this.files.push({
         id: crypto.randomUUID(),
@@ -85,6 +93,7 @@ export default class extends Controller {
   // Re-process all files with the current settings.
   reprocess () {
     this.generation++
+    this.exported = false
     this.files.forEach((f) => {
       f.status = "queue"
       f.outBlob = null
@@ -199,6 +208,7 @@ export default class extends Controller {
   async downloadZip () {
     const done = this.files.filter((f) => f.status === "done")
     if (done.length === 0) return
+    this.exported = true
     if (done.length === 1) {
       this.triggerDownload(done[0].outBlob, this.renameFile(done[0].name, done[0].ext))
       return
@@ -217,6 +227,7 @@ export default class extends Controller {
   downloadOne (e) {
     const f = this.files.find((x) => x.id === e.currentTarget.dataset.id)
     if (!f || !f.outBlob) return
+    this.exported = true
     this.triggerDownload(f.outBlob, this.renameFile(f.name, f.ext))
   }
 
