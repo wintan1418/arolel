@@ -1,12 +1,13 @@
 import { Controller } from "@hotwired/stimulus"
 import heic2any from "heic2any"
 import { zip } from "fflate"
+import { guardUnsavedWork } from "../lib/unsaved_work"
 
 // HEIC → JPG/PNG/WebP. All in-browser. Queues files and processes sequentially
 // (heic2any itself is heavy; parallelism doesn't help much on a single core).
 export default class extends Controller {
   static targets = [
-    "drop", "input", "options", "list", "zipBtn",
+    "drop", "input", "options", "list", "zipBtn", "convertBtn",
     "quality", "format",
     "bytesSent", "threads", "queued", "done"
   ]
@@ -16,7 +17,15 @@ export default class extends Controller {
     this.quality = 0.9
     this.format  = "image/jpeg"
     this.processing = false
+    this.started = false    // nothing converts until the user hits Convert
+    this.generation = 0     // bumped when settings change mid-flight
+    this.exported = false
     if (this.hasThreadsTarget) this.threadsTarget.textContent = "1"
+    this.unguard = guardUnsavedWork(() => this.files.length > 0 && !this.exported)
+  }
+
+  disconnect () {
+    if (this.unguard) this.unguard()
   }
 
   pick () { this.inputTarget.click() }
@@ -33,6 +42,7 @@ export default class extends Controller {
   addFiles (files) {
     const heic = files.filter((f) => /\.(heic|heif)$/i.test(f.name) || /heic|heif/i.test(f.type))
     if (heic.length === 0) return
+    this.exported = false
     for (const f of heic) {
       this.files.push({
         id: crypto.randomUUID(),
@@ -45,36 +55,90 @@ export default class extends Controller {
         ext: null
       })
     }
-    this.optionsTarget.hidden = false
     this.render()
-    this.processNext()
+    this.updateConvertBtn()
+    if (this.started) this.processNext()
   }
 
   setQuality (e) {
     this.quality = parseFloat(e.currentTarget.dataset.q)
-    this.qualityTarget.querySelectorAll(".tb-tab").forEach((b) => b.classList.remove("is-active"))
-    e.currentTarget.classList.add("is-active")
+    this.selectTab(this.qualityTarget, e.currentTarget)
+    this.settingsChanged()
   }
 
   setFormat (e) {
     this.format = e.currentTarget.dataset.f
-    this.formatTarget.querySelectorAll(".tb-tab").forEach((b) => b.classList.remove("is-active"))
-    e.currentTarget.classList.add("is-active")
+    this.selectTab(this.formatTarget, e.currentTarget)
+    this.settingsChanged()
+  }
+
+  selectTab (group, active) {
+    group.querySelectorAll(".tb-tab").forEach((b) => b.classList.remove("is-active"))
+    active.classList.add("is-active")
+  }
+
+  // Once conversion has started, any settings change reprocesses everything
+  // so the downloads always reflect the current settings.
+  settingsChanged () {
+    if (this.started) this.reprocess()
+  }
+
+  start () {
+    if (this.files.length === 0) {
+      this.pick()
+      return
+    }
+    if (this.started) { this.reprocess(); return }
+    this.started = true
+    this.updateConvertBtn()
+    this.processNext()
+  }
+
+  // Re-convert all files with the current settings.
+  reprocess () {
+    this.generation++
+    this.exported = false
+    this.files.forEach((f) => {
+      f.status = "queue"
+      f.outBlob = null
+      f.outSize = null
+      f.ext = null
+    })
+    this.updateZipBtn()
+    this.render()
+    this.processNext()
   }
 
   clear () {
     this.files = []
+    this.started = false
+    this.generation++
     this.render()
     this.listTarget.style.display = "none"
-    this.optionsTarget.hidden = true
     this.zipBtnTarget.disabled = true
+    this.updateConvertBtn()
+  }
+
+  updateConvertBtn () {
+    if (!this.hasConvertBtnTarget) return
+    const count = this.files.length
+    if (count === 0) {
+      this.convertBtnTarget.textContent = "Convert"
+      this.convertBtnTarget.disabled = true
+      return
+    }
+    this.convertBtnTarget.disabled = false
+    this.convertBtnTarget.textContent = this.started
+      ? "Convert again"
+      : `Convert ${count} ${count === 1 ? "photo" : "photos"}`
   }
 
   async processNext () {
-    if (this.processing) return
+    if (this.processing || !this.started) return
     const next = this.files.find((f) => f.status === "queue")
     if (!next) return
     this.processing = true
+    const gen = this.generation
     next.status = "work"
     this.render()
 
@@ -85,14 +149,19 @@ export default class extends Controller {
         quality: this.quality
       })
       const blob = Array.isArray(result) ? result[0] : result
-      next.outBlob = blob
-      next.outSize = blob.size
-      next.ext = this.format === "image/jpeg" ? "jpg" :
-                 this.format === "image/png"  ? "png" : "webp"
-      next.status = "done"
+      if (gen === this.generation) {
+        next.outBlob = blob
+        next.outSize = blob.size
+        next.ext = this.format === "image/jpeg" ? "jpg" :
+                   this.format === "image/png"  ? "png" : "webp"
+        next.status = "done"
+      } else if (next.status === "work") {
+        // Settings changed while this file was in flight — result is stale.
+        next.status = "queue"
+      }
     } catch (err) {
       console.error(err)
-      next.status = "error"
+      next.status = gen === this.generation ? "error" : "queue"
     }
     this.processing = false
     this.render()
@@ -108,6 +177,7 @@ export default class extends Controller {
   async downloadZip () {
     const done = this.files.filter((f) => f.status === "done")
     if (done.length === 0) return
+    this.exported = true
     if (done.length === 1) {
       this.triggerDownload(done[0].outBlob, this.renameFile(done[0].name, done[0].ext))
       return
@@ -128,14 +198,20 @@ export default class extends Controller {
     const id = e.currentTarget.dataset.id
     const f = this.files.find((x) => x.id === id)
     if (!f || !f.outBlob) return
+    this.exported = true
     this.triggerDownload(f.outBlob, this.renameFile(f.name, f.ext))
   }
 
   removeOne (e) {
     const id = e.currentTarget.dataset.id
     this.files = this.files.filter((f) => f.id !== id)
-    this.render()
-    if (this.files.length === 0) this.clear()
+    if (this.files.length === 0) {
+      this.clear()
+    } else {
+      this.render()
+      this.updateZipBtn()
+      this.updateConvertBtn()
+    }
   }
 
   triggerDownload (blob, name) {
@@ -176,7 +252,7 @@ export default class extends Controller {
     let status = ""
     let action = ""
     if (f.status === "queue") {
-      status = `<span class="tb-pill tb-pill-neu">queued</span>`
+      status = `<span class="tb-pill tb-pill-neu">${this.started ? "queued" : "ready"}</span>`
       action = `<button class="tb-btn tb-btn-quiet" data-action-rm data-id="${f.id}">remove</button>`
     } else if (f.status === "work") {
       status = `<div class="tb-progress"><div class="tb-progress-fill" style="width: 70%"></div></div>`

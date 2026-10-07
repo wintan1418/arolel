@@ -3,8 +3,8 @@
     <div class="tb-eyebrow">Tool 01</div>
     <h1 class="tb-h1 tb-tool-title">HEIC → JPG</h1>
     <p class="tb-text tb-tool-subtitle" style="max-width: 56ch;">
-      Drop a pile of iPhone HEIC photos. We'll convert them to JPG, PNG or WebP right here
-      in your browser. Nothing leaves your device.
+      Drop a pile of iPhone HEIC photos, pick a quality and format, then convert them to JPG, PNG or WebP
+      right here in your browser. Nothing leaves your device.
     </p>
 
     <div class="tb-drop"
@@ -24,7 +24,7 @@
     <input type="file" accept="image/heic,image/heif,.heic,.heif" multiple
            data-heic-target="input" data-action="change->heic#picked" hidden>
 
-    <div data-heic-target="options" hidden style="margin-top: 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+    <div data-heic-target="options" style="margin-top: 20px; display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap;">
       <div>
         <div class="tb-eyebrow" style="margin-bottom: 6px;">Quality</div>
         <div class="tb-tabs" data-heic-target="quality">
@@ -45,9 +45,13 @@
       <span style="flex: 1;"></span>
 
       <button class="tb-btn tb-btn-quiet" data-action="click->heic#clear">Clear</button>
-      <button class="tb-btn tb-btn-primary" data-action="click->heic#downloadZip" data-heic-target="zipBtn" disabled>
+      <button class="tb-btn tb-btn-primary" data-action="click->heic#start" data-heic-target="convertBtn" disabled>Convert</button>
+      <button class="tb-btn tb-btn-ghost" data-action="click->heic#downloadZip" data-heic-target="zipBtn" disabled>
         Download all as .zip
       </button>
+    </div>
+    <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 10px;">
+      Nothing converts until you press Convert. Changing quality or format afterwards re-converts with the new settings.
     </div>
 
     <div data-heic-target="list" class="tb-card" style="margin-top: 18px; display: none;"></div>
@@ -78,7 +82,8 @@
 <section class="tb-seo">
   <h2>How do I convert HEIC to JPG?</h2>
   <p>
-    Drop any number of HEIC files onto the box above (or tap it on your phone to pick from your camera roll).
+    Drop any number of HEIC files onto the box above (or tap it on your phone to pick from your camera roll),
+    choose the quality and output format, then press Convert.
     Each file is decoded locally in your browser using <span class="tb-mono">libheif</span> compiled to WebAssembly,
     then re-encoded as JPG, PNG or WebP at the quality you pick. No upload step, no progress bar for "sending to
     server" — just your CPU.
