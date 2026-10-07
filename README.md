@@ -84,6 +84,7 @@ Deployed via Hatchbox. App reads:
 | `SUPER_ADMIN_EMAILS` | Comma-separated emails that can access `/admin` without flipping the DB flag |
 | `COFFEE_URL` | Optional Buy Me A Coffee link — if unset, the button is hidden |
 | `SOURCE_URL` | Optional public source-code link — if unset, hidden from the footer |
+| `PDF2DOCX_PATH` | Optional path override for the `pdf2docx` binary (best PDF → DOCX fidelity; falls back to LibreOffice, then text) |
 | `LIBREOFFICE_PATH` | Optional path override for DOC/PDF conversion binary |
 | `PDFTOPPM_PATH` | Optional path override for Poppler PDF-to-image binary |
 | `PDFTOTEXT_PATH` | Optional path override for Poppler PDF text extraction binary |

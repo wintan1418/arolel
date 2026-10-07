@@ -17,9 +17,20 @@ WORKDIR /rails
 # Install base packages
 RUN apt-get update -qq && \
     apt-get install --no-install-recommends -y curl libjemalloc2 libvips postgresql-client \
-      poppler-utils libreoffice-writer libreoffice-draw fonts-liberation && \
+      poppler-utils libreoffice-writer libreoffice-draw fonts-liberation \
+      python3 python3-venv libglib2.0-0 && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# pdf2docx (PyMuPDF based) gives far better PDF -> DOCX layout fidelity than
+# LibreOffice's PDF import. Installed in its own venv so it never touches the
+# system Python; DocumentConverter finds it on PATH or via PDF2DOCX_PATH.
+ARG PDF2DOCX_VERSION=0.5.13
+RUN python3 -m venv /opt/pdf2docx && \
+    /opt/pdf2docx/bin/pip install --no-cache-dir --upgrade pip && \
+    /opt/pdf2docx/bin/pip install --no-cache-dir "pdf2docx==${PDF2DOCX_VERSION}" && \
+    ln -s /opt/pdf2docx/bin/pdf2docx /usr/local/bin/pdf2docx && \
+    /usr/local/bin/pdf2docx --version
 
 # Set production environment variables and enable jemalloc for reduced memory usage and latency.
 ENV RAILS_ENV="production" \

@@ -101,18 +101,180 @@ class DocumentConverter
     Result.new(File.binread(output_path), filename, content_type)
   end
 
+  # PDF -> DOCX tries three strategies, best first:
+  #
+  # 1. pdf2docx (PyMuPDF based). It rebuilds paragraphs, tables, multi-column
+  #    layouts and background shading, so a two-column resume or an invoice
+  #    comes out looking like the original and the text flows normally.
+  # 2. LibreOffice Writer's PDF import. Keeps fonts and structure but places
+  #    every line as its own positioned frame, which drifts and misaligns.
+  # 3. pdftotext into a minimal hand-built DOCX. Text only, always opens.
   def convert_pdf_to_docx(input_path, dir)
-    # Import the PDF into Writer (not Draw, the default) so the DOCX keeps
-    # layout, fonts, and structure rather than losing everything but text.
-    convert_with_libreoffice(input_path, dir, "docx", "#{base_name}.docx", docx_content_type, infilter: "writer_pdf_import")
-  rescue ConversionFailed, MissingDependency
+    filename = "#{base_name}.docx"
+
+    if (pdf2docx = pdf2docx_path)
+      begin
+        return convert_pdf_to_docx_with_pdf2docx(pdf2docx, input_path, dir, filename)
+      rescue ConversionFailed => error
+        Rails.logger.warn("[DocumentConverter] pdf2docx failed, falling back to LibreOffice: #{error.message}")
+      end
+    end
+
+    begin
+      return convert_with_libreoffice(input_path, dir, "docx", filename, docx_content_type, infilter: "writer_pdf_import")
+    rescue ConversionFailed, MissingDependency => error
+      Rails.logger.warn("[DocumentConverter] LibreOffice PDF import failed, falling back to text: #{error.message}")
+    end
+
     text_path = File.join(dir, "extracted.txt")
     run_command(pdftotext_path, "-layout", input_path, text_path)
 
     text = File.read(text_path).strip
     raise ConversionFailed, "This PDF did not contain extractable text." if text.blank?
 
-    Result.new(build_text_docx(text), "#{base_name}.docx", docx_content_type)
+    Result.new(build_text_docx(text), filename, docx_content_type)
+  end
+
+  # Below this share of the PDF's words, pdf2docx has dropped too much (for
+  # example it sometimes skips text layered over vector artwork) and the
+  # LibreOffice import is the safer result.
+  MIN_TEXT_COVERAGE = 0.7
+
+  def convert_pdf_to_docx_with_pdf2docx(pdf2docx, input_path, dir, filename)
+    output_path = File.join(dir, "pdf2docx-output.docx")
+    run_command(pdf2docx, "convert", input_path, output_path)
+
+    raise ConversionFailed, "pdf2docx did not produce a DOCX file." unless File.file?(output_path)
+    raise ConversionFailed, "pdf2docx produced an unreadable DOCX file." unless valid_docx?(output_path)
+
+    bytes = polish_pdf2docx_docx(File.binread(output_path))
+    coverage = text_coverage(pdf_text_words(input_path, dir), docx_text_words(bytes))
+    if coverage && coverage < MIN_TEXT_COVERAGE
+      raise ConversionFailed, "pdf2docx kept only #{(coverage * 100).round}% of the PDF text."
+    end
+
+    Result.new(bytes, filename, docx_content_type)
+  end
+
+  # pdf2docx reproduces page geometry very literally, which hurts in Word:
+  #
+  # * Table rows get `hRule="exact"` heights copied from the PDF, so any text
+  #   that reflows even slightly taller is clipped. `atLeast` keeps the
+  #   geometry when it fits and grows the row when it does not.
+  # * Text that sat on a dark shape in the PDF keeps its white colour even
+  #   when the shape did not survive as cell shading, leaving invisible
+  #   white-on-white runs. Those runs lose the explicit colour so Word falls
+  #   back to automatic (black) text.
+  def polish_pdf2docx_docx(bytes)
+    rewrite_docx_document(bytes) do |doc|
+      doc.xpath("//w:trHeight[@w:hRule='exact']", DOCX_NS).each { |node| node["w:hRule"] = "atLeast" }
+
+      doc.xpath("//w:r/w:rPr/w:color[@w:val]", DOCX_NS).each do |color|
+        next unless near_white?(color["w:val"])
+        next if shaded_background?(color.parent.parent)
+
+        color.remove
+      end
+    end
+  end
+
+  DOCX_NS = { "w" => "http://schemas.openxmlformats.org/wordprocessingml/2006/main" }.freeze
+
+  def rewrite_docx_document(bytes)
+    document_xml = nil
+    entries = []
+    Zip::File.open_buffer(bytes) do |zip|
+      zip.each do |entry|
+        next if entry.directory?
+
+        data = entry.get_input_stream.read
+        if entry.name == "word/document.xml"
+          document_xml = data
+        else
+          entries << [ entry.name, data ]
+        end
+      end
+    end
+    return bytes if document_xml.nil?
+
+    doc = Nokogiri::XML(document_xml) { |config| config.strict }
+    yield doc
+
+    Zip::OutputStream.write_buffer do |zip|
+      zip.put_next_entry("word/document.xml")
+      zip.write(doc.to_xml)
+      entries.each do |name, data|
+        zip.put_next_entry(name)
+        zip.write(data)
+      end
+    end.string
+  rescue Zip::Error, Nokogiri::XML::SyntaxError
+    bytes
+  end
+
+  def near_white?(hex)
+    return false unless hex.to_s.match?(/\A[0-9a-fA-F]{6}\z/)
+
+    hex.scan(/../).all? { |channel| channel.to_i(16) >= 0xD0 }
+  end
+
+  # True when the run sits in a shaded paragraph or table cell, where white
+  # text is intentional.
+  def shaded_background?(run)
+    run.ancestors.each do |ancestor|
+      next unless ancestor.element?
+
+      fill = case ancestor.name
+      when "p" then ancestor.at_xpath("./w:pPr/w:shd/@w:fill", DOCX_NS)&.value
+      when "tc" then ancestor.at_xpath("./w:tcPr/w:shd/@w:fill", DOCX_NS)&.value
+      end
+      return true if fill.present? && fill != "auto" && !near_white?(fill)
+    end
+    false
+  end
+
+  def pdf_text_words(input_path, dir)
+    text_path = File.join(dir, "coverage.txt")
+    run_command(pdftotext_path, input_path, text_path)
+    significant_words(File.read(text_path))
+  rescue ConversionFailed, MissingDependency, Errno::ENOENT
+    nil
+  end
+
+  def docx_text_words(bytes)
+    Zip::File.open_buffer(bytes) do |zip|
+      xml = zip.read("word/document.xml")
+      return significant_words(Nokogiri::XML(xml).xpath("//w:t", DOCX_NS).map(&:text).join(" "))
+    end
+  rescue Zip::Error
+    Set.new
+  end
+
+  def significant_words(text)
+    text.to_s.downcase.scan(/[[:alnum:]]{3,}/).to_set
+  end
+
+  def text_coverage(pdf_words, docx_words)
+    return nil if pdf_words.nil? || pdf_words.size < 10
+
+    (pdf_words & docx_words).size.to_f / pdf_words.size
+  end
+
+  # Word refuses anything that is not a proper OOXML package, so make sure the
+  # converter output is a zip with a main document part before sending it on.
+  def valid_docx?(path)
+    return false unless File.size?(path)
+
+    Zip::File.open(path) do |zip|
+      entry = zip.find_entry("word/document.xml")
+      return false unless entry
+
+      xml = entry.get_input_stream.read
+      Nokogiri::XML(xml) { |config| config.strict }
+      xml.include?("<w:body")
+    end
+  rescue Zip::Error, Nokogiri::XML::SyntaxError
+    false
   end
 
   def convert_word_to_csv(input_path, dir)
@@ -254,7 +416,8 @@ class DocumentConverter
   # contain form feeds and other control characters that make Word refuse
   # the file ("Illegal xml character") if they reach document.xml.
   XML_ILLEGAL_CHARS = /[^
- -퟿-�\u{10000}-\u{10FFFF}]/
+
+ -퟿-�\u{10000}-\u{10FFFF}]/
 
   def sanitize_docx_text(text)
     text
@@ -320,6 +483,10 @@ class DocumentConverter
       command_path("soffice") ||
       command_path("libreoffice") ||
       raise(MissingDependency, "LibreOffice is not installed on this server.")
+  end
+
+  def pdf2docx_path
+    command_path(ENV["PDF2DOCX_PATH"].presence) || command_path("pdf2docx")
   end
 
   def pdftoppm_path
