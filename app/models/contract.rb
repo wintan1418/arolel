@@ -9,6 +9,7 @@ class Contract < ApplicationRecord
   validates :slug, presence: true, uniqueness: true
   validates :title, presence: true
   validates :template, inclusion: { in: TEMPLATES }
+  validates :notes_heading, length: { maximum: 80 }, allow_blank: true
   validate :png_data_url
 
   scope :recent, -> { order(created_at: :desc) }

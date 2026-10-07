@@ -14,6 +14,7 @@
            party_b_address: @contract.party_b_address,
            party_b_email: @contract.party_b_email,
            summary: @contract.summary,
+           notes_heading: @contract.notes_heading,
            notes: @contract.notes,
            signer_name: @contract.signer_name,
            signer_image_data: @contract.signer_image_data,
@@ -36,6 +37,14 @@
 
   <div class="tb-invoice-shell">
     <div class="tb-invoice-editor">
+      <div class="tb-restore-notice" data-contract-target="restoreNotice" hidden role="status">
+        <div>
+          <strong>Picked up where you left off.</strong>
+          <span>We restored the contract you were drafting before you left this page.</span>
+        </div>
+        <button type="button" class="tb-btn tb-btn-quiet tb-btn-sm" data-action="click->contract#discardDraft">Discard and start fresh</button>
+      </div>
+
       <div class="tb-card tb-card-pad">
         <div class="tb-inline-head" style="margin-bottom: 10px;">
           <div>
@@ -139,8 +148,26 @@
       </div>
 
       <div class="tb-card tb-card-pad">
-        <div class="tb-eyebrow" style="margin-bottom: 10px;">Notes</div>
-        <textarea class="tb-textarea" rows="4" placeholder="Add optional notes, signing instructions, or deal-specific reminders." data-contract-target="fNotes" data-action="input->contract#change"></textarea>
+        <div class="tb-eyebrow" style="margin-bottom: 10px;">Closing section</div>
+        <div class="tb-stack-10">
+          <div>
+            <label class="tb-eyebrow" for="contract-notes-heading" style="display:block; margin-bottom:4px;">Section heading</label>
+            <input class="tb-input" id="contract-notes-heading" list="contract-notes-heading-options" maxlength="80"
+                   placeholder="Notes" data-contract-target="fNotesHeading" data-action="input->contract#change">
+            <datalist id="contract-notes-heading-options">
+              <option value="Notes"></option>
+              <option value="Signing Instructions"></option>
+              <option value="Special Terms"></option>
+              <option value="Additional Terms"></option>
+              <option value="Payment Instructions"></option>
+              <option value="Next Steps"></option>
+            </datalist>
+            <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 6px;">
+              This heading appears above the text in the preview and the PDF. Leave it as "Notes" or name it after what you write.
+            </div>
+          </div>
+          <textarea class="tb-textarea" rows="4" placeholder="Add optional notes, signing instructions, or deal-specific reminders." data-contract-target="fNotes" data-action="input->contract#change"></textarea>
+        </div>
       </div>
     </div>
 

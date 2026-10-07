@@ -35,6 +35,14 @@
 
   <div class="tb-invoice-shell">
     <div class="tb-invoice-editor">
+      <div class="tb-restore-notice" data-invoice-target="restoreNotice" hidden role="status">
+        <div>
+          <strong>Picked up where you left off.</strong>
+          <span>We restored the invoice you were building before you left this page.</span>
+        </div>
+        <button type="button" class="tb-btn tb-btn-quiet tb-btn-sm" data-action="click->invoice#discardDraft">Discard and start fresh</button>
+      </div>
+
       <div class="tb-card tb-card-pad">
         <div class="tb-eyebrow" style="margin-bottom: 10px;">Meta</div>
         <div class="tb-invoice-meta-grid">

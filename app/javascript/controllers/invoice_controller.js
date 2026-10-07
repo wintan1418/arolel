@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib"
+import { loadDraft, saveDraft, clearDraft } from "../lib/draft_store"
 
 // Invoice maker — three templates, all rendered client-side with pdf-lib.
 // State lives in `this.invoiceData`; every field edit updates that state,
@@ -11,7 +12,7 @@ export default class extends Controller {
     "fFromName", "fFromAddress", "fFromEmail",
     "fToName", "fToAddress", "fToEmail",
     "fTax", "fNotes",
-    "preview", "subtotal", "total"
+    "preview", "subtotal", "total", "restoreNotice"
   ]
   static values = {
     saved: Boolean,
@@ -21,6 +22,7 @@ export default class extends Controller {
   }
 
   connect () {
+    this.booting = true
     this.invoiceData = Object.assign({
       number: "",
       template: "plain",
@@ -38,6 +40,14 @@ export default class extends Controller {
       line_items: []
     }, this.seedValue || {})
 
+    // Restore work left behind when the user hopped to another tool and came back.
+    this.draftKey = `invoice:${this.slugValue || "new"}`
+    const draft = loadDraft(this.draftKey)
+    if (draft && draft.invoice) {
+      this.invoiceData = Object.assign(this.invoiceData, draft.invoice)
+      if (this.hasRestoreNoticeTarget) this.restoreNoticeTarget.hidden = false
+    }
+
     if (!this.invoiceData.line_items || this.invoiceData.line_items.length === 0) {
       this.invoiceData.line_items = [{ description: "", quantity: 1, unit_price: 0 }]
     }
@@ -45,6 +55,38 @@ export default class extends Controller {
     this.hydrateFields()
     this.renderItems()
     this.render()
+    this.booting = false
+  }
+
+  disconnect () {
+    if (this.persistTimer) {
+      clearTimeout(this.persistTimer)
+      this.persistTimer = null
+      this.persistDraft()
+    }
+  }
+
+  // ----- draft persistence -----
+
+  schedulePersist () {
+    if (this.booting) return
+    if (this.persistTimer) clearTimeout(this.persistTimer)
+    this.persistTimer = setTimeout(() => {
+      this.persistTimer = null
+      this.persistDraft()
+    }, 250)
+  }
+
+  persistDraft () {
+    if (!this.draftKey) return
+    saveDraft(this.draftKey, { invoice: this.invoiceData })
+  }
+
+  discardDraft (e) {
+    e?.preventDefault()
+    clearDraft(this.draftKey)
+    this.draftKey = null
+    window.location.reload()
   }
 
   // ----- field sync -----
@@ -154,6 +196,7 @@ export default class extends Controller {
     this.subtotalTarget.textContent = this.fmt(this.subtotal())
     this.totalTarget.textContent    = this.fmt(this.total())
     this.previewTarget.innerHTML    = this.previewHtml()
+    this.schedulePersist()
   }
 
   // HTML preview that mirrors each template's PDF layout at a smaller scale.
@@ -519,6 +562,10 @@ export default class extends Controller {
       method, headers: { "X-CSRF-Token": this.csrf(), Accept: "application/json" }, body
     })
     if (res.ok) {
+      if (this.persistTimer) clearTimeout(this.persistTimer)
+      this.persistTimer = null
+      clearDraft(this.draftKey)
+      this.draftKey = null
       window.location.href = "/dashboard"
     } else {
       const msg = await res.text()

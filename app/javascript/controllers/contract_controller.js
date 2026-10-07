@@ -1,5 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib"
+import { loadDraft, saveDraft, clearDraft } from "../lib/draft_store"
+
+const DEFAULT_NOTES_HEADING = "Notes"
 
 export default class extends Controller {
   static targets = [
@@ -7,8 +10,8 @@ export default class extends Controller {
     "assistantBrief", "aiPrompt", "aiThread", "aiStatus", "fTitle", "fEffective",
     "fPartyAName", "fPartyAAddress", "fPartyAEmail",
     "fPartyBName", "fPartyBAddress", "fPartyBEmail",
-    "fSummary", "fNotes",
-    "signerPreview", "signerStatus"
+    "fSummary", "fNotesHeading", "fNotes",
+    "signerPreview", "signerStatus", "restoreNotice"
   ]
 
   static values = {
@@ -20,13 +23,28 @@ export default class extends Controller {
   }
 
   connect () {
+    this.booting = true
     this.savedSignatures = this.loadSavedSignatures()
     this.chatMessages = []
     const seed = this.seedValue || {}
     this.contractData = Object.assign(this.blankContract(seed.template || "service"), seed)
+    if (!this.contractData.notes_heading) this.contractData.notes_heading = DEFAULT_NOTES_HEADING
 
     if (!Array.isArray(this.contractData.sections) || this.contractData.sections.length === 0) {
       this.contractData.sections = this.templateDefaults(this.contractData.template).sections.map((section) => ({ ...section }))
+    }
+
+    // Restore work left behind when the user hopped to another tool (for
+    // example the Sign tool to create a signature) and came back.
+    this.draftKey = `contract:${this.slugValue || "new"}`
+    const draft = loadDraft(this.draftKey)
+    if (draft && draft.contract) {
+      this.contractData = Object.assign(this.contractData, draft.contract)
+      if (!Array.isArray(this.contractData.sections) || this.contractData.sections.length === 0) {
+        this.contractData.sections = this.templateDefaults(this.contractData.template).sections.map((section) => ({ ...section }))
+      }
+      this.chatMessages = Array.isArray(draft.messages) ? draft.messages : []
+      this.showRestoreNotice()
     }
 
     this.hydrateFields()
@@ -34,6 +52,43 @@ export default class extends Controller {
     this.renderSavedSignatures()
     this.renderChat()
     this.render()
+    this.booting = false
+  }
+
+  disconnect () {
+    // Flush any pending debounced write so nothing is lost on navigation.
+    if (this.persistTimer) {
+      clearTimeout(this.persistTimer)
+      this.persistTimer = null
+      this.persistDraft()
+    }
+  }
+
+  // ----- draft persistence -----
+
+  schedulePersist () {
+    if (this.booting) return
+    if (this.persistTimer) clearTimeout(this.persistTimer)
+    this.persistTimer = setTimeout(() => {
+      this.persistTimer = null
+      this.persistDraft()
+    }, 250)
+  }
+
+  persistDraft () {
+    if (!this.draftKey) return
+    saveDraft(this.draftKey, { contract: this.contractData, messages: this.chatMessages })
+  }
+
+  showRestoreNotice () {
+    if (this.hasRestoreNoticeTarget) this.restoreNoticeTarget.hidden = false
+  }
+
+  discardDraft (e) {
+    e?.preventDefault()
+    clearDraft(this.draftKey)
+    this.draftKey = null
+    window.location.reload()
   }
 
   blankContract (template) {
@@ -49,6 +104,7 @@ export default class extends Controller {
       party_b_address: "",
       party_b_email: "",
       summary: defaults.summary,
+      notes_heading: DEFAULT_NOTES_HEADING,
       notes: defaults.notes,
       signer_name: "",
       signer_image_data: "",
@@ -112,6 +168,7 @@ export default class extends Controller {
     this.fPartyBAddressTarget.value = this.contractData.party_b_address || ""
     this.fPartyBEmailTarget.value = this.contractData.party_b_email || ""
     this.fSummaryTarget.value = this.contractData.summary || ""
+    if (this.hasFNotesHeadingTarget) this.fNotesHeadingTarget.value = this.contractData.notes_heading || ""
     this.fNotesTarget.value = this.contractData.notes || ""
     this.templatesTarget.querySelectorAll(".tb-tab").forEach((button) => {
       button.classList.toggle("is-active", button.dataset.template === this.contractData.template)
@@ -128,9 +185,14 @@ export default class extends Controller {
     this.contractData.party_b_address = this.fPartyBAddressTarget.value
     this.contractData.party_b_email = this.fPartyBEmailTarget.value
     this.contractData.summary = this.fSummaryTarget.value
+    if (this.hasFNotesHeadingTarget) this.contractData.notes_heading = this.fNotesHeadingTarget.value
     this.contractData.notes = this.fNotesTarget.value
     this.syncSections()
     this.render()
+  }
+
+  notesHeading () {
+    return (this.contractData.notes_heading || "").trim() || DEFAULT_NOTES_HEADING
   }
 
   setTemplate (e) {
@@ -285,6 +347,7 @@ export default class extends Controller {
   }
 
   renderChat () {
+    this.schedulePersist()
     if (!this.hasAiThreadTarget) return
 
     if (this.chatMessages.length === 0) {
@@ -439,6 +502,7 @@ export default class extends Controller {
   render () {
     this.renderSigner()
     this.previewTarget.innerHTML = this.previewHtml()
+    this.schedulePersist()
   }
 
   renderSigner () {
@@ -510,7 +574,7 @@ export default class extends Controller {
 
       ${sections}
 
-      ${this.contractData.notes ? `<section style="margin-top: 16px;"><div class="tb-eyebrow">Notes</div><p style="margin-top: 6px; white-space: pre-line; color: var(--tb-muted); line-height: 1.7;">${this.esc(this.contractData.notes)}</p></section>` : ""}
+      ${this.contractData.notes ? `<section style="margin-top: 16px;"><div class="tb-eyebrow">${this.esc(this.notesHeading())}</div><p style="margin-top: 6px; white-space: pre-line; color: var(--tb-muted); line-height: 1.7;">${this.esc(this.contractData.notes)}</p></section>` : ""}
 
       <div class="tb-field-grid-2" style="margin-top: 22px;">
         <div>${signer}</div>
@@ -535,7 +599,7 @@ export default class extends Controller {
       this.drawSection(state, fonts, section.heading || "Clause", section.body || "", palette)
     })
     if (this.contractData.notes) {
-      this.drawSection(state, fonts, "Notes", this.contractData.notes, palette)
+      this.drawSection(state, fonts, this.notesHeading(), this.contractData.notes, palette)
     }
     await this.drawSignatureBlock(state, fonts, palette)
 
@@ -717,6 +781,7 @@ export default class extends Controller {
     body.append("contract[party_b_address]", this.contractData.party_b_address || "")
     body.append("contract[party_b_email]", this.contractData.party_b_email || "")
     body.append("contract[summary]", this.contractData.summary || "")
+    body.append("contract[notes_heading]", this.notesHeading())
     body.append("contract[notes]", this.contractData.notes || "")
     body.append("contract[signer_name]", this.contractData.signer_name || "")
     body.append("contract[signer_image_data]", this.contractData.signer_image_data || "")
@@ -734,6 +799,10 @@ export default class extends Controller {
     })
 
     if (res.ok) {
+      if (this.persistTimer) clearTimeout(this.persistTimer)
+      this.persistTimer = null
+      clearDraft(this.draftKey)
+      this.draftKey = null
       window.location.href = "/dashboard"
     } else {
       const msg = await res.text()

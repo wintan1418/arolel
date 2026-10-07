@@ -79,7 +79,7 @@ class ContractsController < ApplicationController
       :title, :template, :effective_on,
       :party_a_name, :party_a_address, :party_a_email,
       :party_b_name, :party_b_address, :party_b_email,
-      :summary, :notes,
+      :summary, :notes_heading, :notes,
       :signer_name, :signer_image_data,
       sections: [ :heading, :body ]
     )

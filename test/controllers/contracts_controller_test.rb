@@ -124,6 +124,8 @@ class ContractsControllerTest < ActionDispatch::IntegrationTest
                party_a_name: "Arolel Studio",
                party_b_name: "Client Co",
                summary: "Consulting support for a launch sprint.",
+               notes_heading: "Signing Instructions",
+               notes: "Sign both copies and return one by email.",
                signer_name: "Arolel Studio",
                signer_image_data: PNG_DATA_URL,
                sections: [
@@ -137,6 +139,32 @@ class ContractsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_match(/\A[a-z0-9]{7}\z/, response.parsed_body["slug"])
+    assert_equal "Signing Instructions", user.contracts.last.notes_heading
+  end
+
+  test "contract maker exposes an editable notes heading" do
+    get new_contract_path
+
+    assert_response :success
+    assert_select "input[data-contract-target='fNotesHeading']"
+    assert_select "[data-contract-target='restoreNotice'][hidden]"
+  end
+
+  test "saved contract seeds its notes heading into the editor" do
+    user = users(:one)
+    sign_in_as(user)
+    contract = user.contracts.create!(
+      title: "Service agreement",
+      template: "service",
+      notes_heading: "Special Terms",
+      notes: "Deposit is non-refundable.",
+      sections: [ { heading: "Scope", body: "Do the work." } ]
+    )
+
+    get edit_contract_path(slug: contract.slug)
+
+    assert_response :success
+    assert_includes response.body, "&quot;notes_heading&quot;:&quot;Special Terms&quot;"
   end
 
   test "signed in user can open saved contract" do

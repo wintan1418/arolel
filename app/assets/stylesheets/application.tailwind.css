@@ -1926,6 +1926,28 @@ a {
 
 /* ----- flash / toast ----- */
 
+.tb-restore-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  border: 1px solid var(--tb-green);
+  background: var(--tb-green-wash);
+  border-radius: var(--tb-r-card, 12px);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.tb-restore-notice[hidden] {
+  display: none;
+}
+
+.tb-restore-notice strong {
+  display: block;
+}
+
 .tb-toast {
   position: fixed;
   bottom: 20px;
