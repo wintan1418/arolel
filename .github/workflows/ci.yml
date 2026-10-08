@@ -88,3 +88,23 @@ jobs:
           # RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
+
+  # Hatchbox's GitHub-app auto-deploy has silently skipped pushes before, so
+  # main deploys itself through the deploy webhook once every check is green.
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [scan_ruby, lint, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy this commit on Hatchbox
+        env:
+          HATCHBOX_DEPLOY_KEY: ${{ secrets.HATCHBOX_DEPLOY_KEY }}
+        run: |
+          set -euo pipefail
+          if [ -z "$HATCHBOX_DEPLOY_KEY" ]; then
+            echo "HATCHBOX_DEPLOY_KEY secret is not set; skipping deploy." >&2
+            exit 1
+          fi
+          response=$(curl --silent --show-error --fail -X POST \
+            "https://hatchbox.io/webhooks/deployments/${HATCHBOX_DEPLOY_KEY}?sha=${GITHUB_SHA}")
+          echo "Hatchbox accepted the deploy: ${response}"
