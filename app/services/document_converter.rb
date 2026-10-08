@@ -485,8 +485,19 @@ class DocumentConverter
       raise(MissingDependency, "LibreOffice is not installed on this server.")
   end
 
+  # pdf2docx lives in its own virtualenv. The Docker image symlinks it onto
+  # PATH; on a plain server (Hatchbox) it is installed under the deploy
+  # user's home without sudo, so look in the conventional spots too.
+  PDF2DOCX_CANDIDATES = [
+    "/opt/pdf2docx/bin/pdf2docx",
+    "~/pdf2docx/bin/pdf2docx",
+    "~/.local/bin/pdf2docx"
+  ].freeze
+
   def pdf2docx_path
-    command_path(ENV["PDF2DOCX_PATH"].presence) || command_path("pdf2docx")
+    command_path(ENV["PDF2DOCX_PATH"].presence) ||
+      command_path("pdf2docx") ||
+      PDF2DOCX_CANDIDATES.map { |candidate| File.expand_path(candidate) }.find { |path| File.executable?(path) }
   end
 
   def pdftoppm_path
