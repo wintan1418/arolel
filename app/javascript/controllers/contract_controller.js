@@ -268,8 +268,8 @@ export default class extends Controller {
           <label class="tb-eyebrow">Clause ${i + 1}</label>
           <button type="button" class="tb-btn tb-btn-quiet" data-action="click->contract#removeSection" data-idx="${i}">Remove</button>
         </div>
-        <input class="tb-input" data-f="heading" placeholder="Clause heading" value="${this.esc(section.heading || "")}">
-        <textarea class="tb-textarea" rows="4" data-f="body" placeholder="Describe the clause clearly.">${this.esc(section.body || "")}</textarea>
+        <input class="tb-input" data-f="heading" placeholder="Clause heading" aria-label="Clause ${i + 1} heading" value="${this.esc(section.heading || "")}">
+        <textarea class="tb-textarea" rows="4" data-f="body" placeholder="Describe the clause clearly." aria-label="Clause ${i + 1} text">${this.esc(section.body || "")}</textarea>
       </div>
     `).join("")
 

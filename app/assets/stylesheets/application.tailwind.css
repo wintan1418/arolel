@@ -154,6 +154,8 @@ a {
 .tb-mono {
   font-family: var(--font-mono);
   font-feature-settings: "zero", "ss01";
+  /* Long tokens such as API names must never widen a phone layout. */
+  overflow-wrap: anywhere;
 }
 
 .tb-eyebrow {
@@ -2452,7 +2454,7 @@ a {
 
 @media (max-width: 900px) {
   .tb-hero {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 36px;
     padding: 40px 0 48px;
   }
