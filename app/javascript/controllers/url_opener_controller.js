@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { showToast } from "../lib/toast"
 
 // Paste, parse, and open or save a set of URLs.
 export default class extends Controller {
@@ -160,12 +161,8 @@ export default class extends Controller {
 
   sleep (ms) { return new Promise((r) => setTimeout(r, ms)) }
 
-  toast (msg) {
-    const t = document.createElement("div")
-    t.className = "tb-toast"
-    t.textContent = msg
-    document.body.appendChild(t)
-    setTimeout(() => t.remove(), 2200)
+  toast (msg, opts) {
+    showToast(msg, opts)
   }
 
   csrf () {

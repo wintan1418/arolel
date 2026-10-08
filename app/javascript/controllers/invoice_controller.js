@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { showToast } from "../lib/toast"
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib"
 import { loadDraft, saveDraft, clearDraft } from "../lib/draft_store"
 
@@ -534,7 +535,7 @@ export default class extends Controller {
 
   async save (e) {
     e?.preventDefault()
-    if (!this.signedInValue) { window.location.href = "/login"; return }
+    if (!this.signedInValue) { window.location.href = "/login?return_to=" + encodeURIComponent(location.pathname); return }
     const body = new FormData()
     body.append("invoice[number]",       this.invoiceData.number || "")
     body.append("invoice[template]",     this.invoiceData.template)
@@ -568,9 +569,18 @@ export default class extends Controller {
       this.draftKey = null
       window.location.href = "/dashboard"
     } else {
-      const msg = await res.text()
-      this.toast("Couldn't save: " + msg.slice(0, 120))
+      this.toast("Couldn't save: " + await this.errorMessage(res), { type: "error" })
     }
+  }
+
+  async errorMessage (res) {
+    try {
+      const data = await res.json()
+      if (Array.isArray(data.errors)) return data.errors.join(", ")
+      if (data.error === "sign_in_required") return "you need to sign in first."
+      if (data.message) return data.message
+    } catch (_) {}
+    return res.status === 401 ? "you need to sign in first." : `the server returned ${res.status}.`
   }
 
   // ----- util -----
@@ -580,9 +590,7 @@ export default class extends Controller {
   in14Days () { const d = new Date(); d.setDate(d.getDate() + 14); return d.toISOString().slice(0, 10) }
   csrf ()     { const el = document.querySelector('meta[name="csrf-token"]'); return el ? el.content : "" }
 
-  toast (msg) {
-    const t = document.createElement("div")
-    t.className = "tb-toast"; t.textContent = msg
-    document.body.appendChild(t); setTimeout(() => t.remove(), 2800)
+  toast (msg, opts) {
+    showToast(msg, opts)
   }
 }

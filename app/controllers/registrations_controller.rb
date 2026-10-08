@@ -3,6 +3,7 @@ class RegistrationsController < ApplicationController
   rate_limit to: 10, within: 10.minutes, only: :create, with: -> { redirect_to new_registration_path, alert: "Try again later." }
 
   def new
+    remember_return_to
     @user = User.new
   end
 
@@ -10,7 +11,7 @@ class RegistrationsController < ApplicationController
     @user = User.new(user_params)
     if @user.save
       start_new_session_for @user
-      redirect_to dashboard_path, notice: "Welcome to Arolel."
+      redirect_to session.delete(:return_to_after_authenticating) || dashboard_path, notice: "Welcome to Arolel."
     else
       render :new, status: :unprocessable_entity
     end

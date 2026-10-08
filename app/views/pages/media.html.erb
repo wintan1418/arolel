@@ -89,10 +89,10 @@
         <% end %>
       <% else %>
         <div class="tb-card tb-card-pad" style="margin-top: 18px; box-shadow: none;">
-          <div class="tb-text-sm">Log in or create an account to use server-side media conversion.</div>
+          <div class="tb-text-sm">Sign in or create a free account to use server-side media conversion.</div>
           <div class="tb-actions-inline" style="margin-top: 14px;">
-            <%= link_to "Log in", new_session_path, class: "tb-btn tb-btn-ghost" %>
-            <%= link_to "Register", new_registration_path, class: "tb-btn tb-btn-primary" %>
+            <%= link_to "Sign in", new_session_path(return_to: request.fullpath), class: "tb-btn tb-btn-ghost" %>
+            <%= link_to "Sign up", signup_path(return_to: request.fullpath), class: "tb-btn tb-btn-primary" %>
           </div>
         </div>
       <% end %>

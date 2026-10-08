@@ -28,6 +28,16 @@ export default class extends Controller {
     this.toggleTarget.setAttribute("aria-expanded", "true")
     this.toggleTarget.setAttribute("aria-label", "Close navigation")
     this.element.classList.add("is-mobile-open")
+    // Move focus into the menu so keyboard and screen-reader users land on it.
+    const first = this.panelTarget.querySelector("a, button")
+    if (first) first.focus({ preventScroll: true })
+  }
+
+  // Close when the user taps or clicks anywhere outside the header.
+  outside(event) {
+    if (!this.hasPanelTarget || this.panelTarget.hidden) return
+    if (this.element.contains(event.target)) return
+    this.close()
   }
 
   close() {
@@ -42,7 +52,7 @@ export default class extends Controller {
   }
 
   handleResize() {
-    if (window.innerWidth > 800) {
+    if (window.innerWidth > 1100) {
       this.close()
     }
   }

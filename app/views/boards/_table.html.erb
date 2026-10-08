@@ -1,4 +1,4 @@
-<table class="tb-table">
+<table class="tb-table tb-host-table">
   <thead>
     <tr>
       <th>Host</th>
@@ -12,7 +12,7 @@
     <% board.hosts.each do |host| %>
       <% c = checks[host] %>
       <tr>
-        <td>
+        <td class="is-host">
           <div style="font-weight: 600; color: var(--tb-ink);"><%= host %></div>
           <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 2px;">
             <% if c %>
@@ -22,7 +22,7 @@
             <% end %>
           </div>
         </td>
-        <td>
+        <td class="is-status">
           <% if c.nil? %>
             <span class="tb-pill tb-pill-neu">pending</span>
           <% elsif c.status == "up" %>
@@ -33,14 +33,14 @@
             <span class="tb-pill tb-pill-down">down</span>
           <% end %>
         </td>
-        <td class="tb-mono" style="font-size: 13px;">
+        <td class="tb-mono is-code" style="font-size: 13px;">
           <%= c&.http_code || "—" %>
         </td>
-        <td class="tb-mono" style="font-size: 13px;
-          color: <%= c&.status == "down" ? "var(--tb-red)" : c&.status == "slow" ? "var(--tb-amber)" : "var(--tb-ink-2)" %>;">
+        <td class="tb-mono is-latency" style="font-size: 13px;
+          color: <%= c&.status == "down" ? "var(--tb-danger)" : c&.status == "slow" ? "var(--tb-amber-text)" : "var(--tb-ink-2)" %>;">
           <%= c&.latency_ms ? "#{c.latency_ms} ms" : "—" %>
         </td>
-        <td>
+        <td class="is-spark">
           <span class="tb-sparkline">
             <% bars = sparklines[host] || [] %>
             <% (24 - bars.size).times do %>

@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { showToast } from "../lib/toast"
 import { PDFDocument, degrees } from "pdf-lib"
 import { zip } from "fflate"
 import Sortable from "sortablejs"
@@ -250,7 +251,7 @@ export default class extends Controller {
       this.exported = true
     } catch (err) {
       console.error(err)
-      alert("Something went wrong: " + err.message)
+      showToast("Something went wrong while processing: " + err.message, { type: "error" })
     } finally {
       this.runBtnTarget.disabled = false
       this.runBtnTarget.textContent = this.defaultRunLabel()

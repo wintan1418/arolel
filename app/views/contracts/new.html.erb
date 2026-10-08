@@ -141,7 +141,7 @@
         <% else %>
           <div class="tb-text-sm" style="margin-top: 12px; margin-bottom: 10px;">Sign in to reuse your saved digital signatures inside contracts.</div>
           <div class="tb-actions-inline">
-            <%= link_to "Sign in", new_session_path, class: "tb-btn tb-btn-ghost" %>
+            <%= link_to "Sign in", new_session_path(return_to: request.fullpath), class: "tb-btn tb-btn-ghost" %>
             <%= link_to "Create signature", sign_path, class: "tb-btn tb-btn-primary" %>
           </div>
         <% end %>
@@ -188,7 +188,7 @@
               <%= @contract.persisted? ? "Update saved" : "Save to dashboard" %>
             </button>
           <% else %>
-            <%= link_to "Sign in to save", new_session_path, class: "tb-btn tb-btn-ghost tb-btn-lg" %>
+            <%= link_to "Sign in to save", new_session_path(return_to: request.fullpath), class: "tb-btn tb-btn-ghost tb-btn-lg" %>
           <% end %>
         </div>
         <% unless signed_in? %>
@@ -199,7 +199,7 @@
       </div>
 
       <div class="tb-card tb-card-pad">
-        <div class="tb-eyebrow" style="color: var(--tb-red);">Important</div>
+        <div class="tb-eyebrow" style="color: var(--tb-amber-text);">Important</div>
         <div class="tb-text-sm" style="margin-top: 8px;">
           This helps draft contracts quickly. It is not legal advice, not an audited e-sign flow, and not a replacement for jurisdiction-specific review.
         </div>

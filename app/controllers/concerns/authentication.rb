@@ -38,6 +38,17 @@ module Authentication
       session.delete(:return_to_after_authenticating) || root_url
     end
 
+    # Sign-in links from inside a tool pass ?return_to= so the user comes
+    # back to the invoice or contract they were working on. Only same-site
+    # paths are accepted.
+    def remember_return_to
+      path = params[:return_to].to_s
+      return unless path.start_with?("/") && !path.start_with?("//") && !path.include?("\\")
+      return if path.start_with?("/login", "/signup", "/session", "/registration", "/passwords", "/logout")
+
+      session[:return_to_after_authenticating] = path
+    end
+
     def start_new_session_for(user)
       user.sessions.create!(user_agent: request.user_agent, ip_address: request.remote_ip).tap do |session|
         Current.session = session

@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { showToast } from "../lib/toast"
 // NOTE: we do not import @ffmpeg/ffmpeg statically — it's a big dependency
 // (~3MB JS wrapper + ~25MB WASM core) and we want to keep the rest of the
 // site snappy. It's lazy-loaded when the user drops their first file.
@@ -345,10 +346,8 @@ export default class extends Controller {
     return lastUsefulLine || `FFmpeg exited with code ${exitCode}`
   }
 
-  toast (msg) {
-    const t = document.createElement("div")
-    t.className = "tb-toast"; t.textContent = msg
-    document.body.appendChild(t); setTimeout(() => t.remove(), 5000)
+  toast (msg, opts) {
+    showToast(msg, opts)
   }
 
   ffmpegArgs (input, output) {

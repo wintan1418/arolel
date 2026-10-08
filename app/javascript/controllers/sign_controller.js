@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
+import { showToast } from "../lib/toast"
 import { PDFDocument } from "pdf-lib"
 import { guardUnsavedWork } from "../lib/unsaved_work"
 
@@ -421,9 +422,9 @@ export default class extends Controller {
 
     if (!this.signedInValue) {
       this.signatureStatusTarget.innerHTML = `
-        <a href="${this.escape(this.loginUrlValue)}" style="color: var(--tb-red); text-decoration: underline;">Log in</a>
+        <a href="${this.escape(this.loginUrlValue)}" style="color: var(--tb-red); text-decoration: underline;">Sign in</a>
         or
-        <a href="${this.escape(this.registerUrlValue)}" style="color: var(--tb-red); text-decoration: underline;">register</a>
+        <a href="${this.escape(this.registerUrlValue)}" style="color: var(--tb-red); text-decoration: underline;">sign up</a>
         to save.
       `
       return
@@ -451,9 +452,9 @@ export default class extends Controller {
 
       if (res.status === 401) {
         this.signatureStatusTarget.innerHTML = `
-          <a href="${this.escape(this.loginUrlValue)}" style="color: var(--tb-red); text-decoration: underline;">Log in</a>
+          <a href="${this.escape(this.loginUrlValue)}" style="color: var(--tb-red); text-decoration: underline;">Sign in</a>
           or
-          <a href="${this.escape(this.registerUrlValue)}" style="color: var(--tb-red); text-decoration: underline;">register</a>
+          <a href="${this.escape(this.registerUrlValue)}" style="color: var(--tb-red); text-decoration: underline;">sign up</a>
           to save.
         `
         return
@@ -588,9 +589,8 @@ export default class extends Controller {
     return new Uint8Array(await res.arrayBuffer())
   }
 
-  toast (msg) {
-    const t = document.createElement("div"); t.className = "tb-toast"; t.textContent = msg
-    document.body.appendChild(t); setTimeout(() => t.remove(), 2200)
+  toast (msg, opts) {
+    showToast(msg, opts)
   }
 
   csrf () {

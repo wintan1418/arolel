@@ -1,7 +1,7 @@
 <section data-controller="sign dropzone"
          data-sign-signed-in-value="<%= signed_in? %>"
-         data-sign-login-url-value="<%= new_session_path %>"
-         data-sign-register-url-value="<%= new_registration_path %>"
+         data-sign-login-url-value="<%= new_session_path(return_to: request.fullpath) %>"
+         data-sign-register-url-value="<%= signup_path(return_to: request.fullpath) %>"
          data-action="dragover@window->dropzone#over drop@window->sign#drop">
   <div class="tb-eyebrow">Tool 08</div>
   <h1 class="tb-h1 tb-tool-title">Sign PDF</h1>
@@ -96,8 +96,8 @@
         <% else %>
           <div class="tb-text-sm" style="margin-bottom: 10px;">Log in or register to keep reusable signature PNGs in your dashboard.</div>
           <div class="tb-actions-inline">
-            <%= link_to "Log in", new_session_path, class: "tb-btn tb-btn-ghost", style: "height: 34px; padding: 0 12px; font-size: 12px;" %>
-            <%= link_to "Register", new_registration_path, class: "tb-btn tb-btn-primary", style: "height: 34px; padding: 0 12px; font-size: 12px;" %>
+            <%= link_to "Sign in", new_session_path(return_to: request.fullpath), class: "tb-btn tb-btn-ghost tb-btn-sm" %>
+            <%= link_to "Sign up", signup_path(return_to: request.fullpath), class: "tb-btn tb-btn-primary tb-btn-sm" %>
           </div>
         <% end %>
       </div>

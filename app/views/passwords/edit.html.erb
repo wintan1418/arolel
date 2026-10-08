@@ -1,9 +1,22 @@
-<h1>Update your password</h1>
+<section style="max-width: 420px; margin: 40px auto 0;">
+  <div class="tb-eyebrow">Reset password</div>
+  <h1 class="tb-h1 tb-tool-title" style="margin-top: 10px;">Choose a new password.</h1>
+  <p class="tb-text" style="margin-top: 10px;">
+    Pick something at least 8 characters long. You'll be signed out everywhere else once it's saved.
+  </p>
 
-<%= tag.div(flash[:alert], style: "color:red") if flash[:alert] %>
-
-<%= form_with url: password_path(params[:token]), method: :put do |form| %>
-  <%= form.password_field :password, required: true, autocomplete: "new-password", placeholder: "Enter new password", maxlength: 72 %><br>
-  <%= form.password_field :password_confirmation, required: true, autocomplete: "new-password", placeholder: "Repeat new password", maxlength: 72 %><br>
-  <%= form.submit "Save" %>
-<% end %>
+  <%= form_with url: password_path(params[:token]), method: :put, class: "tb-stack-14", style: "margin-top: 24px;", local: true do |form| %>
+    <div>
+      <%= form.label :password, "New password", class: "tb-field-label", for: "reset-password" %>
+      <%= form.password_field :password, id: "reset-password", required: true, autofocus: true, autocomplete: "new-password", class: "tb-input", minlength: 8, maxlength: 72 %>
+    </div>
+    <div>
+      <%= form.label :password_confirmation, "Repeat new password", class: "tb-field-label", for: "reset-password-confirmation" %>
+      <%= form.password_field :password_confirmation, id: "reset-password-confirmation", required: true, autocomplete: "new-password", class: "tb-input", minlength: 8, maxlength: 72 %>
+    </div>
+    <div class="tb-actions-inline">
+      <%= form.submit "Save new password", class: "tb-btn tb-btn-primary tb-btn-lg" %>
+      <%= link_to "Back to sign in", new_session_path, class: "tb-btn tb-btn-quiet" %>
+    </div>
+  <% end %>
+</section>

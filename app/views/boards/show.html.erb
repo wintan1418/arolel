@@ -20,7 +20,7 @@
   </div>
 
   <div class="tb-tool-layout tb-tool-layout-narrow" style="margin-top: 28px;">
-    <div class="tb-card" data-down-target="tableWrap">
+    <div class="tb-card tb-table-wrap" data-down-target="tableWrap">
       <%= render "boards/table", board: @board, checks: @checks, sparklines: @sparklines %>
     </div>
 
@@ -31,24 +31,31 @@
         <div class="tb-stack-6">
           <div class="tb-receipt-row is-good"><span>up</span><span data-down-target="upCount"><%= counts[:up] %></span></div>
           <div class="tb-receipt-row is-warn"><span>slow</span><span data-down-target="slowCount"><%= counts[:slow] %></span></div>
-          <div class="tb-receipt-row" style="color: var(--tb-red);"><span>down</span><span data-down-target="downCount"><%= counts[:down] %></span></div>
+          <div class="tb-receipt-row is-bad"><span>down</span><span data-down-target="downCount"><%= counts[:down] %></span></div>
           <div class="tb-receipt-row"><span>auto-refresh</span><span class="tb-mono">60s</span></div>
         </div>
       </div>
 
       <div class="tb-card tb-card-pad">
         <div class="tb-eyebrow" style="margin-bottom: 10px;">Share</div>
-        <div class="tb-actions-inline">
-          <input class="tb-input tb-mono" readonly
+        <div class="tb-actions-inline" style="flex-wrap: nowrap;">
+          <label for="board-share-url" class="tb-sr-only">Share link</label>
+          <input id="board-share-url" class="tb-input tb-mono" readonly
                  value="<%= board_url(slug: @board.slug) %>"
                  data-down-target="shareInput"
-                 style="font-size: 12px; height: 36px;">
-          <button class="tb-btn tb-btn-ghost" style="height: 36px;"
+                 style="font-size: 13px; min-width: 0; flex: 1 1 auto;">
+          <button class="tb-btn tb-btn-ghost"
                   data-action="click->down#copyShare">Copy</button>
         </div>
         <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 10px;">
           No account, no login. Anyone with the link can view this board.
         </div>
+      </div>
+
+      <div class="tb-card tb-card-pad">
+        <div class="tb-eyebrow">Your own board</div>
+        <div class="tb-text-sm" style="margin: 6px 0 12px;">Paste any list of hosts and get a shareable status page like this one in seconds.</div>
+        <%= link_to "Create a board", down_path, class: "tb-btn tb-btn-ghost" %>
       </div>
 
       <div class="tb-card tb-card-pad">

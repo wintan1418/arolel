@@ -131,7 +131,7 @@
               <%= @invoice.persisted? ? "Update saved" : "Save to dashboard" %>
             </button>
           <% else %>
-            <%= link_to "Sign in to save", new_session_path, class: "tb-btn tb-btn-ghost tb-btn-lg" %>
+            <%= link_to "Sign in to save", new_session_path(return_to: request.fullpath), class: "tb-btn tb-btn-ghost tb-btn-lg" %>
           <% end %>
         </div>
         <% unless signed_in? %>

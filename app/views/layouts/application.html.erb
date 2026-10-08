@@ -39,17 +39,20 @@
   </head>
 
   <body data-controller="receipt">
+    <a href="#main-content" class="tb-skip-link">Skip to content</a>
     <%= render "shared/header" %>
 
-    <main class="<%= class_names('tb-shell', 'tb-page', ('tb-shell-wide' if current_nav == :admin)) %>">
+    <main id="main-content" class="<%= class_names('tb-shell', 'tb-page', ('tb-shell-wide' if current_nav == :admin)) %>">
       <% if flash[:alert] %>
-        <div class="tb-card tb-card-pad" style="margin-bottom: 20px; border-color: var(--tb-red); color: var(--tb-red-deep);">
-          <%= flash[:alert] %>
+        <div class="tb-flash tb-flash-alert" role="alert" data-controller="dismiss">
+          <div><%= flash[:alert] %></div>
+          <button type="button" class="tb-flash-close" aria-label="Dismiss message" data-action="click->dismiss#remove">&times;</button>
         </div>
       <% end %>
       <% if flash[:notice] %>
-        <div class="tb-card tb-card-pad" style="margin-bottom: 20px; border-color: var(--tb-green);">
-          <%= flash[:notice] %>
+        <div class="tb-flash tb-flash-notice" role="status" data-controller="dismiss">
+          <div><%= flash[:notice] %></div>
+          <button type="button" class="tb-flash-close" aria-label="Dismiss message" data-action="click->dismiss#remove">&times;</button>
         </div>
       <% end %>
 

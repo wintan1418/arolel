@@ -1,8 +1,18 @@
-<h1>Forgot your password?</h1>
+<section style="max-width: 420px; margin: 40px auto 0;">
+  <div class="tb-eyebrow">Reset password</div>
+  <h1 class="tb-h1 tb-tool-title" style="margin-top: 10px;">Forgot your password?</h1>
+  <p class="tb-text" style="margin-top: 10px;">
+    Enter the email you signed up with and we'll send a link to choose a new password.
+  </p>
 
-<%= tag.div(flash[:alert], style: "color:red") if flash[:alert] %>
-
-<%= form_with url: passwords_path do |form| %>
-  <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email address", value: params[:email_address] %><br>
-  <%= form.submit "Email reset instructions" %>
-<% end %>
+  <%= form_with url: passwords_path, class: "tb-stack-14", style: "margin-top: 24px;", local: true do |form| %>
+    <div>
+      <%= form.label :email_address, "Email", class: "tb-field-label", for: "reset-email" %>
+      <%= form.email_field :email_address, id: "reset-email", required: true, autofocus: true, autocomplete: "username", inputmode: "email", class: "tb-input", placeholder: "you@example.com", value: params[:email_address] %>
+    </div>
+    <div class="tb-actions-inline">
+      <%= form.submit "Email reset link", class: "tb-btn tb-btn-primary tb-btn-lg" %>
+      <%= link_to "Back to sign in", new_session_path, class: "tb-btn tb-btn-quiet" %>
+    </div>
+  <% end %>
+</section>
