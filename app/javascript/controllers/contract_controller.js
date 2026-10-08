@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import { showToast } from "../lib/toast"
+import { pressTab } from "../lib/tabs"
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib"
 import { loadDraft, saveDraft, clearDraft } from "../lib/draft_store"
 
@@ -172,7 +173,9 @@ export default class extends Controller {
     if (this.hasFNotesHeadingTarget) this.fNotesHeadingTarget.value = this.contractData.notes_heading || ""
     this.fNotesTarget.value = this.contractData.notes || ""
     this.templatesTarget.querySelectorAll(".tb-tab").forEach((button) => {
-      button.classList.toggle("is-active", button.dataset.template === this.contractData.template)
+      const on = button.dataset.template === this.contractData.template
+      button.classList.toggle("is-active", on)
+      button.setAttribute("aria-pressed", String(on))
     })
   }
 
@@ -203,6 +206,14 @@ export default class extends Controller {
 
     this.syncSections()
     const currentDefaults = this.templateDefaults(this.contractData.template)
+    // Switching templates replaces the clauses, summary and notes. Ask first
+    // when the user has edited any of them.
+    const edited = this.contractData.summary !== currentDefaults.summary ||
+      this.contractData.notes !== currentDefaults.notes ||
+      JSON.stringify(this.contractData.sections) !== JSON.stringify(currentDefaults.sections)
+    if (edited && !window.confirm(`Switch to the ${e.currentTarget.textContent.trim()} template? Your edited clauses, summary and notes will be replaced with the template's defaults.`)) {
+      return
+    }
     const defaults = this.templateDefaults(nextTemplate)
     const shouldReplaceTitle = !this.contractData.title || this.contractData.title.trim() === currentDefaults.title
 
@@ -770,6 +781,10 @@ export default class extends Controller {
       window.location.href = "/login?return_to=" + encodeURIComponent(location.pathname)
       return
     }
+    if (this.saving) return
+    const buttons = Array.from(this.element.querySelectorAll("[data-action*='contract#save']"))
+    this.saving = true
+    buttons.forEach((b) => { b.disabled = true; b.dataset.label = b.textContent.trim(); b.textContent = "Saving…" })
 
     const body = new FormData()
     body.append("contract[title]", this.contractData.title || "")
@@ -793,20 +808,30 @@ export default class extends Controller {
 
     const url = this.savedValue ? `/contracts/${this.slugValue}` : "/contracts"
     const method = this.savedValue ? "PATCH" : "POST"
-    const res = await fetch(url, {
-      method,
-      headers: { "X-CSRF-Token": this.csrf(), Accept: "application/json" },
-      body
-    })
+    let res
+    try {
+      res = await fetch(url, { method, headers: { "X-CSRF-Token": this.csrf(), Accept: "application/json" }, body })
+    } catch (_) {
+      res = null
+    }
 
-    if (res.ok) {
+    this.saving = false
+    if (res && res.ok) {
+      const data = await res.json().catch(() => ({}))
       if (this.persistTimer) clearTimeout(this.persistTimer)
       this.persistTimer = null
       clearDraft(this.draftKey)
-      this.draftKey = null
-      window.location.href = "/dashboard"
+      if (data.slug) {
+        this.slugValue = data.slug
+        this.savedValue = true
+        this.draftKey = `contract:${data.slug}`
+        if (data.url) history.replaceState(null, "", data.url)
+      }
+      buttons.forEach((b) => { b.disabled = false; b.textContent = "Update saved" })
+      this.toast("Saved to your dashboard.", { href: "/dashboard", linkText: "Open dashboard" })
     } else {
-      this.toast("Couldn't save: " + await this.errorMessage(res), { type: "error" })
+      buttons.forEach((b) => { b.disabled = false; b.textContent = b.dataset.label || "Save" })
+      this.toast("Couldn't save: " + (res ? await this.errorMessage(res) : "the network request failed."), { type: "error" })
     }
   }
 

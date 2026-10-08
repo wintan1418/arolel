@@ -6,7 +6,14 @@ class SignupNudgeTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "[data-controller='signup-nudge']"
-    assert_select "a[href='#{signup_path}']", text: "Create free account"
+    assert_select "a[href='#{signup_path(return_to: '/')}']", text: "Sign up free"
+  end
+
+  test "auth pages do not include signup nudge" do
+    get new_session_path
+
+    assert_response :success
+    assert_select "[data-controller='signup-nudge']", count: 0
   end
 
   test "signed in pages do not include signup nudge" do

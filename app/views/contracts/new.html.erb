@@ -28,10 +28,10 @@
         Draft a service agreement, NDA, or consulting contract. Reuse your saved signature, preview it live, and export a PDF.
       </p>
     </div>
-    <div class="tb-tabs" data-contract-target="templates">
-      <button type="button" class="tb-tab is-active" data-action="click->contract#setTemplate" data-template="service">Service</button>
-      <button type="button" class="tb-tab" data-action="click->contract#setTemplate" data-template="nda">NDA</button>
-      <button type="button" class="tb-tab" data-action="click->contract#setTemplate" data-template="consulting">Consulting</button>
+    <div class="tb-tabs" data-contract-target="templates" role="group" aria-label="Contract template">
+      <button type="button" class="tb-tab is-active" aria-pressed="true" data-action="click->contract#setTemplate" data-template="service">Service</button>
+      <button type="button" class="tb-tab" aria-pressed="false" data-action="click->contract#setTemplate" data-template="nda">NDA</button>
+      <button type="button" class="tb-tab" aria-pressed="false" data-action="click->contract#setTemplate" data-template="consulting">Consulting</button>
     </div>
   </div>
 
@@ -46,45 +46,15 @@
       </div>
 
       <div class="tb-card tb-card-pad">
-        <div class="tb-inline-head" style="margin-bottom: 10px;">
-          <div>
-            <div class="tb-eyebrow">AI contract assistant</div>
-            <div class="tb-text-sm" style="margin-top: 8px;">
-              Chat through the deal and let the model rewrite the draft. This uses your server-side OpenAI key and applies changes directly into the contract builder.
-            </div>
-          </div>
-          <span class="tb-mono tb-muted" data-contract-target="aiStatus" style="font-size: 11px;">
-            <% if signed_in? && @contract_ai_enabled %>
-              Ready
-            <% elsif !signed_in? %>
-              Sign in required
-            <% else %>
-              OPENAI_API_KEY missing
-            <% end %>
-          </span>
-        </div>
-
-        <div data-contract-target="aiThread" class="tb-contract-chat"></div>
-        <textarea class="tb-textarea" rows="4" placeholder="Example: Draft a one-year consulting agreement for monthly design support, paid upfront every month, with confidentiality and IP transfer after full payment." data-contract-target="aiPrompt"></textarea>
-        <div class="tb-actions-inline" style="margin-top: 12px;">
-          <button type="button" class="tb-btn tb-btn-primary" data-action="click->contract#askAi">Ask AI</button>
-          <button type="button" class="tb-btn tb-btn-ghost" data-action="click->contract#applyBrief">Quick shape from brief</button>
-        </div>
-        <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 10px;">
-          AI drafting is signed-in only to keep usage controlled. It drafts language, but you still need legal review before using it for real agreements.
-        </div>
-      </div>
-
-      <div class="tb-card tb-card-pad">
         <div class="tb-eyebrow" style="margin-bottom: 10px;">Meta</div>
         <div class="tb-field-grid-2">
           <div>
-            <label class="tb-eyebrow" style="display:block; margin-bottom:4px;">Contract title</label>
-            <input class="tb-input" data-contract-target="fTitle" data-action="input->contract#change" placeholder="Client service agreement">
+            <label class="tb-field-label" for="contract-title">Contract title</label>
+            <input class="tb-input" id="contract-title" data-contract-target="fTitle" data-action="input->contract#change" placeholder="Client service agreement">
           </div>
           <div>
-            <label class="tb-eyebrow" style="display:block; margin-bottom:4px;">Effective date</label>
-            <input type="date" class="tb-input" data-contract-target="fEffective" data-action="change->contract#change">
+            <label class="tb-field-label" for="contract-effective">Effective date</label>
+            <input type="date" class="tb-input" id="contract-effective" data-contract-target="fEffective" data-action="change->contract#change">
           </div>
         </div>
       </div>
@@ -93,23 +63,71 @@
         <div class="tb-eyebrow" style="margin-bottom: 10px;">Parties</div>
         <div class="tb-field-grid-2">
           <div class="tb-stack-10">
-            <div class="tb-eyebrow">Party A</div>
-            <input class="tb-input" placeholder="Your name or company" data-contract-target="fPartyAName" data-action="input->contract#change">
-            <textarea class="tb-textarea" rows="3" placeholder="Address" data-contract-target="fPartyAAddress" data-action="input->contract#change"></textarea>
-            <input class="tb-input" placeholder="hello@company.com" data-contract-target="fPartyAEmail" data-action="input->contract#change">
+            <div class="tb-eyebrow">Party A (you)</div>
+            <div>
+              <label class="tb-field-label" for="contract-a-name">Name or company</label>
+              <input class="tb-input" id="contract-a-name" autocomplete="organization" placeholder="Your name or company" data-contract-target="fPartyAName" data-action="input->contract#change">
+            </div>
+            <div>
+              <label class="tb-field-label" for="contract-a-address">Address</label>
+              <textarea class="tb-textarea" id="contract-a-address" rows="3" placeholder="Street, city, country" data-contract-target="fPartyAAddress" data-action="input->contract#change"></textarea>
+            </div>
+            <div>
+              <label class="tb-field-label" for="contract-a-email">Email</label>
+              <input class="tb-input" id="contract-a-email" type="email" inputmode="email" autocomplete="email" placeholder="hello@company.com" data-contract-target="fPartyAEmail" data-action="input->contract#change">
+            </div>
           </div>
           <div class="tb-stack-10">
-            <div class="tb-eyebrow">Party B</div>
-            <input class="tb-input" placeholder="Client or counterparty" data-contract-target="fPartyBName" data-action="input->contract#change">
-            <textarea class="tb-textarea" rows="3" placeholder="Address" data-contract-target="fPartyBAddress" data-action="input->contract#change"></textarea>
-            <input class="tb-input" placeholder="client@example.com" data-contract-target="fPartyBEmail" data-action="input->contract#change">
+            <div class="tb-eyebrow">Party B (counterparty)</div>
+            <div>
+              <label class="tb-field-label" for="contract-b-name">Name or company</label>
+              <input class="tb-input" id="contract-b-name" placeholder="Client or counterparty" data-contract-target="fPartyBName" data-action="input->contract#change">
+            </div>
+            <div>
+              <label class="tb-field-label" for="contract-b-address">Address</label>
+              <textarea class="tb-textarea" id="contract-b-address" rows="3" placeholder="Street, city, country" data-contract-target="fPartyBAddress" data-action="input->contract#change"></textarea>
+            </div>
+            <div>
+              <label class="tb-field-label" for="contract-b-email">Email</label>
+              <input class="tb-input" id="contract-b-email" type="email" inputmode="email" placeholder="client@example.com" data-contract-target="fPartyBEmail" data-action="input->contract#change">
+            </div>
           </div>
         </div>
       </div>
 
+      <% if signed_in? && @contract_ai_enabled %>
+        <div class="tb-card tb-card-pad">
+          <div class="tb-inline-head" style="margin-bottom: 10px;">
+            <div>
+              <div class="tb-eyebrow">AI contract assistant</div>
+              <div class="tb-text-sm" style="margin-top: 8px;">
+                Describe the deal and the assistant rewrites the clauses, summary and notes above. You still need legal review before using the result.
+              </div>
+            </div>
+            <span class="tb-mono tb-muted" data-contract-target="aiStatus" style="font-size: 11px;">Ready</span>
+          </div>
+
+          <div data-contract-target="aiThread" class="tb-contract-chat"></div>
+          <label for="contract-ai-prompt" class="tb-sr-only">Describe the contract you want</label>
+          <textarea class="tb-textarea" id="contract-ai-prompt" rows="4" placeholder="Example: Draft a one-year consulting agreement for monthly design support, paid upfront every month, with confidentiality and IP transfer after full payment." data-contract-target="aiPrompt"></textarea>
+          <div class="tb-actions-inline" style="margin-top: 12px;">
+            <button type="button" class="tb-btn tb-btn-primary" data-action="click->contract#askAi">Ask AI</button>
+            <button type="button" class="tb-btn tb-btn-ghost" data-action="click->contract#applyBrief">Quick shape from brief</button>
+          </div>
+        </div>
+      <% elsif !signed_in? %>
+        <div class="tb-card tb-card-pad tb-inline-head">
+          <div>
+            <div class="tb-eyebrow">Draft with AI</div>
+            <div class="tb-text-sm" style="margin-top: 6px;">Signed-in users can describe the deal in a sentence and have the clauses drafted for them.</div>
+          </div>
+          <%= link_to "Sign in to use AI", new_session_path(return_to: request.fullpath), class: "tb-btn tb-btn-ghost" %>
+        </div>
+      <% end %>
+
       <div class="tb-card tb-card-pad">
-        <div class="tb-eyebrow" style="margin-bottom: 10px;">Agreement summary</div>
-        <textarea class="tb-textarea" rows="4" placeholder="State the purpose of the contract in a few clear sentences." data-contract-target="fSummary" data-action="input->contract#change"></textarea>
+        <label class="tb-eyebrow" for="contract-summary" style="display: block; margin-bottom: 10px;">Agreement summary</label>
+        <textarea class="tb-textarea" id="contract-summary" rows="4" placeholder="State the purpose of the contract in a few clear sentences." data-contract-target="fSummary" data-action="input->contract#change"></textarea>
       </div>
 
       <div class="tb-card tb-card-pad">
@@ -166,7 +184,8 @@
               This heading appears above the text in the preview and the PDF. Leave it as "Notes" or name it after what you write.
             </div>
           </div>
-          <textarea class="tb-textarea" rows="4" placeholder="Add optional notes, signing instructions, or deal-specific reminders." data-contract-target="fNotes" data-action="input->contract#change"></textarea>
+          <label for="contract-notes" class="tb-sr-only">Section text</label>
+          <textarea class="tb-textarea" id="contract-notes" rows="4" placeholder="Add optional notes, signing instructions, or deal-specific reminders." data-contract-target="fNotes" data-action="input->contract#change"></textarea>
         </div>
       </div>
     </div>
@@ -180,7 +199,7 @@
         <div data-contract-target="preview" class="tb-invoice-preview-pane"></div>
       </div>
 
-      <div class="tb-card tb-card-pad">
+      <div class="tb-card tb-card-pad tb-desktop-actions">
         <div class="tb-invoice-actions">
           <button type="button" class="tb-btn tb-btn-primary tb-btn-lg" data-action="click->contract#download">Download PDF</button>
           <% if signed_in? %>
@@ -192,7 +211,7 @@
           <% end %>
         </div>
         <% unless signed_in? %>
-          <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 10px;">
+          <div class="tb-text-sm tb-muted" style="margin-top: 10px;">
             You can draft and download without an account. Saving and signature reuse need sign-in.
           </div>
         <% end %>
@@ -205,6 +224,17 @@
         </div>
       </div>
     </aside>
+
+    <div class="tb-mobile-actions">
+      <button type="button" class="tb-btn tb-btn-primary" data-action="click->contract#download">Download PDF</button>
+      <% if signed_in? %>
+        <button type="button" class="tb-btn tb-btn-ghost" data-action="click->contract#save">
+          <%= @contract.persisted? ? "Update saved" : "Save" %>
+        </button>
+      <% else %>
+        <%= link_to "Sign in to save", new_session_path(return_to: request.fullpath), class: "tb-btn tb-btn-ghost" %>
+      <% end %>
+    </div>
   </div>
 </section>
 

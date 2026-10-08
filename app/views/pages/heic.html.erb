@@ -8,9 +8,11 @@
     </p>
 
     <div class="tb-drop"
+         role="button" tabindex="0"
+         aria-label="Choose HEIC photos to convert"
          data-heic-target="drop"
          data-dropzone-target="zone"
-         data-action="click->heic#pick dragover->dropzone#over dragleave->dropzone#leave drop->heic#drop"
+         data-action="click->heic#pick keydown.enter->heic#pick keydown.space->heic#pick dragover->dropzone#over dragleave->dropzone#leave drop->heic#drop"
          style="margin-top: 26px;">
       <svg class="tb-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
@@ -21,32 +23,34 @@
       <div class="tb-drop-sub">.heic · .heif · any number of files · 0 bytes uploaded</div>
     </div>
 
+    <div class="tb-drop-error" data-heic-target="dropError" role="alert" hidden></div>
+
     <input type="file" accept="image/heic,image/heif,.heic,.heif" multiple
            data-heic-target="input" data-action="change->heic#picked" hidden>
 
     <div data-heic-target="options" style="margin-top: 20px; display: flex; align-items: flex-end; gap: 14px; flex-wrap: wrap;">
       <div>
         <div class="tb-eyebrow" style="margin-bottom: 6px;">Quality</div>
-        <div class="tb-tabs" data-heic-target="quality">
-          <button class="tb-tab" data-action="click->heic#setQuality" data-q="0.8">80</button>
-          <button class="tb-tab is-active" data-action="click->heic#setQuality" data-q="0.9">90</button>
-          <button class="tb-tab" data-action="click->heic#setQuality" data-q="1.0">100</button>
+        <div class="tb-tabs" data-heic-target="quality" role="group" aria-label="Quality">
+          <button type="button" class="tb-tab" aria-pressed="false" data-action="click->heic#setQuality" data-q="0.8">80</button>
+          <button type="button" class="tb-tab is-active" aria-pressed="true" data-action="click->heic#setQuality" data-q="0.9">90</button>
+          <button type="button" class="tb-tab" aria-pressed="false" data-action="click->heic#setQuality" data-q="1.0">100</button>
         </div>
       </div>
       <div>
         <div class="tb-eyebrow" style="margin-bottom: 6px;">Format</div>
-        <div class="tb-tabs" data-heic-target="format">
-          <button class="tb-tab is-active" data-action="click->heic#setFormat" data-f="image/jpeg">JPG</button>
-          <button class="tb-tab" data-action="click->heic#setFormat" data-f="image/png">PNG</button>
-          <button class="tb-tab" data-action="click->heic#setFormat" data-f="image/webp">WebP</button>
+        <div class="tb-tabs" data-heic-target="format" role="group" aria-label="Output format">
+          <button type="button" class="tb-tab is-active" aria-pressed="true" data-action="click->heic#setFormat" data-f="image/jpeg">JPG</button>
+          <button type="button" class="tb-tab" aria-pressed="false" data-action="click->heic#setFormat" data-f="image/png">PNG</button>
+          <button type="button" class="tb-tab" aria-pressed="false" data-action="click->heic#setFormat" data-f="image/webp">WebP</button>
         </div>
       </div>
 
       <span style="flex: 1;"></span>
 
-      <button class="tb-btn tb-btn-quiet" data-action="click->heic#clear">Clear</button>
-      <button class="tb-btn tb-btn-primary" data-action="click->heic#start" data-heic-target="convertBtn" disabled>Convert</button>
-      <button class="tb-btn tb-btn-ghost" data-action="click->heic#downloadZip" data-heic-target="zipBtn" disabled>
+      <button type="button" class="tb-btn tb-btn-quiet" data-action="click->heic#clear">Clear</button>
+      <button type="button" class="tb-btn tb-btn-primary" data-action="click->heic#start" data-heic-target="convertBtn" disabled>Convert</button>
+      <button type="button" class="tb-btn tb-btn-ghost" data-action="click->heic#downloadZip" data-heic-target="zipBtn" disabled>
         Download all as .zip
       </button>
     </div>

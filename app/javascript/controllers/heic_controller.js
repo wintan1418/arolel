@@ -2,12 +2,14 @@ import { Controller } from "@hotwired/stimulus"
 import heic2any from "heic2any"
 import { zip } from "fflate"
 import { guardUnsavedWork } from "../lib/unsaved_work"
+import { pressTab } from "../lib/tabs"
+import { describeRejected, showDropError } from "../lib/drop_errors"
 
 // HEIC → JPG/PNG/WebP. All in-browser. Queues files and processes sequentially
 // (heic2any itself is heavy; parallelism doesn't help much on a single core).
 export default class extends Controller {
   static targets = [
-    "drop", "input", "options", "list", "zipBtn", "convertBtn",
+    "drop", "input", "options", "list", "zipBtn", "convertBtn", "dropError",
     "quality", "format",
     "bytesSent", "threads", "queued", "done"
   ]
@@ -28,9 +30,12 @@ export default class extends Controller {
     if (this.unguard) this.unguard()
   }
 
-  pick () { this.inputTarget.click() }
+  pick (e) {
+    if (e && e.type === "keydown") e.preventDefault()
+    this.inputTarget.click()
+  }
 
-  picked (e) { this.addFiles(Array.from(e.target.files || [])) }
+  picked (e) { this.addFiles(Array.from(e.target.files || [])); e.target.value = "" }
 
   drop (e) {
     e.preventDefault()
@@ -40,7 +45,10 @@ export default class extends Controller {
   }
 
   addFiles (files) {
-    const heic = files.filter((f) => /\.(heic|heif)$/i.test(f.name) || /heic|heif/i.test(f.type))
+    const isHeic = (f) => /\.(heic|heif)$/i.test(f.name) || /heic|heif/i.test(f.type)
+    const heic = files.filter(isHeic)
+    const rejected = files.filter((f) => !isHeic(f))
+    showDropError(this.hasDropErrorTarget && this.dropErrorTarget, describeRejected(rejected, "a HEIC photo", "This tool accepts .heic and .heif. For JPG, PNG or WebP use the Images tool."))
     if (heic.length === 0) return
     this.exported = false
     for (const f of heic) {
@@ -73,8 +81,7 @@ export default class extends Controller {
   }
 
   selectTab (group, active) {
-    group.querySelectorAll(".tb-tab").forEach((b) => b.classList.remove("is-active"))
-    active.classList.add("is-active")
+    pressTab(group, active)
   }
 
   // Once conversion has started, any settings change reprocesses everything
@@ -266,14 +273,14 @@ export default class extends Controller {
     }
     return `
       <div class="tb-file-row">
-        <span class="tb-file-thumb">HEIC</span>
-        <div>
+        <span class="tb-file-thumb" aria-hidden="true">HEIC</span>
+        <div class="tb-file-main">
           <div class="tb-file-name">${this.escape(f.name)}</div>
           <div class="tb-file-meta">${meta}</div>
         </div>
-        <div>${status}</div>
-        <div class="tb-mono tb-muted" style="font-size:11px;">local</div>
-        <div style="text-align:right;">${action}</div>
+        <div class="tb-file-status">${status}</div>
+        <div class="tb-file-where tb-mono tb-muted" style="font-size:11px;">local</div>
+        <div class="tb-file-actions">${action}</div>
       </div>
     `
   }

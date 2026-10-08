@@ -69,17 +69,17 @@
           <%= f.hidden_field :kind, value: "suggestion" %>
 
           <div>
-            <label class="tb-label">Your name</label>
+            <%= f.label :name, "Your name", class: "tb-label" %>
             <%= f.text_field :name, class: "tb-input", placeholder: "Optional" %>
           </div>
 
           <div>
-            <label class="tb-label">Email</label>
+            <%= f.label :email, "Email", class: "tb-label" %>
             <%= f.email_field :email, value: current_user&.email_address, class: "tb-input", placeholder: "you@example.com" %>
           </div>
 
           <div>
-            <label class="tb-label">Feature area</label>
+            <%= f.label :feature_area, "Feature area", class: "tb-label" %>
             <%= f.select :feature_area,
                          [["PDF", "pdf"], ["Images", "images"], ["Media", "media"], ["Signatures", "signatures"], ["Invoices", "invoices"], ["Dashboard", "dashboard"], ["Other", "other"]],
                          { include_blank: "Choose one" },
@@ -87,7 +87,7 @@
           </div>
 
           <div>
-            <label class="tb-label">Suggestion</label>
+            <%= f.label :message, "Suggestion", class: "tb-label" %>
             <%= f.text_area :message, class: "tb-textarea tb-textarea-sm", required: true, placeholder: "Tell us the feature, the problem, and how you would use it." %>
           </div>
 
@@ -97,7 +97,7 @@
           </label>
 
           <div>
-            <label class="tb-label">Possible budget</label>
+            <%= f.label :budget_range, "Possible budget", class: "tb-label" %>
             <%= f.select :budget_range,
                          [["Not sure yet", "not_sure"], ["Under $5/month", "under_5"], ["$5-$15/month", "5_15"], ["$15-$50/month", "15_50"], ["One-time payment", "one_time"]],
                          {},

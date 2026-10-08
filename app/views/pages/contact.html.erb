@@ -22,22 +22,22 @@
 
       <div class="tb-two-col">
         <div>
-          <label class="tb-label">Your name</label>
-          <%= f.text_field :name, class: "tb-input", placeholder: "Optional" %>
+          <%= f.label :name, "Your name", class: "tb-label" %>
+          <%= f.text_field :name, class: "tb-input", placeholder: "Optional", autocomplete: "name" %>
         </div>
         <div>
-          <label class="tb-label">Email</label>
-          <%= f.email_field :email, value: current_user&.email_address, class: "tb-input", placeholder: "you@example.com" %>
+          <%= f.label :email, "Email", class: "tb-label" %>
+          <%= f.email_field :email, value: current_user&.email_address, class: "tb-input", placeholder: "you@example.com", autocomplete: "email", inputmode: "email" %>
         </div>
       </div>
 
       <div>
-        <label class="tb-label">Subject</label>
+        <%= f.label :subject, "Subject", class: "tb-label" %>
         <%= f.text_field :subject, class: "tb-input", placeholder: "Bug report, comment, partnership, support..." %>
       </div>
 
       <div>
-        <label class="tb-label">Message</label>
+        <%= f.label :message, "Message", class: "tb-label" %>
         <%= f.text_area :message, class: "tb-textarea", required: true, placeholder: "Write your message here." %>
       </div>
 

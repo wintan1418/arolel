@@ -1,6 +1,6 @@
 <div class="tb-signup-nudge"
      data-controller="signup-nudge"
-     data-action="click->signup-nudge#backdrop"
+     data-action="click->signup-nudge#backdrop keydown.esc@window->signup-nudge#escape"
      hidden>
   <section class="tb-signup-nudge-panel"
            data-signup-nudge-target="panel"
@@ -12,15 +12,16 @@
             data-action="click->signup-nudge#close"
             aria-label="Close sign up prompt">×</button>
 
-    <div class="tb-eyebrow">Personalize Arolel</div>
-    <h2 id="signup-nudge-title">Make Arolel yours</h2>
+    <div class="tb-eyebrow">Optional</div>
+    <h2 id="signup-nudge-title">Keep what you make</h2>
     <p>
-      Create a free account to save contracts, signatures, invoices, tool history, and get a more personalized workspace as new features ship.
+      A free account saves contracts, invoices and signatures to a dashboard so you can reuse them. The tools stay free without one.
     </p>
 
     <div class="tb-signup-nudge-actions">
-      <%= link_to "Create free account", signup_path, class: "tb-btn tb-btn-primary" %>
-      <%= link_to "Sign in", new_session_path, class: "tb-btn tb-btn-ghost" %>
+      <%= link_to "Sign up free", signup_path(return_to: request.fullpath), class: "tb-btn tb-btn-primary", data: { action: "click->signup-nudge#dismiss" } %>
+      <%= link_to "Sign in", new_session_path(return_to: request.fullpath), class: "tb-btn tb-btn-ghost", data: { action: "click->signup-nudge#dismiss" } %>
+      <button type="button" class="tb-btn tb-btn-quiet" data-action="click->signup-nudge#close">Not now</button>
     </div>
   </section>
 </div>

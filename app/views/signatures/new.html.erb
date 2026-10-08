@@ -13,9 +13,11 @@
   <div class="tb-tool-layout tb-tool-layout-equal" style="margin-top: 28px;">
     <div>
       <div class="tb-drop"
+           role="button" tabindex="0"
+           aria-label="Choose a PDF to sign"
            data-sign-target="drop"
            data-dropzone-target="zone"
-           data-action="click->sign#pick dragover->dropzone#over dragleave->dropzone#leave drop->sign#drop">
+           data-action="click->sign#pick keydown.enter->sign#pick keydown.space->sign#pick dragover->dropzone#over dragleave->dropzone#leave drop->sign#drop">
         <svg class="tb-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
           <path d="M14 2v6h6"/>
@@ -24,6 +26,8 @@
         <div class="tb-drop-title">Drop a PDF, or click to choose</div>
         <div class="tb-drop-sub">.pdf · stays on your device</div>
       </div>
+
+      <div class="tb-drop-error" data-sign-target="dropError" role="alert" hidden></div>
 
       <input type="file" accept="application/pdf,.pdf" data-sign-target="pdfInput" data-action="change->sign#picked" hidden>
 
@@ -39,23 +43,24 @@
     <aside class="tb-stack-14">
       <div class="tb-card tb-card-pad">
         <div class="tb-eyebrow" style="margin-bottom: 10px;">Signature</div>
-        <div class="tb-tabs" data-sign-target="modeTabs" style="margin-bottom: 10px;">
-          <button type="button" class="tb-tab is-active" data-action="click->sign#setMode" data-mode="draw">Draw</button>
-          <button type="button" class="tb-tab"            data-action="click->sign#setMode" data-mode="type">Type</button>
-          <button type="button" class="tb-tab"            data-action="click->sign#setMode" data-mode="upload">Upload</button>
+        <div class="tb-tabs" data-sign-target="modeTabs" style="margin-bottom: 10px;" role="group" aria-label="Signature method">
+          <button type="button" class="tb-tab is-active" aria-pressed="true" data-action="click->sign#setMode" data-mode="draw">Draw</button>
+          <button type="button" class="tb-tab" aria-pressed="false" data-action="click->sign#setMode" data-mode="type">Type</button>
+          <button type="button" class="tb-tab" aria-pressed="false" data-action="click->sign#setMode" data-mode="upload">Upload</button>
         </div>
 
         <div data-sign-target="drawPanel">
           <canvas data-sign-target="canvas" width="520" height="180" style="width: 100%; background: var(--tb-paper-2); border: 1px solid var(--tb-line-2); border-radius: 8px; touch-action: none; cursor: crosshair;"></canvas>
           <div class="tb-actions-inline is-spread" style="margin-top: 8px;">
             <button type="button" class="tb-btn tb-btn-quiet" data-action="click->sign#clearPad">Clear</button>
-            <label class="tb-eyebrow" style="align-self: center;">Colour</label>
-            <input type="color" value="#0f172a" data-sign-target="inkColor" data-action="input->sign#changeColor" style="width: 34px; height: 28px; border: 1px solid var(--tb-line-2); border-radius: 6px;">
+            <label class="tb-eyebrow" for="sign-ink-colour" style="align-self: center;">Colour</label>
+            <input type="color" id="sign-ink-colour" value="#0f172a" data-sign-target="inkColor" data-action="input->sign#changeColor" style="width: 44px; height: 36px; padding: 2px; border: 1px solid var(--tb-line-2); border-radius: 6px;">
           </div>
         </div>
 
         <div data-sign-target="typePanel" hidden>
-          <input class="tb-input" placeholder="Your name" data-sign-target="typeText" data-action="input->sign#typedSig" style="font-family: 'Source Serif 4', serif; font-size: 24px; height: 60px;">
+          <label for="sign-typed-name" class="tb-sr-only">Your name</label>
+          <input class="tb-input" id="sign-typed-name" placeholder="Your name" autocomplete="name" data-sign-target="typeText" data-action="input->sign#typedSig" style="font-family: 'Source Serif 4', serif; font-size: 24px; height: 60px;">
           <div data-sign-target="variants" class="tb-field-grid-2" style="margin-top: 10px;"></div>
           <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 6px;">Rendered as a signature-style cursive.</div>
         </div>

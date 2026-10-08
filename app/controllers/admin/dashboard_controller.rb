@@ -48,7 +48,7 @@ module Admin
         .limit(10)
         .count
 
-      @recent_events = ActivityEvent.includes(:user).recent.limit(30)
+      @recent_events = ActivityEvent.includes(:user).recent.limit(20)
       @recent_tool_runs = ToolRun.includes(:user).recent.limit(20)
       @recent_feedback = FeedbackSubmission.includes(:user).recent.limit(12)
       @recent_users = User.order(created_at: :desc).limit(10)

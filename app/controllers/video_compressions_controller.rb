@@ -34,6 +34,18 @@ class VideoCompressionsController < ApplicationController
     end
 
     page_title "#{@video_compression.operation_label} · Arolel"
+
+    respond_to do |format|
+      format.html
+      format.json do
+        render json: {
+          status: @video_compression.status,
+          active: @video_compression.active?,
+          progress: @video_compression.progress_percent,
+          message: @video_compression.status_message.presence || (@video_compression.active? ? "Queued" : @video_compression.status.humanize)
+        }
+      end
+    end
   end
 
   def download

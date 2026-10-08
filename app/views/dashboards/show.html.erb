@@ -24,6 +24,19 @@
     </div>
   </div>
 
+  <% if total_saved.zero? %>
+    <div class="tb-card tb-card-pad tb-inline-head" style="margin-bottom: 20px; border-color: var(--tb-red); background: var(--tb-red-wash);">
+      <div>
+        <div class="tb-eyebrow" style="color: var(--tb-red-deep);">Welcome</div>
+        <div class="tb-text" style="margin-top: 6px;">Nothing saved yet. Start with an invoice or a reusable signature; saved items show up here and on every tool.</div>
+      </div>
+      <div class="tb-actions-inline">
+        <%= link_to "Make an invoice", new_invoice_path, class: "tb-btn tb-btn-primary" %>
+        <%= link_to "Save a signature", sign_path, class: "tb-btn tb-btn-ghost" %>
+      </div>
+    </div>
+  <% end %>
+
   <div class="tb-dashboard-stats">
     <div class="tb-stat">
       <span class="tb-stat-label">Saved items</span>
@@ -53,7 +66,7 @@
   </div>
 
   <div class="tb-dashboard-grid">
-    <main class="tb-dashboard-main">
+    <div class="tb-dashboard-main">
       <section class="tb-dash-section">
         <div class="tb-dash-section-head">
           <div>
@@ -175,7 +188,7 @@
           <%= render "empty", message: "No saved URL sets yet.", action_label: "Create set", action_path: open_urls_path %>
         <% end %>
       </section>
-    </main>
+    </div>
 
     <aside class="tb-dashboard-side">
       <section class="tb-dash-section">

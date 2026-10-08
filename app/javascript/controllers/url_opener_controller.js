@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import { showToast } from "../lib/toast"
+import { pressTab } from "../lib/tabs"
 
 // Paste, parse, and open or save a set of URLs.
 export default class extends Controller {
@@ -87,9 +88,7 @@ export default class extends Controller {
 
   setDelay (e) {
     this.delay = parseInt(e.currentTarget.dataset.delay, 10) || 0
-    const parent = e.currentTarget.parentElement
-    parent.querySelectorAll(".tb-tab").forEach((b) => b.classList.remove("is-active"))
-    e.currentTarget.classList.add("is-active")
+    pressTab(e.currentTarget.parentElement, e.currentTarget)
   }
 
   async openAll () {

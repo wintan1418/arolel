@@ -60,4 +60,17 @@ module ApplicationHelper
 
     defined?(Propshaft::MissingAssetError) && error.is_a?(Propshaft::MissingAssetError)
   end
+
+  # "3m", "2h", "5d": short relative times for dense admin tables.
+  def compact_time_ago(time)
+    return "—" if time.blank?
+
+    seconds = (Time.current - time).to_i
+    return "now" if seconds < 60
+    return "#{seconds / 60}m" if seconds < 3600
+    return "#{seconds / 3600}h" if seconds < 86_400
+    return "#{seconds / 86_400}d" if seconds < 30 * 86_400
+
+    time.strftime("%b %-d")
+  end
 end

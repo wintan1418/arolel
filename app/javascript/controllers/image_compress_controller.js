@@ -1,12 +1,14 @@
 import { Controller } from "@hotwired/stimulus"
 import { zip } from "fflate"
 import { guardUnsavedWork } from "../lib/unsaved_work"
+import { pressTab } from "../lib/tabs"
+import { describeRejected, showDropError } from "../lib/drop_errors"
 
 // In-browser image compressor. Draws the source image to a canvas at a target
 // size, then uses canvas.toBlob to re-encode at the chosen quality. No upload.
 export default class extends Controller {
   static targets = [
-    "drop", "input", "options", "list", "zipBtn",
+    "drop", "input", "options", "list", "zipBtn", "dropError",
     "quality", "maxdim", "format",
     "queued", "done", "saved"
   ]
@@ -27,8 +29,11 @@ export default class extends Controller {
     if (this.unguard) this.unguard()
   }
 
-  pick () { this.inputTarget.click() }
-  picked (e) { this.addFiles(Array.from(e.target.files || [])) }
+  pick (e) {
+    if (e && e.type === "keydown") e.preventDefault()
+    this.inputTarget.click()
+  }
+  picked (e) { this.addFiles(Array.from(e.target.files || [])); e.target.value = "" }
 
   drop (e) {
     e.preventDefault()
@@ -37,7 +42,11 @@ export default class extends Controller {
   }
 
   addFiles (files) {
-    const imgs = files.filter((f) => /^image\/(jpeg|png|webp)$/.test(f.type))
+    const isImage = (f) => /^image\/(jpeg|png|webp)$/.test(f.type) || /\.(jpe?g|png|webp)$/i.test(f.name)
+    const imgs = files.filter(isImage)
+    const rejected = files.filter((f) => !isImage(f))
+    const heic = rejected.some((f) => /\.(heic|heif)$/i.test(f.name))
+    showDropError(this.hasDropErrorTarget && this.dropErrorTarget, describeRejected(rejected, "a JPG, PNG or WebP image", heic ? "For iPhone HEIC photos use the HEIC tool." : "This tool accepts .jpg, .png and .webp."))
     if (imgs.length === 0) return
     this.exported = false
     for (const f of imgs) {
@@ -75,8 +84,7 @@ export default class extends Controller {
   }
 
   selectTab (group, active) {
-    group.querySelectorAll(".tb-tab").forEach((b) => b.classList.remove("is-active"))
-    active.classList.add("is-active")
+    pressTab(group, active)
   }
 
   clear () {
@@ -297,14 +305,14 @@ export default class extends Controller {
 
     return `
       <div class="tb-file-row">
-        <span class="tb-file-thumb">${typeLabel}</span>
-        <div>
+        <span class="tb-file-thumb" aria-hidden="true">${typeLabel}</span>
+        <div class="tb-file-main">
           <div class="tb-file-name">${this.escape(f.name)}</div>
           <div class="tb-file-meta">${sizeMeta}</div>
         </div>
-        <div>${status}</div>
-        <div class="tb-mono tb-muted" style="font-size:11px;">local</div>
-        <div style="text-align:right;">${action}</div>
+        <div class="tb-file-status">${status}</div>
+        <div class="tb-file-where tb-mono tb-muted" style="font-size:11px;">local</div>
+        <div class="tb-file-actions">${action}</div>
       </div>
     `
   }

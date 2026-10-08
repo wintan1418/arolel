@@ -38,10 +38,10 @@
     <aside class="tb-stack-14">
       <div class="tb-card tb-card-pad">
         <div class="tb-eyebrow" style="margin-bottom: 10px;">Delay</div>
-        <div class="tb-tabs">
-          <button class="tb-tab is-active" data-action="click->url-opener#setDelay" data-delay="0">0ms</button>
-          <button class="tb-tab" data-action="click->url-opener#setDelay" data-delay="150">150ms</button>
-          <button class="tb-tab" data-action="click->url-opener#setDelay" data-delay="500">500ms</button>
+        <div class="tb-tabs" role="group" aria-label="Delay between tabs">
+          <button type="button" class="tb-tab is-active" aria-pressed="true" data-action="click->url-opener#setDelay" data-delay="0">0ms</button>
+          <button type="button" class="tb-tab" aria-pressed="false" data-action="click->url-opener#setDelay" data-delay="150">150ms</button>
+          <button type="button" class="tb-tab" aria-pressed="false" data-action="click->url-opener#setDelay" data-delay="500">500ms</button>
         </div>
         <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 10px;">
           Your browser may ask to allow pop-ups. Allow once.

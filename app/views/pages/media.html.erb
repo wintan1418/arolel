@@ -51,11 +51,11 @@
         <p class="tb-text tb-tool-subtitle"><%= meta[:note] %></p>
       </div>
       <div class="tb-tool-tabs-wrap">
-        <div class="tb-tabs">
-          <%= link_to "MP4 → MP3",  media_path(op: "mp4-to-mp3"),  class: ["tb-tab", ("is-active" if @op == "mp4-to-mp3")] %>
-          <%= link_to "WebM → MP4", media_path(op: "webm-to-mp4"), class: ["tb-tab", ("is-active" if @op == "webm-to-mp4")] %>
-          <%= link_to "Compress", media_path(op: "compress-video"), class: ["tb-tab", ("is-active" if @op == "compress-video")] %>
-        </div>
+        <nav class="tb-tabs is-wrap" aria-label="Media tools">
+          <%= link_to "MP4 → MP3",  media_path(op: "mp4-to-mp3"),  class: ["tb-tab", ("is-active" if @op == "mp4-to-mp3")], "aria-current": (@op == "mp4-to-mp3" ? "page" : nil) %>
+          <%= link_to "WebM → MP4", media_path(op: "webm-to-mp4"), class: ["tb-tab", ("is-active" if @op == "webm-to-mp4")], "aria-current": (@op == "webm-to-mp4" ? "page" : nil) %>
+          <%= link_to "Compress", media_path(op: "compress-video"), class: ["tb-tab", ("is-active" if @op == "compress-video")], "aria-current": (@op == "compress-video" ? "page" : nil) %>
+        </nav>
       </div>
     </div>
 
@@ -75,8 +75,9 @@
         <%= form_with url: video_compressions_path, method: :post, multipart: true, local: true, class: "tb-stack-14", style: "margin-top: 18px;" do |form| %>
           <%= form.hidden_field :operation, value: @op %>
           <div>
-            <label class="tb-label"><%= meta[:drop] %></label>
+            <%= form.label :file, meta[:drop], class: "tb-label", for: "media-upload-file" %>
             <%= form.file_field :file,
+                                id: "media-upload-file",
                                 accept: meta[:accept],
                                 required: true,
                                 class: "tb-input",

@@ -2,6 +2,8 @@ import { Controller } from "@hotwired/stimulus"
 import { showToast } from "../lib/toast"
 import { PDFDocument } from "pdf-lib"
 import { guardUnsavedWork } from "../lib/unsaved_work"
+import { pressTab } from "../lib/tabs"
+import { showDropError } from "../lib/drop_errors"
 
 // Sign PDF — client-side.
 // Flow:
@@ -16,7 +18,7 @@ export default class extends Controller {
     "modeTabs", "drawPanel", "typePanel", "uploadPanel",
     "canvas", "inkColor", "typeText", "sigInput", "variants",
     "signaturePreview", "signatureActions", "saveSignatureBtn", "signatureStatus",
-    "savedSeed", "savedList", "downloadBtn"
+    "savedSeed", "savedList", "downloadBtn", "dropError"
   ]
   static values = {
     signedIn: Boolean,
@@ -117,8 +119,7 @@ export default class extends Controller {
 
   setMode (e) {
     this.signatureMode = e.currentTarget.dataset.mode
-    this.modeTabsTarget.querySelectorAll(".tb-tab").forEach((b) => b.classList.remove("is-active"))
-    e.currentTarget.classList.add("is-active")
+    pressTab(this.modeTabsTarget, e.currentTarget)
     this.drawPanelTarget.hidden   = this.signatureMode !== "draw"
     this.typePanelTarget.hidden   = this.signatureMode !== "type"
     this.uploadPanelTarget.hidden = this.signatureMode !== "upload"
@@ -266,8 +267,11 @@ export default class extends Controller {
 
   // ----- PDF handling -----
 
-  pick () { this.pdfInputTarget.click() }
-  picked (e) { this.loadPdf(e.target.files[0]) }
+  pick (e) {
+    if (e && e.type === "keydown") e.preventDefault()
+    this.pdfInputTarget.click()
+  }
+  picked (e) { this.loadPdf(e.target.files[0]); e.target.value = "" }
 
   drop (e) {
     e.preventDefault()
@@ -277,9 +281,25 @@ export default class extends Controller {
   }
 
   async loadPdf (file) {
-    if (!file || !/\.pdf$/i.test(file.name)) return
+    if (!file) return
+    const errorEl = this.hasDropErrorTarget && this.dropErrorTarget
+    if (!/\.pdf$/i.test(file.name) && file.type !== "application/pdf") {
+      showDropError(errorEl, `${file.name} isn't a PDF. This tool signs .pdf files only; use DOCX → PDF first for a Word document.`)
+      return
+    }
+    showDropError(errorEl, "")
     this.pdfBuffer = await file.arrayBuffer()
-    this.pdfDoc = await PDFDocument.load(this.pdfBuffer)
+    try {
+      this.pdfDoc = await PDFDocument.load(this.pdfBuffer)
+    } catch (err) {
+      console.error("Failed to load PDF", err)
+      const encrypted = /encrypted|password/i.test(String(err && err.message))
+      showDropError(errorEl, encrypted
+        ? `${file.name} is password-protected. Remove the password in your PDF viewer first, then drop it again.`
+        : `${file.name} couldn't be read. The file may be damaged or not a real PDF.`)
+      this.pdfBuffer = null
+      return
+    }
     this.exported = false
 
     this.pageInfos = []

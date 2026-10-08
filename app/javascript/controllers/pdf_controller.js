@@ -4,14 +4,16 @@ import { PDFDocument, degrees } from "pdf-lib"
 import { zip } from "fflate"
 import Sortable from "sortablejs"
 import { guardUnsavedWork } from "../lib/unsaved_work"
+import { pressTab } from "../lib/tabs"
+import { describeRejected, showDropError } from "../lib/drop_errors"
 
 // Client-side PDF merge / split / rotate / compress.
 export default class extends Controller {
   static targets = [
-    "drop", "input", "files",
+    "drop", "input", "files", "dropError",
     "previewWrap", "preview", "previewCount",
     "compressOpts",
-    "runBtn",
+    "runBtn", "runBtnMobile",
     "outName",
     "statFiles", "statPages", "statIn", "statOut"
   ]
@@ -29,8 +31,19 @@ export default class extends Controller {
     if (this.unguard) this.unguard()
   }
 
-  pick () { this.inputTarget.click() }
-  picked (e) { this.addFiles(Array.from(e.target.files || [])) }
+  pick (e) {
+    if (e && e.type === "keydown") e.preventDefault()
+    this.inputTarget.click()
+  }
+  picked (e) { this.addFiles(Array.from(e.target.files || [])); e.target.value = "" }
+
+  dropError (message) {
+    showDropError(this.hasDropErrorTarget && this.dropErrorTarget, message)
+  }
+
+  runButtons () {
+    return [this.runBtnTarget, ...this.runBtnMobileTargets]
+  }
 
   drop (e) {
     e.preventDefault()
@@ -40,7 +53,11 @@ export default class extends Controller {
   }
 
   async addFiles (files) {
-    const pdfs = files.filter((f) => /\.pdf$/i.test(f.name) || f.type === "application/pdf")
+    const isPdf = (f) => /\.pdf$/i.test(f.name) || f.type === "application/pdf"
+    const pdfs = files.filter(isPdf)
+    const rejected = files.filter((f) => !isPdf(f))
+    const office = rejected.some((f) => /\.(docx?|odt|rtf|txt)$/i.test(f.name))
+    this.dropError(describeRejected(rejected, "a PDF", office ? "To turn a Word document into a PDF use the DOCX → PDF tab." : "This tool accepts .pdf files only."))
     if (pdfs.length === 0) return
     this.exported = false
     if (this.opValue !== "merge" && this.items.length + pdfs.length > 1) {
@@ -62,6 +79,10 @@ export default class extends Controller {
         })
       } catch (err) {
         console.error("Failed to load PDF", err)
+        const encrypted = /encrypted|password/i.test(String(err && err.message))
+        this.dropError(encrypted
+          ? `${f.name} is password-protected. Remove the password in your PDF viewer first, then drop it again.`
+          : `${f.name} couldn't be read. The file may be damaged or not a real PDF.`)
       }
     }
     this.render()
@@ -69,8 +90,7 @@ export default class extends Controller {
 
   setCompress (e) {
     this.compress = e.currentTarget.dataset.level
-    this.compressOptsTarget.querySelectorAll(".tb-tab").forEach((b) => b.classList.remove("is-active"))
-    e.currentTarget.classList.add("is-active")
+    pressTab(this.compressOptsTarget, e.currentTarget)
   }
 
   remove (e) {
@@ -141,18 +161,18 @@ export default class extends Controller {
 
   fileRowHtml (f, idx) {
     const grip = this.opValue === "merge" && this.items.length > 1
-      ? `<span class="tb-grip" aria-label="Drag to reorder"></span>` : `<span></span>`
+      ? `<span class="tb-grip" aria-label="Drag to reorder"></span>` : `<span class="tb-file-thumb" aria-hidden="true">PDF</span>`
     return `
       <div class="tb-file-row" data-id="${f.id}">
         ${grip}
-        <div>
+        <div class="tb-file-main">
           <div class="tb-file-name">${this.escape(f.name)}</div>
-          <div class="tb-file-meta">${f.pages.length} pages · ${this.fmtBytes(f.bytes)}</div>
+          <div class="tb-file-meta">${f.pages.length} ${f.pages.length === 1 ? "page" : "pages"} · ${this.fmtBytes(f.bytes)}</div>
         </div>
-        <div><span class="tb-pill tb-pill-neu">#${idx + 1}</span></div>
-        <div class="tb-mono tb-muted" style="font-size:11px;">local</div>
-        <div style="text-align:right;">
-          <button class="tb-btn tb-btn-quiet" data-action-rm data-id="${f.id}">remove</button>
+        <div class="tb-file-status"><span class="tb-pill tb-pill-neu">#${idx + 1}</span></div>
+        <div class="tb-file-where tb-mono tb-muted" style="font-size:11px;">local</div>
+        <div class="tb-file-actions">
+          <button type="button" class="tb-btn tb-btn-quiet" data-action-rm data-id="${f.id}" aria-label="Remove ${this.escape(f.name)}">remove</button>
         </div>
       </div>`
   }
@@ -232,15 +252,14 @@ export default class extends Controller {
     const enabled = this.opValue === "merge"
       ? this.items.length >= 2
       : this.items.length === 1
-    this.runBtnTarget.disabled = !enabled
+    this.runButtons().forEach((b) => { b.disabled = !enabled })
   }
 
   // ---------- run ----------
 
   async run () {
     if (this.items.length === 0) return
-    this.runBtnTarget.disabled = true
-    this.runBtnTarget.textContent = "Working…"
+    this.runButtons().forEach((b) => { b.disabled = true; b.textContent = "Working…" })
     try {
       switch (this.opValue) {
         case "merge":    await this.runMerge(); break
@@ -253,8 +272,7 @@ export default class extends Controller {
       console.error(err)
       showToast("Something went wrong while processing: " + err.message, { type: "error" })
     } finally {
-      this.runBtnTarget.disabled = false
-      this.runBtnTarget.textContent = this.defaultRunLabel()
+      this.runButtons().forEach((b) => { b.disabled = false; b.textContent = this.defaultRunLabel() })
       this.updateRunBtn()
     }
   }

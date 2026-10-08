@@ -26,10 +26,10 @@
         Build the invoice, preview it live, and download the PDF. Runs in your browser.
       </p>
     </div>
-    <div class="tb-tabs" data-invoice-target="templates">
-      <button type="button" class="tb-tab is-active" data-action="click->invoice#setTemplate" data-template="plain">Plain</button>
-      <button type="button" class="tb-tab" data-action="click->invoice#setTemplate" data-template="classic">Classic</button>
-      <button type="button" class="tb-tab" data-action="click->invoice#setTemplate" data-template="modern">Modern</button>
+    <div class="tb-tabs" data-invoice-target="templates" role="group" aria-label="Invoice template">
+      <button type="button" class="tb-tab is-active" aria-pressed="true" data-action="click->invoice#setTemplate" data-template="plain">Plain</button>
+      <button type="button" class="tb-tab" aria-pressed="false" data-action="click->invoice#setTemplate" data-template="classic">Classic</button>
+      <button type="button" class="tb-tab" aria-pressed="false" data-action="click->invoice#setTemplate" data-template="modern">Modern</button>
     </div>
   </div>
 
@@ -47,24 +47,24 @@
         <div class="tb-eyebrow" style="margin-bottom: 10px;">Meta</div>
         <div class="tb-invoice-meta-grid">
           <div>
-            <label class="tb-eyebrow" style="display:block; margin-bottom:4px;">Invoice #</label>
-            <input class="tb-input tb-mono" data-invoice-target="fNumber" data-action="input->invoice#change" placeholder="INV-1001">
+            <label class="tb-field-label" for="invoice-number">Invoice #</label>
+            <input class="tb-input tb-mono" id="invoice-number" data-invoice-target="fNumber" data-action="input->invoice#change" placeholder="INV-1001">
           </div>
           <div>
-            <label class="tb-eyebrow" style="display:block; margin-bottom:4px;">Currency</label>
-            <select class="tb-input" data-invoice-target="fCurrency" data-action="change->invoice#change">
+            <label class="tb-field-label" for="invoice-currency">Currency</label>
+            <select class="tb-input" id="invoice-currency" data-invoice-target="fCurrency" data-action="change->invoice#change">
               <option>USD</option><option>EUR</option><option>GBP</option>
               <option>NGN</option><option>KES</option><option>ZAR</option>
               <option>CAD</option><option>AUD</option><option>JPY</option><option>INR</option>
             </select>
           </div>
           <div>
-            <label class="tb-eyebrow" style="display:block; margin-bottom:4px;">Issued</label>
-            <input type="date" class="tb-input" data-invoice-target="fIssued" data-action="change->invoice#change">
+            <label class="tb-field-label" for="invoice-issued">Issued</label>
+            <input type="date" class="tb-input" id="invoice-issued" data-invoice-target="fIssued" data-action="change->invoice#change">
           </div>
           <div>
-            <label class="tb-eyebrow" style="display:block; margin-bottom:4px;">Due</label>
-            <input type="date" class="tb-input" data-invoice-target="fDue" data-action="change->invoice#change">
+            <label class="tb-field-label" for="invoice-due">Due</label>
+            <input type="date" class="tb-input" id="invoice-due" data-invoice-target="fDue" data-action="change->invoice#change">
           </div>
         </div>
       </div>
@@ -72,18 +72,36 @@
       <div class="tb-card tb-card-pad">
         <div class="tb-eyebrow" style="margin-bottom: 10px;">From (you)</div>
         <div class="tb-stack-10">
-          <input class="tb-input" placeholder="Your name or company" data-invoice-target="fFromName" data-action="input->invoice#change">
-          <textarea class="tb-textarea" rows="3" placeholder="Address" data-invoice-target="fFromAddress" data-action="input->invoice#change" style="min-height: 72px;"></textarea>
-          <input class="tb-input" placeholder="hello@you.com" data-invoice-target="fFromEmail" data-action="input->invoice#change">
+          <div>
+            <label class="tb-field-label" for="invoice-from-name">Name or company</label>
+            <input class="tb-input" id="invoice-from-name" autocomplete="organization" placeholder="Your name or company" data-invoice-target="fFromName" data-action="input->invoice#change">
+          </div>
+          <div>
+            <label class="tb-field-label" for="invoice-from-address">Address</label>
+            <textarea class="tb-textarea" id="invoice-from-address" rows="3" autocomplete="street-address" placeholder="Street, city, country" data-invoice-target="fFromAddress" data-action="input->invoice#change" style="min-height: 72px;"></textarea>
+          </div>
+          <div>
+            <label class="tb-field-label" for="invoice-from-email">Email</label>
+            <input class="tb-input" id="invoice-from-email" type="email" inputmode="email" autocomplete="email" placeholder="hello@you.com" data-invoice-target="fFromEmail" data-action="input->invoice#change">
+          </div>
         </div>
       </div>
 
       <div class="tb-card tb-card-pad">
         <div class="tb-eyebrow" style="margin-bottom: 10px;">Bill to</div>
         <div class="tb-stack-10">
-          <input class="tb-input" placeholder="Client name" data-invoice-target="fToName" data-action="input->invoice#change">
-          <textarea class="tb-textarea" rows="3" placeholder="Client address" data-invoice-target="fToAddress" data-action="input->invoice#change" style="min-height: 72px;"></textarea>
-          <input class="tb-input" placeholder="client@example.com" data-invoice-target="fToEmail" data-action="input->invoice#change">
+          <div>
+            <label class="tb-field-label" for="invoice-to-name">Client name</label>
+            <input class="tb-input" id="invoice-to-name" placeholder="Client name" data-invoice-target="fToName" data-action="input->invoice#change">
+          </div>
+          <div>
+            <label class="tb-field-label" for="invoice-to-address">Client address</label>
+            <textarea class="tb-textarea" id="invoice-to-address" rows="3" placeholder="Street, city, country" data-invoice-target="fToAddress" data-action="input->invoice#change" style="min-height: 72px;"></textarea>
+          </div>
+          <div>
+            <label class="tb-field-label" for="invoice-to-email">Client email</label>
+            <input class="tb-input" id="invoice-to-email" type="email" inputmode="email" placeholder="client@example.com" data-invoice-target="fToEmail" data-action="input->invoice#change">
+          </div>
         </div>
       </div>
 
@@ -100,15 +118,15 @@
 
         <div class="tb-invoice-tax-grid">
           <div>
-            <label class="tb-eyebrow" style="display:block; margin-bottom:4px;">Tax rate %</label>
-            <input type="number" step="0.01" class="tb-input tb-mono" data-invoice-target="fTax" data-action="input->invoice#change" placeholder="0">
+            <label class="tb-field-label" for="invoice-tax">Tax rate %</label>
+            <input type="number" step="0.01" inputmode="decimal" class="tb-input tb-mono" id="invoice-tax" data-invoice-target="fTax" data-action="input->invoice#change" placeholder="0">
           </div>
         </div>
       </div>
 
       <div class="tb-card tb-card-pad">
-        <div class="tb-eyebrow" style="margin-bottom: 10px;">Notes</div>
-        <textarea class="tb-textarea" rows="3" placeholder="Payment terms, thank-you note…" data-invoice-target="fNotes" data-action="input->invoice#change" style="min-height: 80px;"></textarea>
+        <label class="tb-eyebrow" for="invoice-notes" style="display: block; margin-bottom: 10px;">Notes</label>
+        <textarea class="tb-textarea" id="invoice-notes" rows="3" placeholder="Payment terms, thank-you note…" data-invoice-target="fNotes" data-action="input->invoice#change" style="min-height: 80px;"></textarea>
       </div>
     </div>
 
@@ -123,7 +141,7 @@
         <div data-invoice-target="preview" class="tb-invoice-preview-pane"></div>
       </div>
 
-      <div class="tb-card tb-card-pad">
+      <div class="tb-card tb-card-pad tb-desktop-actions">
         <div class="tb-invoice-actions">
           <button type="button" class="tb-btn tb-btn-primary tb-btn-lg" data-action="click->invoice#download">Download PDF</button>
           <% if signed_in? %>
@@ -135,12 +153,23 @@
           <% end %>
         </div>
         <% unless signed_in? %>
-          <div class="tb-mono tb-muted" style="font-size: 11px; margin-top: 10px;">
+          <div class="tb-text-sm tb-muted" style="margin-top: 10px;">
             You don't need an account to download. Save is optional.
           </div>
         <% end %>
       </div>
     </aside>
+
+    <div class="tb-mobile-actions">
+      <button type="button" class="tb-btn tb-btn-primary" data-action="click->invoice#download">Download PDF</button>
+      <% if signed_in? %>
+        <button type="button" class="tb-btn tb-btn-ghost" data-action="click->invoice#save">
+          <%= @invoice.persisted? ? "Update saved" : "Save" %>
+        </button>
+      <% else %>
+        <%= link_to "Sign in to save", new_session_path(return_to: request.fullpath), class: "tb-btn tb-btn-ghost" %>
+      <% end %>
+    </div>
   </div>
 </section>
 

@@ -1,4 +1,7 @@
-<section class="tb-tool-layout tb-tool-layout-narrow">
+<section class="tb-tool-layout tb-tool-layout-narrow"
+         data-controller="job-status"
+         data-job-status-url-value="<%= video_compression_path(@video_compression, format: :json) %>"
+         data-job-status-active-value="<%= @video_compression.active? %>">
   <div>
     <div class="tb-eyebrow">Media conversion</div>
     <h1 class="tb-h1 tb-tool-title"><%= @video_compression.operation_label %> job</h1>
@@ -11,22 +14,18 @@
       </div>
     </div>
 
-    <% if @video_compression.active? %>
-      <meta http-equiv="refresh" content="12">
-    <% end %>
-
     <% status_class = @video_compression.failed? ? "tb-pill-down" : (@video_compression.succeeded? ? "tb-pill-ok" : "tb-pill-warn") %>
 
     <div class="tb-card tb-card-pad" style="margin-top: 24px;">
       <div class="tb-stack-10" style="margin-bottom: 18px;">
         <div class="tb-receipt-row">
           <span>Progress</span>
-          <span><%= @video_compression.progress_percent %>%</span>
+          <span><span data-job-status-target="percent"><%= @video_compression.progress_percent %></span>%</span>
         </div>
-        <div class="tb-progress">
-          <div class="tb-progress-fill" style="width: <%= [@video_compression.progress_percent, @video_compression.active? ? 4 : 0].max %>%"></div>
+        <div class="tb-progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="<%= @video_compression.progress_percent %>" data-job-status-target="bar">
+          <div class="tb-progress-fill" data-job-status-target="fill" style="width: <%= [@video_compression.progress_percent, @video_compression.active? ? 4 : 0].max %>%"></div>
         </div>
-        <div class="tb-mono tb-muted" style="font-size: 11px;">
+        <div class="tb-mono tb-muted" style="font-size: 12px;" aria-live="polite" data-job-status-target="message">
           <%= @video_compression.status_message.presence || (@video_compression.active? ? "Queued" : @video_compression.status.humanize) %>
         </div>
       </div>
@@ -45,8 +44,8 @@
       </div>
 
       <% if @video_compression.failed? %>
-        <div class="tb-card tb-card-pad" style="margin-top: 16px; border-color: var(--tb-red); color: var(--tb-red-deep); box-shadow: none;">
-          <%= @video_compression.error_message.presence || "Conversion failed." %>
+        <div class="tb-flash tb-flash-alert" role="alert" style="margin: 16px 0 0;">
+          <div><%= @video_compression.error_message.presence || "Conversion failed." %></div>
         </div>
       <% elsif @video_compression.succeeded? && !@video_compression.output_available? %>
         <div class="tb-card tb-card-pad" style="margin-top: 16px; box-shadow: none;">

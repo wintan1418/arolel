@@ -1,5 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import { showToast } from "../lib/toast"
+import { pressTab } from "../lib/tabs"
 import { PDFDocument, StandardFonts, rgb } from "pdf-lib"
 import { loadDraft, saveDraft, clearDraft } from "../lib/draft_store"
 
@@ -107,7 +108,9 @@ export default class extends Controller {
     this.fNotesTarget.value      = this.invoiceData.notes || ""
     // activate template tab
     this.templatesTarget.querySelectorAll(".tb-tab").forEach((b) => {
-      b.classList.toggle("is-active", b.dataset.template === this.invoiceData.template)
+      const on = b.dataset.template === this.invoiceData.template
+      b.classList.toggle("is-active", on)
+      b.setAttribute("aria-pressed", String(on))
     })
   }
 
@@ -131,8 +134,7 @@ export default class extends Controller {
   setTemplate (e) {
     e.preventDefault()
     this.invoiceData.template = e.currentTarget.dataset.template
-    this.templatesTarget.querySelectorAll(".tb-tab").forEach((b) => b.classList.remove("is-active"))
-    e.currentTarget.classList.add("is-active")
+    pressTab(this.templatesTarget, e.currentTarget)
     this.render()
   }
 
@@ -167,10 +169,10 @@ export default class extends Controller {
   renderItems () {
     this.itemsTarget.innerHTML = this.invoiceData.line_items.map((it, i) => `
       <div class="tb-invoice-item-row" data-row="${i}">
-        <input class="tb-input"        data-f="description" placeholder="Description"  value="${this.esc(it.description || "")}">
-        <input class="tb-input tb-mono" data-f="quantity"    type="number" step="1" min="0" value="${it.quantity || 0}">
-        <input class="tb-input tb-mono" data-f="unit_price"  type="number" step="0.01" min="0" value="${it.unit_price || 0}">
-        <button type="button" class="tb-btn-icon" data-action="click->invoice#removeItem" data-idx="${i}" aria-label="Remove line item">×</button>
+        <input class="tb-input" data-f="description" placeholder="Description" aria-label="Line ${i + 1} description" value="${this.esc(it.description || "")}">
+        <label class="tb-invoice-item-field"><span>Qty</span><input class="tb-input tb-mono" data-f="quantity" type="number" inputmode="decimal" step="1" min="0" aria-label="Line ${i + 1} quantity" value="${it.quantity || 0}"></label>
+        <label class="tb-invoice-item-field"><span>Rate</span><input class="tb-input tb-mono" data-f="unit_price" type="number" inputmode="decimal" step="0.01" min="0" aria-label="Line ${i + 1} rate" value="${it.unit_price || 0}"></label>
+        <button type="button" class="tb-btn-icon" data-action="click->invoice#removeItem" data-idx="${i}" aria-label="Remove line ${i + 1}">×</button>
       </div>
     `).join("")
     this.itemsTarget.querySelectorAll("input").forEach((el) => {
@@ -536,6 +538,11 @@ export default class extends Controller {
   async save (e) {
     e?.preventDefault()
     if (!this.signedInValue) { window.location.href = "/login?return_to=" + encodeURIComponent(location.pathname); return }
+    if (this.saving) return
+    const buttons = Array.from(this.element.querySelectorAll("[data-action*='invoice#save']"))
+    this.saving = true
+    buttons.forEach((b) => { b.disabled = true; b.dataset.label = b.textContent.trim(); b.textContent = "Saving…" })
+
     const body = new FormData()
     body.append("invoice[number]",       this.invoiceData.number || "")
     body.append("invoice[template]",     this.invoiceData.template)
@@ -559,17 +566,31 @@ export default class extends Controller {
 
     const url = this.savedValue ? `/invoices/${this.slugValue}` : "/invoices"
     const method = this.savedValue ? "PATCH" : "POST"
-    const res = await fetch(url, {
-      method, headers: { "X-CSRF-Token": this.csrf(), Accept: "application/json" }, body
-    })
-    if (res.ok) {
+    let res
+    try {
+      res = await fetch(url, { method, headers: { "X-CSRF-Token": this.csrf(), Accept: "application/json" }, body })
+    } catch (_) {
+      res = null
+    }
+
+    this.saving = false
+    if (res && res.ok) {
+      const data = await res.json().catch(() => ({}))
       if (this.persistTimer) clearTimeout(this.persistTimer)
       this.persistTimer = null
       clearDraft(this.draftKey)
-      this.draftKey = null
-      window.location.href = "/dashboard"
+      // Stay in the editor. The record now exists, so further saves update it.
+      if (data.slug) {
+        this.slugValue = data.slug
+        this.savedValue = true
+        this.draftKey = `invoice:${data.slug}`
+        if (data.url) history.replaceState(null, "", data.url)
+      }
+      buttons.forEach((b) => { b.disabled = false; b.textContent = "Update saved" })
+      this.toast("Saved to your dashboard.", { href: "/dashboard", linkText: "Open dashboard" })
     } else {
-      this.toast("Couldn't save: " + await this.errorMessage(res), { type: "error" })
+      buttons.forEach((b) => { b.disabled = false; b.textContent = b.dataset.label || "Save" })
+      this.toast("Couldn't save: " + (res ? await this.errorMessage(res) : "the network request failed."), { type: "error" })
     }
   }
 

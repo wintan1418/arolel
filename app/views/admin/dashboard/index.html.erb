@@ -48,7 +48,7 @@
     </div>
 
     <div class="tb-admin-content-grid">
-      <main class="tb-admin-maincol">
+      <div class="tb-admin-maincol">
         <section class="tb-dash-section">
           <div class="tb-dash-section-head">
             <div>
@@ -153,7 +153,7 @@
               <tbody>
                 <% @recent_events.each do |event| %>
                   <tr>
-                    <td class="tb-mono"><%= time_ago_in_words(event.occurred_at) %> ago</td>
+                    <td class="tb-mono" style="white-space: nowrap;" title="<%= event.occurred_at.to_fs(:long) %>"><%= compact_time_ago(event.occurred_at) %></td>
                     <td><%= event.event_name.humanize %></td>
                     <td class="tb-mono"><%= event.path %></td>
                     <td><%= event.user&.email_address || "guest" %></td>
@@ -164,7 +164,7 @@
             </table>
           </div>
         </section>
-      </main>
+      </div>
 
       <aside class="tb-admin-sidecol">
         <section class="tb-dash-section" id="mail-desk">

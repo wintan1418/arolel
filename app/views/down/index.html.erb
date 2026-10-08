@@ -8,15 +8,16 @@
 
   <%= form_with url: boards_path, method: :post, local: true, class: "tb-stack-14", style: "margin-top: 28px;" do |f| %>
     <div class="tb-card tb-card-pad">
-      <div class="tb-eyebrow" style="margin-bottom: 6px;">URLs</div>
-      <%= f.text_area :hosts, class: "tb-textarea", rows: 6, placeholder: "github.com&#10;notion.so&#10;your-side-project.app" %>
+      <%= f.label :hosts, "URLs to check", class: "tb-field-label" %>
+      <%= f.text_area :hosts, class: "tb-textarea", rows: 6, required: true, placeholder: "github.com&#10;notion.so&#10;your-side-project.app" %>
       <div class="tb-mono tb-muted" style="font-size: 12px; margin-top: 8px;">
         One per line, or comma-separated. Schemes and paths are ignored — we check the host.
       </div>
     </div>
 
     <div class="tb-actions-inline">
-      <%= f.text_field :name, class: "tb-input", placeholder: "board name (optional)", style: "max-width: 260px;" %>
+      <%= f.label :name, "Board name (optional)", class: "tb-sr-only" %>
+      <%= f.text_field :name, class: "tb-input", placeholder: "Board name (optional)", style: "max-width: 260px;" %>
       <%= f.submit "Check now", class: "tb-btn tb-btn-primary tb-btn-lg" %>
       <span class="tb-mono tb-muted" style="font-size: 12px;">· up to 25 hosts</span>
     </div>

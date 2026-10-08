@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 const DISMISSED_KEY = "arolel-signup-nudge-dismissed-at"
 const DISMISS_DAYS = 7
-const DELAY_MS = 30000
+const DELAY_MS = 45000
 
 export default class extends Controller {
   static targets = ["panel"]
@@ -30,9 +30,23 @@ export default class extends Controller {
 
   open () {
     if (this.recentlyDismissed()) return
+    // Never interrupt a conversion or a download in progress.
+    if (window.__arolelUnsavedWork && [...window.__arolelUnsavedWork].some((check) => { try { return check() } catch (_) { return false } })) {
+      this.timer = setTimeout(() => this.open(), DELAY_MS)
+      return
+    }
 
+    this.previousFocus = document.activeElement
     this.element.hidden = false
-    requestAnimationFrame(() => this.element.classList.add("is-open"))
+    requestAnimationFrame(() => {
+      this.element.classList.add("is-open")
+      const first = this.panelTarget.querySelector("a, button")
+      if (first) first.focus()
+    })
+  }
+
+  escape () {
+    if (!this.element.hidden) this.dismiss()
   }
 
   close () {
@@ -40,11 +54,12 @@ export default class extends Controller {
   }
 
   dismiss () {
-    localStorage.setItem(DISMISSED_KEY, Date.now().toString())
+    try { localStorage.setItem(DISMISSED_KEY, Date.now().toString()) } catch (_) {}
     this.element.classList.remove("is-open")
     setTimeout(() => {
       this.element.hidden = true
     }, 180)
+    if (this.previousFocus && typeof this.previousFocus.focus === "function") this.previousFocus.focus()
   }
 
   backdrop (event) {
@@ -52,7 +67,8 @@ export default class extends Controller {
   }
 
   recentlyDismissed () {
-    const dismissedAt = parseInt(localStorage.getItem(DISMISSED_KEY) || "0", 10)
+    let dismissedAt = 0
+    try { dismissedAt = parseInt(localStorage.getItem(DISMISSED_KEY) || "0", 10) } catch (_) {}
     if (!dismissedAt) return false
 
     return Date.now() - dismissedAt < DISMISS_DAYS * 24 * 60 * 60 * 1000

@@ -41,17 +41,17 @@
       <p class="tb-text tb-tool-subtitle">Merge · split · rotate · compress locally. DOCX, CSV and image conversions use temporary uploads.</p>
     </div>
     <div class="tb-tool-tabs-wrap">
-      <div class="tb-tabs">
-        <%= link_to "Merge",    pdf_path(op: "merge"),    class: ["tb-tab", ("is-active" if @op == "merge")] %>
-        <%= link_to "Split",    pdf_path(op: "split"),    class: ["tb-tab", ("is-active" if @op == "split")] %>
-        <%= link_to "Rotate",   pdf_path(op: "rotate"),   class: ["tb-tab", ("is-active" if @op == "rotate")] %>
-        <%= link_to "Compress", pdf_path(op: "compress"), class: ["tb-tab", ("is-active" if @op == "compress")] %>
-        <%= link_to "PDF → DOCX", pdf_path(op: "pdf-to-docx"), class: ["tb-tab", ("is-active" if @op == "pdf-to-docx")] %>
-        <%= link_to "DOCX → PDF", pdf_path(op: "docx-to-pdf"), class: ["tb-tab", ("is-active" if @op == "docx-to-pdf")] %>
-        <%= link_to "Word → CSV", pdf_path(op: "word-to-csv"), class: ["tb-tab", ("is-active" if @op == "word-to-csv")] %>
-        <%= link_to "PDF → JPG",  pdf_path(op: "pdf-to-jpg"),  class: ["tb-tab", ("is-active" if @op == "pdf-to-jpg")] %>
-        <%= link_to "PDF → PNG",  pdf_path(op: "pdf-to-png"),  class: ["tb-tab", ("is-active" if @op == "pdf-to-png")] %>
-      </div>
+      <nav class="tb-tabs is-wrap" aria-label="PDF tools">
+        <%= link_to "Merge",    pdf_path(op: "merge"),    class: ["tb-tab", ("is-active" if @op == "merge")], "aria-current": (@op == "merge" ? "page" : nil) %>
+        <%= link_to "Split",    pdf_path(op: "split"),    class: ["tb-tab", ("is-active" if @op == "split")], "aria-current": (@op == "split" ? "page" : nil) %>
+        <%= link_to "Rotate",   pdf_path(op: "rotate"),   class: ["tb-tab", ("is-active" if @op == "rotate")], "aria-current": (@op == "rotate" ? "page" : nil) %>
+        <%= link_to "Compress", pdf_path(op: "compress"), class: ["tb-tab", ("is-active" if @op == "compress")], "aria-current": (@op == "compress" ? "page" : nil) %>
+        <%= link_to "PDF → DOCX", pdf_path(op: "pdf-to-docx"), class: ["tb-tab", ("is-active" if @op == "pdf-to-docx")], "aria-current": (@op == "pdf-to-docx" ? "page" : nil) %>
+        <%= link_to "DOCX → PDF", pdf_path(op: "docx-to-pdf"), class: ["tb-tab", ("is-active" if @op == "docx-to-pdf")], "aria-current": (@op == "docx-to-pdf" ? "page" : nil) %>
+        <%= link_to "Word → CSV", pdf_path(op: "word-to-csv"), class: ["tb-tab", ("is-active" if @op == "word-to-csv")], "aria-current": (@op == "word-to-csv" ? "page" : nil) %>
+        <%= link_to "PDF → JPG",  pdf_path(op: "pdf-to-jpg"),  class: ["tb-tab", ("is-active" if @op == "pdf-to-jpg")], "aria-current": (@op == "pdf-to-jpg" ? "page" : nil) %>
+        <%= link_to "PDF → PNG",  pdf_path(op: "pdf-to-png"),  class: ["tb-tab", ("is-active" if @op == "pdf-to-png")], "aria-current": (@op == "pdf-to-png" ? "page" : nil) %>
+      </nav>
     </div>
   </div>
 
@@ -135,9 +135,11 @@
   <div class="tb-tool-layout" style="margin-top: 28px;">
     <div>
       <div class="tb-drop"
+           role="button" tabindex="0"
+           aria-label="<%= labels[:drop] %>"
            data-pdf-target="drop"
            data-dropzone-target="zone"
-           data-action="click->pdf#pick dragover->dropzone#over dragleave->dropzone#leave drop->pdf#drop">
+           data-action="click->pdf#pick keydown.enter->pdf#pick keydown.space->pdf#pick dragover->dropzone#over dragleave->dropzone#leave drop->pdf#drop">
         <svg class="tb-drop-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
           <path d="M14 2v6h6"/>
@@ -145,6 +147,8 @@
         <div class="tb-drop-title"><%= labels[:drop] %></div>
         <div class="tb-drop-sub">.pdf · any size · runs on your device</div>
       </div>
+
+      <div class="tb-drop-error" data-pdf-target="dropError" role="alert" hidden></div>
 
       <input type="file" accept="application/pdf,.pdf"
              <%= "multiple" if @op == "merge" %>
@@ -155,10 +159,10 @@
       <% if @op == "compress" %>
         <div data-pdf-target="compressOpts" class="tb-card tb-card-pad" style="margin-top: 16px; display:none;">
           <div class="tb-eyebrow" style="margin-bottom: 8px;">Compression</div>
-          <div class="tb-tabs">
-            <button class="tb-tab" data-action="click->pdf#setCompress" data-level="low">Low (fastest)</button>
-            <button class="tb-tab is-active" data-action="click->pdf#setCompress" data-level="medium">Medium</button>
-            <button class="tb-tab" data-action="click->pdf#setCompress" data-level="high">High (smallest)</button>
+          <div class="tb-tabs is-wrap" role="group" aria-label="Compression level">
+            <button type="button" class="tb-tab" aria-pressed="false" data-action="click->pdf#setCompress" data-level="low">Low (fastest)</button>
+            <button type="button" class="tb-tab is-active" aria-pressed="true" data-action="click->pdf#setCompress" data-level="medium">Medium</button>
+            <button type="button" class="tb-tab" aria-pressed="false" data-action="click->pdf#setCompress" data-level="high">High (smallest)</button>
           </div>
           <div class="tb-mono tb-muted" style="font-size: 12px; margin-top: 10px;">
             Browser compression typically shrinks 20–60%. For aggressive text-PDF compression, server tools still win.
@@ -199,6 +203,14 @@
         </div>
       </div>
     </aside>
+
+    <div class="tb-mobile-actions">
+      <button type="button" class="tb-btn tb-btn-primary tb-btn-lg"
+              data-pdf-target="runBtnMobile"
+              data-action="click->pdf#run" disabled>
+        <%= labels[:cta] %>
+      </button>
+    </div>
   </div>
   <% end %>
 </section>
