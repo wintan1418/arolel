@@ -1048,6 +1048,8 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 12px;
   padding-top: 14px;
   border-top: 1px dashed var(--tb-line);
   font-family: var(--font-mono);
@@ -1920,13 +1922,16 @@ a {
     display: none;
   }
 
-  .tb-host-table,
-  .tb-host-table tbody {
+  table.tb-host-table,
+  .tb-table-wrap table.tb-host-table,
+  table.tb-host-table tbody {
     display: block;
     min-width: 0;
+    width: 100%;
   }
 
-  .tb-host-table tr {
+  table.tb-host-table tr {
+    width: 100%;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 4px 12px;
@@ -1976,7 +1981,7 @@ a {
 }
 
 .tb-user-directory-table .tb-table {
-  min-width: 980px;
+  min-width: 720px;
 }
 
 .tb-user-directory-table .tb-table td,
