@@ -1087,13 +1087,13 @@ a {
 
 .tb-pill-slow {
   background: var(--tb-amber-wash);
-  color: var(--tb-amber);
+  color: var(--tb-amber-text);
   border-color: rgba(217, 119, 6, 0.2);
 }
 
 .tb-pill-warn {
   background: var(--tb-amber-wash);
-  color: var(--tb-amber);
+  color: var(--tb-amber-text);
   border-color: rgba(217, 119, 6, 0.2);
 }
 
@@ -1109,7 +1109,7 @@ a {
   gap: 6px;
   font-family: var(--font-mono);
   font-size: 11px;
-  color: var(--tb-green);
+  color: var(--tb-green-text);
   font-weight: 500;
 }
 
@@ -3018,7 +3018,18 @@ a {
   .tb-footer-links a,
   .tb-footer-credit {
     display: inline-block;
-    padding: 10px 0;
+    padding: 13px 0;
+  }
+
+  .tb-dash-link {
+    display: inline-block;
+    padding: 12px 0;
+  }
+
+  .tb-admin-nav-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
   }
 
   /* 16px stops iOS from zooming the page when a field is focused. */
