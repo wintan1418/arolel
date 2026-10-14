@@ -3,8 +3,9 @@ class DocumentConversionsController < ApplicationController
   before_action :rate_limit_conversions, only: :create
 
   def create
-    result = DocumentConverter.new(operation: params[:op], upload: params[:file]).call
-    record_tool_run(status: "succeeded", result: result)
+    converter = DocumentConverter.new(operation: params[:op], upload: params[:file], layout: params[:layout])
+    result = converter.call
+    record_tool_run(status: "succeeded", result: result, engine: converter.engine_used)
 
     send_data result.bytes,
               filename: result.filename,
@@ -30,7 +31,7 @@ class DocumentConversionsController < ApplicationController
                 status: :see_other
   end
 
-  def record_tool_run(status:, result: nil, error: nil)
+  def record_tool_run(status:, result: nil, error: nil, engine: nil)
     upload = params[:file]
 
     ToolRun.create!(
@@ -43,7 +44,7 @@ class DocumentConversionsController < ApplicationController
       output_filename: result&.filename,
       output_bytes: result&.bytes&.bytesize,
       error_message: error&.message&.first(255),
-      metadata: { content_type: upload&.content_type }.compact,
+      metadata: { content_type: upload&.content_type, layout: params[:layout].presence, engine: engine }.compact,
       occurred_at: Time.current
     )
   rescue StandardError => e

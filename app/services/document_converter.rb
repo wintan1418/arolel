@@ -1,5 +1,6 @@
 require "cgi"
 require "fileutils"
+require "json"
 require "nokogiri"
 require "open3"
 require "securerandom"
@@ -22,9 +23,16 @@ class DocumentConverter
   DOCUMENT_EXTENSIONS = %w[.doc .docx .odt .rtf .txt].freeze
   PDF_EXTENSION = ".pdf"
 
-  def initialize(operation:, upload:)
+  LAYOUT_MODES = %w[auto exact flow].freeze
+
+  # layout: how PDF -> DOCX should treat the page design.
+  #   auto  - measure the pages and pick exact for designed layouts, flow otherwise
+  #   exact - keep every page as laid out (backdrop artwork + positioned text frames)
+  #   flow  - rebuild ordinary paragraphs, tables and columns (pdf2docx)
+  def initialize(operation:, upload:, layout: "auto")
     @operation = operation.to_s
     @upload = upload
+    @layout = LAYOUT_MODES.include?(layout.to_s) ? layout.to_s : "auto"
   end
 
   def call
@@ -51,6 +59,10 @@ class DocumentConverter
   ensure
     upload&.rewind if upload.respond_to?(:rewind)
   end
+
+  # The requested PDF -> DOCX layout mode and the engine that produced the
+  # last result ("exact" or "flow"; nil when a fallback or another operation ran).
+  attr_reader :layout, :engine_used
 
   private
 
@@ -101,22 +113,23 @@ class DocumentConverter
     Result.new(File.binread(output_path), filename, content_type)
   end
 
-  # PDF -> DOCX tries three strategies, best first:
+  # PDF -> DOCX strategies, best first:
   #
-  # 1. pdf2docx (PyMuPDF based). It rebuilds paragraphs, tables, multi-column
-  #    layouts and background shading, so a two-column resume or an invoice
-  #    comes out looking like the original and the text flows normally.
-  # 2. LibreOffice Writer's PDF import. Keeps fonts and structure but places
-  #    every line as its own positioned frame, which drifts and misaligns.
+  # 1. lib/pdf_to_docx/convert.py running in the pdf2docx virtualenv. It
+  #    offers two engines: "exact" keeps every page as designed (artwork as a
+  #    backdrop, each text line as an editable positioned frame), "flow"
+  #    rebuilds paragraphs and tables with pdf2docx. "auto" measures the
+  #    pages and chooses.
+  # 2. LibreOffice Writer's PDF import.
   # 3. pdftotext into a minimal hand-built DOCX. Text only, always opens.
   def convert_pdf_to_docx(input_path, dir)
     filename = "#{base_name}.docx"
 
-    if (pdf2docx = pdf2docx_path)
+    if (python = pdf2docx_python)
       begin
-        return convert_pdf_to_docx_with_pdf2docx(pdf2docx, input_path, dir, filename)
+        return convert_pdf_to_docx_with_script(python, input_path, dir, filename)
       rescue ConversionFailed => error
-        Rails.logger.warn("[DocumentConverter] pdf2docx failed, falling back to LibreOffice: #{error.message}")
+        Rails.logger.warn("[DocumentConverter] PDF->DOCX script failed, falling back to LibreOffice: #{error.message}")
       end
     end
 
@@ -135,25 +148,38 @@ class DocumentConverter
     Result.new(build_text_docx(text), filename, docx_content_type)
   end
 
-  # Below this share of the PDF's words, pdf2docx has dropped too much (for
-  # example it sometimes skips text layered over vector artwork) and the
+  # Below this share of the PDF's words, the converter has dropped too much
+  # (for example it skipped text layered over vector artwork) and the
   # LibreOffice import is the safer result.
   MIN_TEXT_COVERAGE = 0.7
 
-  def convert_pdf_to_docx_with_pdf2docx(pdf2docx, input_path, dir, filename)
-    output_path = File.join(dir, "pdf2docx-output.docx")
-    run_command(pdf2docx, "convert", input_path, output_path)
+  SCRIPT_PATH = Rails.root.join("lib/pdf_to_docx/convert.py").to_s
 
-    raise ConversionFailed, "pdf2docx did not produce a DOCX file." unless File.file?(output_path)
-    raise ConversionFailed, "pdf2docx produced an unreadable DOCX file." unless valid_docx?(output_path)
+  def convert_pdf_to_docx_with_script(python, input_path, dir, filename)
+    output_path = File.join(dir, "script-output.docx")
+    stdout = capture_command(python, "-I", SCRIPT_PATH, input_path, output_path, "--mode", layout)
 
-    bytes = polish_pdf2docx_docx(File.binread(output_path))
+    raise ConversionFailed, "The PDF converter did not produce a DOCX file." unless File.file?(output_path)
+    raise ConversionFailed, "The PDF converter produced an unreadable DOCX file." unless valid_docx?(output_path)
+
+    info = parse_script_info(stdout)
+    bytes = File.binread(output_path)
+    bytes = polish_pdf2docx_docx(bytes) if info["engine"] == "flow"
+
     coverage = text_coverage(pdf_text_words(input_path, dir), docx_text_words(bytes))
     if coverage && coverage < MIN_TEXT_COVERAGE
-      raise ConversionFailed, "pdf2docx kept only #{(coverage * 100).round}% of the PDF text."
+      raise ConversionFailed, "The #{info["engine"]} converter kept only #{(coverage * 100).round}% of the PDF text."
     end
 
+    @engine_used = info["engine"]
     Result.new(bytes, filename, docx_content_type)
+  end
+
+  def parse_script_info(stdout)
+    line = stdout.to_s.lines.map(&:strip).reverse.find { |l| l.start_with?("{") }
+    JSON.parse(line.to_s)
+  rescue JSON::ParserError
+    { "engine" => "flow" }
   end
 
   # pdf2docx reproduces page geometry very literally, which hurts in Word:
@@ -391,14 +417,21 @@ class DocumentConverter
   end
 
   def run_command(*args)
+    capture_command(*args)
+    nil
+  end
+
+  # Runs a command and returns its stdout, raising ConversionFailed with the
+  # first line of stderr when it exits non-zero.
+  def capture_command(*args)
     stdout, stderr, status = Timeout.timeout(TIMEOUT_SECONDS) do
       Open3.capture3({ "HOME" => Dir.tmpdir }, *args)
     end
 
-    return if status.success?
+    return stdout if status.success?
 
     message = stderr.presence || stdout.presence || "conversion command failed"
-    raise ConversionFailed, message.to_s.lines.first.to_s.strip.presence || "Conversion failed."
+    raise ConversionFailed, message.to_s.lines.map(&:strip).reject(&:blank?).last.to_s.presence || "Conversion failed."
   rescue Timeout::Error
     raise ConversionFailed, "Conversion timed out. Try a smaller file."
   end
@@ -498,6 +531,20 @@ class DocumentConverter
     command_path(ENV["PDF2DOCX_PATH"].presence) ||
       command_path("pdf2docx") ||
       PDF2DOCX_CANDIDATES.map { |candidate| File.expand_path(candidate) }.find { |path| File.executable?(path) }
+  end
+
+  # The Python interpreter of the pdf2docx virtualenv (it has PyMuPDF too),
+  # which runs lib/pdf_to_docx/convert.py. PDF2DOCX_PYTHON overrides it.
+  def pdf2docx_python
+    explicit = command_path(ENV["PDF2DOCX_PYTHON"].presence)
+    return explicit if explicit
+
+    binary = pdf2docx_path
+    return unless binary
+
+    binary = File.realpath(binary) rescue binary
+    python = File.join(File.dirname(binary), "python")
+    File.executable?(python) ? python : nil
   end
 
   def pdftoppm_path

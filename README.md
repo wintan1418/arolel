@@ -84,7 +84,8 @@ Deployed via Hatchbox. App reads:
 | `SUPER_ADMIN_EMAILS` | Comma-separated emails that can access `/admin` without flipping the DB flag |
 | `COFFEE_URL` | Optional Buy Me A Coffee link — if unset, the button is hidden |
 | `SOURCE_URL` | Optional public source-code link — if unset, hidden from the footer |
-| `PDF2DOCX_PATH` | Optional path override for the `pdf2docx` binary (best PDF → DOCX fidelity; falls back to LibreOffice, then text) |
+| `PDF2DOCX_PATH` | Optional path override for the `pdf2docx` binary; its virtualenv Python (with PyMuPDF) runs `lib/pdf_to_docx/convert.py`, which keeps designed pages exactly or reflows plain ones. Falls back to LibreOffice, then text |
+| `PDF2DOCX_PYTHON` | Optional path to the Python interpreter that has PyMuPDF and pdf2docx (defaults to the one next to `pdf2docx`) |
 | `LIBREOFFICE_PATH` | Optional path override for DOC/PDF conversion binary |
 | `PDFTOPPM_PATH` | Optional path override for Poppler PDF-to-image binary |
 | `PDFTOTEXT_PATH` | Optional path override for Poppler PDF text extraction binary |

@@ -92,6 +92,23 @@
             <div class="tb-text-sm" style="margin-top: 10px;">
               This conversion needs server software, so the selected file is uploaded once, processed in a temporary directory, returned as a download, and deleted.
             </div>
+            <% if @op == "pdf-to-docx" %>
+              <fieldset class="tb-layout-choice" style="margin-top: 14px;">
+                <legend class="tb-field-label">Layout</legend>
+                <label class="tb-choice">
+                  <input type="radio" name="layout" value="auto" checked>
+                  <span><strong>Auto</strong> <small>Picks the best engine for each file.</small></span>
+                </label>
+                <label class="tb-choice">
+                  <input type="radio" name="layout" value="exact">
+                  <span><strong>Keep exact layout</strong> <small>Resumes with sidebars, letterheads, flyers. Every page looks like the PDF; text stays editable in place.</small></span>
+                </label>
+                <label class="tb-choice">
+                  <input type="radio" name="layout" value="flow">
+                  <span><strong>Editable flowing text</strong> <small>Letters, reports, invoices. Rebuilds paragraphs and tables you can retype freely.</small></span>
+                </label>
+              </fieldset>
+            <% end %>
             <div class="tb-conversion-status" aria-live="polite">
               <strong data-document-conversion-target="status">Choose a file to convert.</strong>
               <span data-document-conversion-target="details">We check file size before upload. PDF page counts are estimated locally when possible.</span>
@@ -114,7 +131,7 @@
             <%= labels[:out] %>
           </div>
           <div class="tb-stack-6">
-            <div class="tb-receipt-row"><span>server engine</span><span><%= @op == "pdf-to-jpg" || @op == "pdf-to-png" ? "Poppler" : "LibreOffice" %></span></div>
+            <div class="tb-receipt-row"><span>server engine</span><span><%= case @op when "pdf-to-jpg", "pdf-to-png" then "Poppler" when "pdf-to-docx" then "PyMuPDF layout engine" else "LibreOffice" end %></span></div>
             <div class="tb-receipt-row"><span>max upload</span><span>25MB</span></div>
             <% if @op == "pdf-to-jpg" || @op == "pdf-to-png" %>
               <div class="tb-receipt-row"><span>page limit</span><span>50</span></div>

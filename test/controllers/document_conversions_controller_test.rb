@@ -8,6 +8,18 @@ class DocumentConversionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action='#{document_conversion_path(op: "pdf-to-docx")}']"
     assert_select "form[data-turbo=false]"
     assert_select "input[type=file][name=file]"
+    assert_select "input[type=radio][name=layout][value=auto][checked]"
+    assert_select "input[type=radio][name=layout][value=exact]"
+    assert_select "input[type=radio][name=layout][value=flow]"
+  end
+
+  test "records the requested layout on the tool run" do
+    post document_conversion_path(op: "pdf-to-docx"), params: { layout: "exact" }
+
+    assert_redirected_to pdf_path(op: "pdf-to-docx")
+    run = ToolRun.last
+    assert_equal "failed", run.status
+    assert_equal "exact", run.metadata["layout"]
   end
 
   test "shows word to csv conversion form" do
